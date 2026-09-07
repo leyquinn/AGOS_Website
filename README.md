@@ -1,59 +1,52 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+# AGOS: Dual-Platform Disaster Monitoring System
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+> **Undergraduate Thesis** | Ateneo de Davao University  
+> **Core Architecture:** Multi-Task NLP (XLM-RoBERTa) & K-Means++ Clustering for Barangay-Level Flood Validation  
+> **Repository:** [leyquinn/AGOS_Website](https://github.com/leyquinn/AGOS_Website)
 
-## About Laravel
+---
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+## 📌 Project Overview
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+**AGOS** is a real-time crowdsourced flood monitoring and disaster response ecosystem built for local government units and emergency responders. By integrating social media data harvesting and citizen report submissions, AGOS uses advanced Machine Learning techniques to eliminate false alarms, cluster geographic incident hotspots, and provide actionable flood intelligence.
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+* **Multi-Task XLM-RoBERTa:** Validates noisy, code-switched (English/Cebuano/Tagalog) social media and citizen reports for relevance, severity, and location accuracy.
+* **K-Means++ Spatial Clustering:** Group validated reports dynamically by barangay and GPS coordinates to identify high-risk flood zones.
+* **Dual-Platform Integration:** Decoupled architecture supporting a responsive Web Administrative Portal and a lightweight Mobile App API.
 
-## Learning Laravel
+---
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework. You can also check out [Laravel Learn](https://laravel.com/learn), where you will be guided through building a modern Laravel application.
+## 🛠️ Tech Stack
 
-If you don't feel like reading, [Laracasts](https://laracasts.com) can help. Laracasts contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+* **Backend Framework:** Laravel 12 (PHP 8.2+)
+* **Frontend Framework:** Tailwind CSS, Blade Components, Vite
+* **Database:** MySQL
+* **NLP & Clustering Engine:** Python / XLM-RoBERTa Transformer Models & K-Means++
+* **API Engine:** RESTful JSON Services (`app/Http/Controllers/Api`)
 
-## Laravel Sponsors
+---
 
-We would like to extend our thanks to the following sponsors for funding Laravel development. If you are interested in becoming a sponsor, please visit the [Laravel Partners program](https://partners.laravel.com).
+## 📂 Project Structure
 
-### Premium Partners
-
-- **[Vehikl](https://vehikl.com)**
-- **[Tighten Co.](https://tighten.co)**
-- **[Kirschbaum Development Group](https://kirschbaumdevelopment.com)**
-- **[64 Robots](https://64robots.com)**
-- **[Curotec](https://www.curotec.com/services/technologies/laravel)**
-- **[DevSquad](https://devsquad.com/hire-laravel-developers)**
-- **[Redberry](https://redberry.international/laravel-development)**
-- **[Active Logic](https://activelogic.com)**
-
-## Contributing
-
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
-
-## Code of Conduct
-
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
-
-## Security Vulnerabilities
-
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
-
-## License
-
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+```text
+agos/
+├── app/
+│   ├── Http/
+│   │   ├── Controllers/
+│   │   │   ├── Api/          # Mobile App API Controllers (Auth, Reports, Maps)
+│   │   │   └── Web/          # Admin Web Portal Controllers (Dashboard, Harvesting, Analytics)
+│   │   └── Resources/        # JSON Data Transformers for Mobile Clients
+│   └── Models/               # Shared Database Models (User, Report, Incident, etc.)
+├── resources/
+│   └── views/
+│       ├── components/       # UI Partials (Navbar, Sidebar)
+│       ├── layouts/          # Master Wrappers (app.blade.php, guest.blade.php)
+│       ├── auth/             # Login & Access Views
+│       ├── operations/       # Dispatch & Field Unit Views
+│       ├── reports/          # Verification & Incident Logs
+│       ├── harvesting/       # Social Media Crawlers & NLP Feeds
+│       ├── analytics/        # K-Means++ Hotspot Maps & Charts
+│       └── landing.blade.php # Public Overview Page
+└── routes/
+    ├── api.php               # Mobile API Endpoints
+    └── web.php               # Web Portal Routes
