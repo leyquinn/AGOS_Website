@@ -1,1 +1,172 @@
 @import "tailwindcss";
+
+body {
+    background-image: radial-gradient(circle at 85% -20%, rgba(37, 99, 235, 0.16), transparent 34rem);
+    transition: background-color 180ms ease, color 180ms ease;
+}
+
+::selection {
+    background: #2563eb;
+    color: #fff;
+}
+
+* {
+    scrollbar-width: thin;
+    scrollbar-color: #1d4ed8 #031027;
+}
+
+.portal-header {
+    box-shadow: 0 1px 0 rgba(96, 165, 250, 0.08), 0 14px 35px rgba(2, 11, 26, 0.12);
+}
+
+.portal-main {
+    background-image: radial-gradient(circle at 100% 0%, rgba(30, 64, 175, 0.16), transparent 28rem);
+}
+
+.portal-main article,
+.portal-main section {
+    transition: border-color 180ms ease, box-shadow 180ms ease, transform 180ms ease;
+}
+
+.portal-main article:hover,
+.portal-main section:hover {
+    border-color: rgba(96, 165, 250, 0.28);
+}
+
+.portal-main button,
+.portal-main a,
+.portal-main select,
+.portal-main input {
+    outline-offset: 3px;
+}
+
+.portal-main button:focus-visible,
+.portal-main a:focus-visible,
+.portal-main select:focus-visible,
+.portal-main input:focus-visible {
+    outline: 2px solid #60a5fa;
+}
+
+.portal-main table tbody tr {
+    transition: background-color 160ms ease;
+}
+
+.portal-main table tbody tr:hover {
+    background-color: rgba(30, 64, 175, 0.12);
+}
+
+.portal-sidebar {
+    transition: width 220ms ease, transform 300ms ease, background-color 180ms ease;
+}
+
+.portal-sidebar.is-collapsed {
+    width: 5rem !important;
+}
+
+.portal-sidebar.is-collapsed .sidebar-label {
+    display: none !important;
+}
+
+.portal-sidebar.is-collapsed .mb-7 {
+    justify-content: center;
+}
+
+.portal-sidebar.is-collapsed > div > .mb-7:first-child {
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.portal-sidebar.is-collapsed nav a {
+    justify-content: center;
+    padding-left: 0.75rem;
+    padding-right: 0.75rem;
+}
+
+.portal-sidebar.is-collapsed nav a > span:first-child {
+    margin: 0;
+}
+
+.portal-sidebar.is-collapsed [data-logout] {
+    justify-content: center;
+    padding-left: 0.75rem;
+    padding-right: 0.75rem;
+}
+
+.portal-sidebar.is-collapsed [data-sidebar-toggle] svg {
+    transform: rotate(180deg);
+}
+
+body.theme-light .portal-sidebar .sidebar-nav-item:not(.bg-gradient-to-r) {
+    background-color: rgba(6, 38, 83, 0.72) !important;
+    color: #dbeafe !important;
+}
+
+body.theme-light .portal-sidebar .sidebar-nav-icon {
+    background-color: #031b3c !important;
+    color: #bfdbfe !important;
+}
+
+body.theme-light {
+    background-color: #f5f8ff !important;
+    color: #0f172a !important;
+}
+
+body.theme-light [class*="bg-[#"],
+body.theme-light [class*="bg-blue-950"],
+body.theme-light [class*="bg-blue-900"] {
+    background-color: #ffffff !important;
+}
+
+body.theme-light [class*="bg-[#020b1a"] {
+    background-color: #e8effc !important;
+}
+
+body.theme-light [class*="bg-[#091b40"] {
+    background-color: #dbe7fb !important;
+}
+
+body.theme-light [class*="bg-[#0a2357"] {
+    background-color: #dbeafe !important;
+}
+
+body.theme-light [class*="text-white"] {
+    color: #0f172a !important;
+}
+
+body.theme-light [class*="text-slate-100"],
+body.theme-light [class*="text-slate-200"],
+body.theme-light [class*="text-slate-300"] {
+    color: #334155 !important;
+}
+
+body.theme-light [class*="text-slate-400"],
+body.theme-light [class*="text-slate-500"] {
+    color: #64748b !important;
+}
+
+body.theme-light [class*="border-blue-950"],
+body.theme-light [class*="border-blue-900"] {
+    border-color: #cbd5e1 !important;
+}
+
+body.theme-light input {
+    background-color: #ffffff !important;
+    color: #0f172a !important;
+    border-color: #cbd5e1 !important;
+}
+
+body.theme-light input::placeholder {
+    color: #94a3b8;
+}
+
+body.theme-light .portal-sidebar {
+    background-color: #0b326d !important;
+}
+
+body.theme-light .portal-header {
+    background-color: rgba(245, 248, 255, 0.95) !important;
+}
+
+body.theme-light .portal-main {
+    background-color: #eef4ff !important;
+}
