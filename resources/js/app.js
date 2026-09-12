@@ -1,9 +1,73 @@
 import './bootstrap';
 
-const themeStorageKey = 'agos-theme';
-if (document.documentElement.classList.contains('theme-light')) {
-    document.body.classList.add('theme-light');
+document.querySelectorAll('[data-carousel]').forEach((carousel) => {
+    const carouselId = carousel.id;
+    const track = carousel.querySelector('[data-carousel-track]');
+    const previousButton = document.querySelector(`[data-carousel-prev="${carouselId}"]`);
+    const nextButton = document.querySelector(`[data-carousel-next="${carouselId}"]`);
+    const cards = track ? Array.from(track.children) : [];
+    let currentIndex = 0;
+    let autoAdvance;
+
+    const getMetrics = () => {
+        const firstCard = cards[0];
+        const gap = Number.parseFloat(getComputedStyle(track).columnGap) || 0;
+        const cardWidth = firstCard?.getBoundingClientRect().width || carousel.clientWidth;
+        const visibleCards = Math.max(1, Math.floor((carousel.clientWidth + gap) / (cardWidth + gap)));
+        return { step: cardWidth + gap, maxIndex: Math.max(0, cards.length - visibleCards) };
+    };
+    const renderCarousel = (index, animate = true) => {
+        if (!track) {
+            return;
+        }
+        const { step, maxIndex } = getMetrics();
+        currentIndex = Math.min(Math.max(index, 0), maxIndex);
+        track.classList.toggle('transition-none', !animate);
+        track.style.transform = `translateX(-${currentIndex * step}px)`;
+    };
+    const scrollCarousel = (direction) => {
+        const { maxIndex } = getMetrics();
+        const nextIndex = currentIndex + direction;
+        renderCarousel(nextIndex > maxIndex ? 0 : nextIndex < 0 ? maxIndex : nextIndex);
+        window.clearTimeout(autoAdvance);
+        autoAdvance = window.setTimeout(advanceCarousel, 5200);
+    };
+    const advanceCarousel = () => {
+        const { maxIndex } = getMetrics();
+        renderCarousel(currentIndex >= maxIndex ? 0 : currentIndex + 1);
+        autoAdvance = window.setTimeout(advanceCarousel, 5200);
+    };
+
+    previousButton?.addEventListener('click', () => scrollCarousel(-1));
+    nextButton?.addEventListener('click', () => scrollCarousel(1));
+    window.addEventListener('resize', () => renderCarousel(currentIndex, false));
+    renderCarousel(0, false);
+    autoAdvance = window.setTimeout(advanceCarousel, 5200);
+});
+
+const scrollFadeElements = document.querySelectorAll('[data-scroll-fade]');
+const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+if (scrollFadeElements.length && !prefersReducedMotion && 'IntersectionObserver' in window) {
+    document.documentElement.classList.add('scroll-reveal-ready');
+
+    const scrollFadeObserver = new IntersectionObserver((entries) => {
+        entries.forEach((entry) => {
+            entry.target.classList.toggle('is-visible', entry.isIntersecting);
+        });
+    }, {
+        threshold: 0.12,
+        rootMargin: '0px 0px -8% 0px',
+    });
+
+    scrollFadeElements.forEach((element) => scrollFadeObserver.observe(element));
 }
+
+const themeStorageKey = 'agos-theme';
+const root = document.documentElement;
+const isStoredLightTheme = localStorage.getItem(themeStorageKey) === 'light';
+root.classList.toggle('theme-light', isStoredLightTheme);
+document.body.classList.toggle('theme-light', isStoredLightTheme);
 
 const themeToggles = document.querySelectorAll('[data-theme-toggle]');
 
@@ -12,7 +76,7 @@ const updateThemeToggle = () => {
         return;
     }
 
-    const isLight = document.body.classList.contains('theme-light');
+    const isLight = root.classList.contains('theme-light');
     themeToggles.forEach((themeToggle) => {
         themeToggle.setAttribute('aria-label', isLight ? 'Switch to dark mode' : 'Switch to light mode');
         themeToggle.setAttribute('title', isLight ? 'Switch to dark mode' : 'Switch to light mode');
@@ -22,10 +86,14 @@ const updateThemeToggle = () => {
 };
 
 themeToggles.forEach((themeToggle) => themeToggle.addEventListener('click', () => {
-    const isLight = document.body.classList.toggle('theme-light');
+    const isLight = !root.classList.contains('theme-light');
+    root.classList.toggle('theme-light', isLight);
+    document.body.classList.toggle('theme-light', isLight);
     localStorage.setItem(themeStorageKey, isLight ? 'light' : 'dark');
     updateThemeToggle();
 }));
+
+updateThemeToggle();
 
 const sidebar = document.querySelector('[data-sidebar]');
 const sidebarOverlay = document.querySelector('[data-sidebar-overlay]');

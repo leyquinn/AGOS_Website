@@ -7,13 +7,13 @@
     <script>if (localStorage.getItem('agos-theme') === 'light') document.documentElement.classList.add('theme-light');</script>
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
-<body class="bg-[#031027] text-slate-100 font-sans antialiased selection:bg-blue-600 selection:text-white min-h-screen" onload="document.documentElement.classList.contains('theme-light') && document.body.classList.add('theme-light')">
+<body class="overflow-x-hidden bg-[#031027] text-slate-100 font-sans antialiased selection:bg-blue-600 selection:text-white min-h-screen" onload="document.documentElement.classList.contains('theme-light') && document.body.classList.add('theme-light')">
 
     <!-- Sticky Header -->
     <header class="fixed top-0 left-0 right-0 z-50 bg-[#031027]/90 backdrop-blur-md border-b border-blue-950/50">
-        <div class="max-w-7xl mx-auto px-8 h-20 grid grid-cols-[1fr_auto_1fr] items-center">
+        <div class="w-full px-6 sm:px-8 lg:px-12 h-20 grid grid-cols-[1fr_auto_1fr] items-center">
             <a href="#home" class="flex items-center justify-self-start" aria-label="AGOS home">
-                <img src="{{ asset('images/agos-logo.png') }}" alt="AGOS - Bantay Agos, Ligtas Barangay" class="h-16 w-auto object-contain">
+                <img src="{{ asset('images/agos-logo.png') }}" alt="AGOS - Bantay Agos, Ligtas Barangay" class="h-9 w-auto max-w-[8rem] object-contain sm:h-11 sm:max-w-[9rem]">
             </a>
             
             <nav class="hidden md:flex items-center justify-center space-x-10 text-sm font-medium text-slate-300">
@@ -43,7 +43,7 @@
 
     <!-- Footer -->
     <footer class="py-12 bg-[#020b1a] border-t border-blue-950/60 text-slate-500 text-xs">
-        <div class="max-w-7xl mx-auto px-8 flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
+        <div class="w-full max-w-7xl mx-auto px-6 sm:px-8 lg:px-12 flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
             <div>
                 <img src="{{ asset('images/agos-logo.png') }}" alt="AGOS - Bantay Agos, Ligtas Barangay" class="h-12 w-auto object-contain mb-2">
                 <p class="uppercase tracking-wider">Ateneo de Davao University • Computer Studies Cluster</p>

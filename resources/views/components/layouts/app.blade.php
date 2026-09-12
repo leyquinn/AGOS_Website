@@ -14,7 +14,7 @@
         <div class="min-w-0 flex-1">
             <x-navbar :title="$title ?? 'Operations'" />
             <main class="portal-main min-h-[calc(100vh-5rem)] bg-[#061633] px-5 py-6 sm:px-8 sm:py-8 lg:px-10 lg:py-10">
-                <div class="portal-content mx-auto w-full max-w-[1440px]">
+                <div class="portal-content w-full">
                     {{ $slot }}
                 </div>
             </main>

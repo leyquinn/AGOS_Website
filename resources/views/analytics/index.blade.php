@@ -1,5 +1,5 @@
 <x-layouts.app title="Model Analytics">
-    <div class="mx-auto max-w-7xl">
+    <div class="w-full">
         <div class="mb-8 flex flex-wrap items-start justify-between gap-4">
             <p class="max-w-md text-xs leading-relaxed text-slate-400">
                 Evaluation metrics for the thesis defense baseline vs. integrated pipeline.

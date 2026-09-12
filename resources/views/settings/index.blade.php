@@ -1,5 +1,5 @@
 <x-layouts.app title="Settings">
-    <div class="mx-auto max-w-5xl">
+    <div class="w-full">
         <div class="mb-8">
             <p class="max-w-xl text-sm leading-relaxed text-slate-400">Configure your AGOS portal preferences, alert delivery, and operations defaults.</p>
         </div>

@@ -1,5 +1,5 @@
 <x-layouts.app title="Dashboard">
-    <div class="mx-auto max-w-7xl">
+    <div class="w-full">
         <div class="mb-8 flex flex-wrap items-end justify-between gap-4">
             <div>
                 <p class="text-sm leading-relaxed text-slate-400">A real-time overview of flood intelligence activity across the AGOS portal.</p>

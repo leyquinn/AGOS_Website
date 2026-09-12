@@ -1,5 +1,5 @@
 <x-layouts.app title="Reports">
-    <div class="mx-auto max-w-7xl">
+    <div class="w-full">
         <div class="mb-8 flex flex-wrap items-center justify-between gap-3">
             <div>
                 <p class="text-xs font-semibold text-slate-400">Brgy. Poblacion • Aug 23, 2026 • 10:15:00</p>
