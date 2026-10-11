@@ -160,6 +160,29 @@ document.querySelector('[data-logout]')?.addEventListener('click', () => {
     }
 });
 
+const citizenApp = document.querySelector('[data-citizen-app]');
+
+if (citizenApp) {
+    const citizenScreens = citizenApp.querySelectorAll('[data-citizen-screen]');
+    const citizenNavItems = citizenApp.querySelectorAll('[data-citizen-nav]');
+    const showCitizenScreen = (screenName) => {
+        citizenScreens.forEach((screen) => screen.classList.toggle('is-active', screen.dataset.citizenScreen === screenName));
+        citizenNavItems.forEach((item) => item.classList.toggle('is-active', item.dataset.citizenNav === screenName));
+        citizenApp.querySelector('.citizen-main')?.scrollTo({ top: 0, behavior: 'smooth' });
+    };
+
+    citizenNavItems.forEach((item) => {
+        item.addEventListener('click', (event) => {
+            event.preventDefault();
+            showCitizenScreen(item.dataset.citizenNav);
+        });
+    });
+
+    citizenApp.querySelector('[data-citizen-alerts]')?.addEventListener('click', () => showCitizenScreen('alerts'));
+    citizenApp.querySelector('[data-citizen-profile]')?.addEventListener('click', () => showCitizenScreen('profile'));
+    citizenApp.querySelector('[data-citizen-menu]')?.addEventListener('click', () => showToast('AGOS Citizen App'));
+}
+
 document.addEventListener('click', (event) => {
     const button = event.target.closest('button');
     if (!button || button.dataset.themeToggle !== undefined || button.dataset.sidebarOpen !== undefined || button.dataset.sidebarClose !== undefined) {

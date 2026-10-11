@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\CitizenReportController;
 use Illuminate\Support\Facades\Route;
 
 // Public Landing Page
@@ -11,6 +12,20 @@ Route::get('/', function () {
 Route::get('/login', function () {
     return view('auth.login');
 })->name('login');
+
+// Citizen reporting app
+Route::middleware('guest')->group(function () {
+    Route::get('/citizen/login', [CitizenReportController::class, 'showLogin'])->name('citizen.login');
+    Route::post('/citizen/login', [CitizenReportController::class, 'login'])->name('citizen.login.store');
+    Route::get('/citizen/register', [CitizenReportController::class, 'showRegistration'])->name('citizen.register');
+    Route::post('/citizen/register', [CitizenReportController::class, 'register'])->name('citizen.register.store');
+});
+
+Route::middleware('auth')->group(function () {
+    Route::get('/citizen', [CitizenReportController::class, 'create'])->name('citizen.create');
+    Route::post('/citizen/reports', [CitizenReportController::class, 'store'])->name('citizen.reports.store');
+    Route::post('/citizen/logout', [CitizenReportController::class, 'logout'])->name('citizen.logout');
+});
 
 // Portal Pages
 Route::get('/dashboard', function () {

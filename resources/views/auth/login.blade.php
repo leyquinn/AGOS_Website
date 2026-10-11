@@ -61,6 +61,22 @@
                     </button>
                 </form>
 
+                <div class="mt-6 rounded-2xl border border-cyan-800/40 bg-cyan-950/20 p-4">
+                    <div class="flex items-start gap-3">
+                        <div class="mt-0.5 text-cyan-300" aria-hidden="true">
+                            <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 20h9M12 4H3m9 0v16m0-8h9"></path></svg>
+                        </div>
+                        <div>
+                            <h3 class="text-sm font-bold text-white">Are you reporting a flood?</h3>
+                            <p class="mt-1 text-xs leading-relaxed text-slate-400">Use the citizen app to send a real-time update to the AGOS response team. Register first to continue.</p>
+                            <a href="{{ route('citizen.login') }}" class="mt-3 inline-flex items-center gap-2 text-sm font-bold text-cyan-300 transition hover:text-cyan-200">
+                                Open Citizen App
+                                <span aria-hidden="true">&rarr;</span>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+
                 <div class="mt-10 border-t border-blue-950/60 pt-6 text-center">
                     <p class="text-xs leading-relaxed text-slate-500">
                         Access is limited to authorized DRRMO and LGU personnel.
