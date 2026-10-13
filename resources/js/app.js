@@ -70,6 +70,12 @@ root.classList.toggle('theme-light', isStoredLightTheme);
 document.body.classList.toggle('theme-light', isStoredLightTheme);
 
 const themeToggles = document.querySelectorAll('[data-theme-toggle]');
+const mobileMenuButton = document.querySelector('[data-mobile-menu]');
+const mobileMenuPanel = document.querySelector('[data-mobile-menu-panel]');
+mobileMenuButton?.addEventListener('click', () => {
+    const isOpen = !mobileMenuPanel?.classList.toggle('hidden');
+    mobileMenuButton.setAttribute('aria-expanded', String(isOpen));
+});
 
 const updateThemeToggle = () => {
     if (!themeToggles.length) {
@@ -181,11 +187,109 @@ if (citizenApp) {
     citizenApp.querySelector('[data-citizen-alerts]')?.addEventListener('click', () => showCitizenScreen('alerts'));
     citizenApp.querySelector('[data-citizen-profile]')?.addEventListener('click', () => showCitizenScreen('profile'));
     citizenApp.querySelector('[data-citizen-menu]')?.addEventListener('click', () => showToast('AGOS Citizen App'));
+
+    citizenApp.addEventListener('click', (event) => {
+        const removeButton = event.target.closest('[data-remove-barangay]');
+        if (removeButton) {
+            removeButton.closest('[data-barangay-tag]')?.remove();
+            showToast('Barangay removed from alerts');
+        }
+
+        document.querySelectorAll('[data-report-action]').forEach((button) => {
+            button.addEventListener('click', () => {
+                const isFalseAlarm = button.textContent.includes('False Alarm');
+                button.textContent = isFalseAlarm ? 'Marked false alarm' : '✓ Confirmed';
+                button.disabled = true;
+                button.classList.add('cursor-not-allowed', 'opacity-60');
+                showToast(isFalseAlarm ? 'Report marked as a false alarm' : 'Report marked as validated');
+            });
+        });
+
+        const broadcastModal = document.querySelector('[data-broadcast-modal]');
+        document.querySelectorAll('[data-broadcast-alert]').forEach((button) => {
+            button.addEventListener('click', () => {
+                broadcastModal?.classList.remove('hidden');
+                broadcastModal?.classList.add('flex');
+                broadcastModal?.querySelector('textarea')?.focus();
+            });
+        });
+        broadcastModal?.querySelector('[data-close-broadcast]')?.addEventListener('click', () => {
+            broadcastModal.classList.add('hidden');
+            broadcastModal.classList.remove('flex');
+        });
+        broadcastModal?.addEventListener('click', (event) => {
+            if (event.target === broadcastModal) {
+                broadcastModal.classList.add('hidden');
+                broadcastModal.classList.remove('flex');
+            }
+        });
+        broadcastModal?.querySelector('[data-broadcast-form]')?.addEventListener('submit', (event) => {
+            event.preventDefault();
+            broadcastModal.classList.add('hidden');
+            broadcastModal.classList.remove('flex');
+            event.currentTarget.reset();
+            showToast('Alert broadcast to response channels');
+        });
+
+        if (event.target.closest('[data-edit-profile]')) {
+            const card = event.target.closest('.profile-card');
+            const name = card?.querySelector('[data-profile-name]');
+            const location = card?.querySelector('[data-profile-location]');
+            if (!card || !name || !location) {
+                return;
+            }
+
+            const editing = card.dataset.editing === 'true';
+            if (editing) {
+                name.textContent = card.querySelector('[data-profile-name-input]')?.value.trim() || 'Juan Dela Cruz';
+                location.textContent = `⌖  ${card.querySelector('[data-profile-location-input]')?.value.trim() || 'Davao City, Davao del Sur'}`;
+                card.querySelector('[data-profile-name-input]')?.remove();
+                card.querySelector('[data-profile-location-input]')?.remove();
+                event.target.closest('[data-edit-profile]').textContent = '⌁  Edit Profile';
+                card.dataset.editing = 'false';
+                showToast('Profile updated');
+                return;
+            }
+
+            const nameInput = document.createElement('input');
+            nameInput.type = 'text';
+            nameInput.value = name.textContent.trim();
+            nameInput.dataset.profileNameInput = '';
+            nameInput.className = 'profile-edit-input';
+            const locationInput = document.createElement('input');
+            locationInput.type = 'text';
+            locationInput.value = location.textContent.replace(/^⌖\s*/, '').trim();
+            locationInput.dataset.profileLocationInput = '';
+            locationInput.className = 'profile-edit-input';
+            name.replaceWith(nameInput);
+            location.replaceWith(locationInput);
+            event.target.closest('[data-edit-profile]').textContent = '✓  Save Profile';
+            card.dataset.editing = 'true';
+            nameInput.focus();
+        }
+    });
+
+    const photoInput = citizenApp.querySelector('#report-photo');
+    photoInput?.addEventListener('change', () => {
+        const file = photoInput.files?.[0];
+        if (file) {
+            citizenApp.querySelector('[data-photo-label]').textContent = file.name;
+            showToast('Photo attached to report');
+        }
+    });
 }
 
 document.addEventListener('click', (event) => {
     const button = event.target.closest('button');
     if (!button || button.dataset.themeToggle !== undefined || button.dataset.sidebarOpen !== undefined || button.dataset.sidebarClose !== undefined) {
+        return;
+    }
+
+    if (button.dataset.broadcastAlert !== undefined) {
+        const modal = document.querySelector('[data-broadcast-modal]');
+        modal?.classList.remove('hidden');
+        modal?.classList.add('flex');
+        modal?.querySelector('textarea')?.focus();
         return;
     }
 

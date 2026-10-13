@@ -29,12 +29,12 @@
             @endforeach
         </section>
 
-        <section class="mt-5 rounded-2xl bg-[#b7c9e5] p-5 text-slate-700 shadow-lg shadow-blue-950/10">
+        <section class="portal-card mt-5 rounded-2xl bg-[#b7c9e5] p-5 text-slate-700 shadow-lg shadow-blue-950/10">
             <h2 class="text-lg font-black">Pipeline Queue &amp; Health</h2>
             <div class="mt-6 grid gap-5 text-center sm:grid-cols-2 xl:grid-cols-4">
                 @foreach ([
-                    ['label' => 'Harvest Interval', 'value' => '2 min', 'class' => 'text-slate-800'],
-                    ['label' => 'Clustering Pass Interval', 'value' => '5 min', 'class' => 'text-slate-800'],
+                    ['label' => 'Harvest Interval', 'value' => '2 min', 'class' => 'text-blue-700 dark:text-blue-400'],
+                    ['label' => 'Clustering Pass Interval', 'value' => '5 min', 'class' => 'text-blue-700 dark:text-blue-400'],
                     ['label' => 'Preprocessing Queue', 'value' => '12 pending', 'class' => 'text-emerald-500'],
                     ['label' => 'ML Analysis Queue', 'value' => '47 pending', 'class' => 'text-orange-500'],
                 ] as $metric)
@@ -47,7 +47,7 @@
         </section>
 
         <div class="mt-5 grid gap-5 xl:grid-cols-2">
-            <section class="rounded-2xl bg-[#b7c9e5] p-4 text-slate-700 shadow-lg shadow-blue-950/10 sm:p-5">
+            <section class="portal-card rounded-2xl bg-[#b7c9e5] p-4 text-slate-700 shadow-lg shadow-blue-950/10 sm:p-5">
                 <div class="flex items-center justify-between gap-3">
                     <h2 class="text-lg font-black">Keyword &amp; hashtag listeners</h2>
                     <button type="button" class="rounded-lg bg-slate-100 px-3 py-1.5 text-xs font-bold text-slate-700 transition hover:bg-white">＋ Add</button>
@@ -82,7 +82,7 @@
                 </div>
             </section>
 
-            <section class="rounded-2xl bg-[#b7c9e5] p-4 text-slate-700 shadow-lg shadow-blue-950/10 sm:p-5">
+            <section class="portal-card rounded-2xl bg-[#b7c9e5] p-4 text-slate-700 shadow-lg shadow-blue-950/10 sm:p-5">
                 <div class="flex items-center justify-between gap-3">
                     <h2 class="text-lg font-black">Verified source whitelist</h2>
                     <button type="button" class="rounded-lg bg-slate-100 px-3 py-1.5 text-xs font-bold text-slate-700 transition hover:bg-white">＋ Add</button>

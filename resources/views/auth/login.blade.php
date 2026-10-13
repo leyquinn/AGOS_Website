@@ -69,7 +69,7 @@
                         <div>
                             <h3 class="text-sm font-bold text-white">Are you reporting a flood?</h3>
                             <p class="mt-1 text-xs leading-relaxed text-slate-400">Use the citizen app to send a real-time update to the AGOS response team. Register first to continue.</p>
-                            <a href="{{ route('citizen.login') }}" class="mt-3 inline-flex items-center gap-2 text-sm font-bold text-cyan-300 transition hover:text-cyan-200">
+                            <a href="{{ route('citizen.register') }}" class="agos-citizen-link mt-3 inline-flex items-center gap-2 text-sm font-bold transition">
                                 Open Citizen App
                                 <span aria-hidden="true">&rarr;</span>
                             </a>

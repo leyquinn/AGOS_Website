@@ -25,6 +25,9 @@
                 <a href="#team" class="hover:text-blue-400 transition-colors">Team</a>
             </nav>
 
+            <button type="button" data-mobile-menu class="rounded-xl border border-blue-800/50 bg-blue-950/40 p-2 text-blue-200 md:hidden" aria-label="Open menu" aria-expanded="false">
+                <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path></svg>
+            </button>
             <div class="flex items-center justify-self-end gap-3">
                 <a href="{{ route('login') }}" class="bg-blue-600 hover:bg-blue-500 text-white text-sm font-semibold px-7 py-2.5 rounded-full transition-all shadow-md shadow-blue-600/30">
                     Sign In
@@ -35,6 +38,11 @@
                 </button>
             </div>
         </div>
+        <nav data-mobile-menu-panel class="hidden border-t border-blue-900/50 bg-[#031027] px-6 py-4 md:hidden">
+            <div class="grid gap-3 text-sm font-semibold text-slate-300">
+                <a href="#home">Home</a><a href="#problem">Problem</a><a href="#process">Process</a><a href="#features">Features</a><a href="#results">Results</a><a href="#team">Team</a>
+            </div>
+        </nav>
     </header>
 
     <main>

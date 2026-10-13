@@ -17,7 +17,7 @@
 
         <div class="grid gap-5 xl:grid-cols-[minmax(0,1fr)_18rem]">
             <div class="space-y-5">
-                <section class="rounded-2xl bg-[#b7c9e5] p-4 text-slate-700 sm:p-5">
+                <section class="portal-card rounded-2xl bg-[#b7c9e5] p-4 text-slate-700 sm:p-5">
                     <div class="flex items-center justify-between gap-3">
                         <h3 class="font-black">● &nbsp; Original Post</h3>
                         <span class="rounded-full bg-[#d4e0f3] px-3 py-1 text-[10px] font-bold uppercase tracking-wide text-slate-500">Lang: Cebuano (Detected)</span>
@@ -26,7 +26,7 @@
                     <p class="mt-4 text-[10px] font-semibold text-slate-500">◉ &nbsp; @juandelacruz01 &nbsp;•&nbsp; △ &nbsp; not a verified source</p>
                 </section>
 
-                <section class="rounded-2xl bg-[#b7c9e5] p-4 text-slate-700 sm:p-5">
+                <section class="portal-card rounded-2xl bg-[#b7c9e5] p-4 text-slate-700 sm:p-5">
                     <h3 class="text-xl font-black">Multi-task NLP Output</h3>
                     <div class="mt-5">
                         <div class="flex items-center justify-between text-sm text-slate-500">
@@ -43,7 +43,7 @@
                     <p class="mt-5 text-[10px] font-semibold uppercase tracking-wide text-slate-500">Model_version: MTL-XLM-R-v1.2 • Inferred 3 min ago</p>
                 </section>
 
-                <section class="rounded-2xl bg-[#b7c9e5] p-4 text-slate-700 sm:p-5">
+                <section class="portal-card rounded-2xl bg-[#b7c9e5] p-4 text-slate-700 sm:p-5">
                     <h3 class="text-xl font-black">Confidence score breakdown</h3>
                     <div class="mt-5 flex flex-wrap justify-center gap-5 text-center">
                         <div class="rounded-2xl bg-[#d2dff1] px-6 py-3"><p class="text-sm text-slate-500">P<sub>rel</sub></p><strong class="text-2xl">0.94</strong></div>
@@ -55,7 +55,7 @@
             </div>
 
             <aside class="space-y-5">
-                <section class="overflow-hidden rounded-2xl border-2 border-blue-500 bg-[#b7c9e5]">
+                <section class="portal-card overflow-hidden rounded-2xl border-2 border-blue-500 bg-[#b7c9e5]">
                     <div class="relative h-52 overflow-hidden bg-[#c9d9ed] bg-[linear-gradient(90deg,transparent_48%,rgba(71,85,105,.25)_49%,transparent_51%),linear-gradient(0deg,transparent_48%,rgba(71,85,105,.25)_49%,transparent_51%)] bg-[length:42px_34px]">
                         <div class="absolute inset-0 flex flex-wrap content-center justify-center gap-3 p-5 opacity-90">
                             @foreach (range(1, 36) as $marker)
@@ -66,7 +66,7 @@
                     </div>
                 </section>
 
-                <section class="rounded-2xl bg-[#b7c9e5] p-3 text-slate-700">
+                <section class="portal-card rounded-2xl bg-[#b7c9e5] p-3 text-slate-700">
                     <div class="flex items-center justify-between px-2 pb-3">
                         <h3 class="font-bold">Cluster Consensus</h3>
                         <span class="text-[9px] text-slate-500">6 members • not an outlier</span>

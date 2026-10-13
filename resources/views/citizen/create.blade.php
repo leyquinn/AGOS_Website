@@ -16,9 +16,15 @@
             <a href="{{ route('citizen.create') }}" class="citizen-brand" data-citizen-nav="home">
                 <img src="{{ asset('images/agos-logo.png') }}" alt="AGOS">
             </a>
-            <button type="button" class="citizen-header-button" data-citizen-alerts aria-label="Open alerts">
+            <div class="citizen-header-actions">
+                <button type="button" class="citizen-header-button" data-theme-toggle aria-label="Switch to light mode">
+                    <svg data-theme-icon="moon" viewBox="0 0 24 24" aria-hidden="true"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79Z"/></svg>
+                    <svg data-theme-icon="sun" class="hidden" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v2m0 16v2M4.93 4.93l1.41 1.41m11.32 11.32 1.41 1.41M2 12h2m16 0h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"/></svg>
+                </button>
+                <button type="button" class="citizen-header-button" data-citizen-alerts aria-label="Open alerts">
                 <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M18 9a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9M10 21h4"/></svg>
-            </button>
+                </button>
+            </div>
         </header>
 
         <main class="citizen-main">
@@ -63,10 +69,10 @@
                 <div class="citizen-screen-title"><button type="button" data-citizen-nav="home">←</button><h1>LIVE FLOOD MAP</h1><button type="button" data-citizen-profile>◎</button></div>
                 <div class="citizen-map-large">
                     <div class="map-road road-one"></div><div class="map-road road-two"></div><div class="map-road road-three"></div><div class="map-water"></div>
-                    <div class="map-search">⌕ <span>Search location or area...</span><b>♟</b></div>
+                    <label class="map-search">⌕ <input type="text" placeholder="Search location or area..." aria-label="Search location or area"><b>♟</b></label>
                     <i class="map-dot dot-red"></i><i class="map-dot dot-orange"></i><i class="map-dot dot-blue"></i><i class="map-dot dot-yellow"></i>
                 </div>
-                <div class="citizen-section-title"><strong>Nearby Activity</strong><button type="button">View All</button></div>
+                <div class="citizen-section-title"><strong>Nearby Activity</strong><button type="button" data-citizen-nav="map">View All</button></div>
                 <div class="map-activity-list">
                     <article><div><strong>Main St. Underpass</strong><small>0.5 km</small></div><p>♦ &nbsp; Severe flooding reported. Impassable fo...</p><span class="status-critical">Critical</span><small>◷ &nbsp; 10 min ago</small></article>
                     <article><div><strong>Rizal Ave. Extension</strong><small>1.2 km</small></div><p>▲ &nbsp; Gutter deep water. Drive with caution.</p><span class="status-monitoring">Monitoring</span><small>◷ &nbsp; 35 min ago</small></article>
@@ -95,7 +101,8 @@
                     <label class="citizen-field"><span>Describe What You See</span><textarea name="description" required maxlength="2000" placeholder="e.g Water is rising quickly, road is completely covered">{{ old('description') }}</textarea></label>
                     @error('description')<small class="citizen-error">{{ $message }}</small>@enderror
                     <h2>Add Photo <small>(Optional)</small></h2>
-                    <button type="button" class="photo-upload">▣<span>Tap to add photo</span></button>
+                    <label class="photo-upload" for="report-photo">▣<span data-photo-label>Tap to add photo</span></label>
+                    <input id="report-photo" class="sr-only" type="file" name="photo" accept="image/*" capture="environment">
                     <div class="citizen-extra-fields">
                         <label class="citizen-field"><span>Your name (optional)</span><input name="reporter_name" value="{{ old('reporter_name') }}"></label>
                         <label class="citizen-field"><span>Contact number (optional)</span><input name="reporter_contact" value="{{ old('reporter_contact') }}"></label>
@@ -107,7 +114,12 @@
             <section class="citizen-screen" data-citizen-screen="alerts">
                 <div class="citizen-screen-title"><button type="button" data-citizen-nav="home">←</button><h1>ALERT / NOTIFICATION</h1><span></span></div>
                 <div class="barangay-title">MANAGE YOUR BARANGAYS</div>
-                <div class="barangay-tags"><span>Poblacion　×</span><span>Matina　×</span><span>Talomo　×</span><button type="button">＋ Add Barangay</button></div>
+                <div class="barangay-tags">
+                    <span data-barangay-tag>Poblacion <button type="button" data-remove-barangay aria-label="Remove Poblacion">×</button></span>
+                    <span data-barangay-tag>Matina <button type="button" data-remove-barangay aria-label="Remove Matina">×</button></span>
+                    <span data-barangay-tag>Talomo <button type="button" data-remove-barangay aria-label="Remove Talomo">×</button></span>
+                    <button type="button">＋ Add Barangay</button>
+                </div>
                 <div class="alert-list">
                     <article><div><span class="alert-badge badge-red">● VALIDATED</span><small>4 min ago</small></div><strong>Flash Flood Warning: Poblacion</strong><p>Water level is rising rapidly in downtown area. Immediate evacuation recommended for all low-lying zones near river.</p></article>
                     <article><div><span class="alert-badge badge-blue">⚑ OFFICIAL NOTICE</span><small>22 min ago</small></div><strong>Road Closure: Matina Crossing</strong><p>McArthur Highway is temporarily closed due to severe water pooling. Please use alternate routes via Diversion Road.</p></article>
@@ -118,9 +130,10 @@
 
             <section class="citizen-screen" data-citizen-screen="profile">
                 <div class="citizen-screen-title"><button type="button" data-citizen-nav="home">←</button><h1>PROFILE</h1><span></span></div>
-                <div class="profile-card"><div class="profile-avatar">●</div><h2>Juan Dela Cruz</h2><p>⌖ &nbsp; Davao City, Davao del Sur</p><span class="contributor-badge">♟ &nbsp; LEVEL 3 CONTRIBUTOR</span><p class="profile-copy">Committed to community safety. Active reporter in flood-prone areas of Davao City.</p><button type="button">⌁ &nbsp; Edit Profile</button></div>
+                <div class="profile-card"><div class="profile-avatar">●</div><h2 data-profile-name>Juan Dela Cruz</h2><p data-profile-location>⌖ &nbsp; Davao City, Davao del Sur</p><span class="contributor-badge">♟ &nbsp; LEVEL 3 CONTRIBUTOR</span><p class="profile-copy">Committed to community safety. Active reporter in flood-prone areas of Davao City.</p><button type="button" data-edit-profile>⌁ &nbsp; Edit Profile</button></div>
                 <div class="citizen-section-title profile-reports-title"><strong>My Reports</strong><button type="button">View All</button></div>
                 <article class="my-report"><span>♦</span><div><strong>Knee-Deep Flooding</strong><small>Brgy. Roxas District, D.C</small></div><small>2h ago</small></article>
+                <form action="{{ route('citizen.logout') }}" method="POST" class="citizen-logout-form">@csrf<button type="submit">Log Out</button></form>
             </section>
         </main>
 

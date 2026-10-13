@@ -18,7 +18,7 @@
                 ['label' => 'Recall', 'value' => '9', 'class' => 'text-slate-500'],
                 ['label' => 'F1-Score', 'value' => '0.81', 'class' => 'text-blue-700'],
             ] as $metric)
-                <article class="rounded-2xl bg-[#b7c9e5] px-4 py-3 text-center shadow-lg shadow-blue-950/10">
+                <article class="portal-card rounded-2xl bg-[#b7c9e5] px-4 py-3 text-center shadow-lg shadow-blue-950/10">
                     <p class="text-xs font-bold text-slate-500">{{ $metric['label'] }}</p>
                     <p class="mt-2 text-3xl font-black {{ $metric['class'] }}">{{ $metric['value'] }}</p>
                 </article>
@@ -26,7 +26,7 @@
         </section>
 
         <section class="mt-4 grid gap-4 xl:grid-cols-[1.1fr_1fr]">
-            <article class="rounded-2xl bg-[#b7c9e5] p-4 text-slate-700 shadow-lg shadow-blue-950/10">
+            <article class="portal-card rounded-2xl bg-[#b7c9e5] p-4 text-slate-700 shadow-lg shadow-blue-950/10">
                 <h2 class="text-xs font-black">Per Barangay Performance</h2>
                 <div class="mt-4 overflow-x-auto">
                     <table class="w-full min-w-[26rem] text-center text-[9px]">
@@ -42,18 +42,18 @@
                 </div>
             </article>
 
-            <article class="rounded-2xl bg-[#b7c9e5] p-4 text-slate-700 shadow-lg shadow-blue-950/10">
+            <article class="portal-card rounded-2xl bg-[#b7c9e5] p-4 text-slate-700 shadow-lg shadow-blue-950/10">
                 <h2 class="text-xs font-black">Confusion Matrix (valid set)</h2>
                 <div class="mt-5 grid grid-cols-[5rem_1fr_1fr] items-center gap-2 text-center text-[9px] text-slate-500">
                     <span></span><span>Prediction flood</span><span>Prediction non-flood</span>
-                    <span class="text-left">Actual flood</span><strong class="rounded-lg bg-emerald-500 px-3 py-2 text-white">412</strong><strong class="rounded-lg bg-red-500 px-3 py-2 text-white">38</strong>
-                    <span class="text-left">Actual non-flood</span><strong class="rounded-lg bg-red-500 px-3 py-2 text-white">29</strong><strong class="rounded-lg bg-emerald-500 px-3 py-2 text-white">551</strong>
+                    <span class="text-left">Actual flood</span><strong class="rounded-lg border border-emerald-500/20 bg-emerald-500/10 px-3 py-2 text-emerald-700 dark:text-emerald-300">412</strong><strong class="rounded-lg border border-rose-500/20 bg-rose-500/10 px-3 py-2 text-rose-700 dark:text-rose-300">38</strong>
+                    <span class="text-left">Actual non-flood</span><strong class="rounded-lg border border-rose-500/20 bg-rose-500/10 px-3 py-2 text-rose-700 dark:text-rose-300">29</strong><strong class="rounded-lg border border-emerald-500/20 bg-emerald-500/10 px-3 py-2 text-emerald-700 dark:text-emerald-300">551</strong>
                 </div>
             </article>
         </section>
 
         <section class="mt-4 grid gap-4 xl:grid-cols-2">
-            <article class="overflow-hidden rounded-2xl bg-[#b7c9e5] text-slate-700 shadow-lg shadow-blue-950/10">
+            <article class="portal-card overflow-hidden rounded-2xl bg-[#b7c9e5] text-slate-700 shadow-lg shadow-blue-950/10">
                 <div class="p-4">
                     <h2 class="text-sm font-black">Baseline vs. Integrated Pipeline</h2>
                     <p class="text-[10px] text-slate-500">Classification-only (w2 = 0) vs. multi-task + K-Means++ consensus</p>
@@ -72,7 +72,7 @@
                 <div class="flex gap-5 border-t border-blue-200/70 px-5 py-3 text-[9px] text-slate-500"><span><i class="mr-1 inline-block h-2 w-2 bg-[#9bb5e1]"></i>Baseline (classification only)</span><span><i class="mr-1 inline-block h-2 w-2 bg-blue-800"></i>Integrated (MTL + K-Means++)</span></div>
             </article>
 
-            <article class="overflow-hidden rounded-2xl bg-[#b7c9e5] text-slate-700 shadow-lg shadow-blue-950/10">
+            <article class="portal-card overflow-hidden rounded-2xl bg-[#b7c9e5] text-slate-700 shadow-lg shadow-blue-950/10">
                 <div class="p-4">
                     <h2 class="text-sm font-black">F1 Score Across Model Versions</h2>
                     <p class="text-[10px] text-slate-500">Improvement from active-learning retraining on confirmed/false-alarm feedback</p>

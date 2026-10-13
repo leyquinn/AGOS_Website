@@ -14,12 +14,10 @@ Route::get('/login', function () {
 })->name('login');
 
 // Citizen reporting app
-Route::middleware('guest')->group(function () {
-    Route::get('/citizen/login', [CitizenReportController::class, 'showLogin'])->name('citizen.login');
-    Route::post('/citizen/login', [CitizenReportController::class, 'login'])->name('citizen.login.store');
-    Route::get('/citizen/register', [CitizenReportController::class, 'showRegistration'])->name('citizen.register');
-    Route::post('/citizen/register', [CitizenReportController::class, 'register'])->name('citizen.register.store');
-});
+Route::get('/citizen/login', [CitizenReportController::class, 'showLogin'])->name('citizen.login');
+Route::post('/citizen/login', [CitizenReportController::class, 'login'])->name('citizen.login.store');
+Route::get('/citizen/register', [CitizenReportController::class, 'showRegistration'])->name('citizen.register');
+Route::post('/citizen/register', [CitizenReportController::class, 'register'])->name('citizen.register.store');
 
 Route::middleware('auth')->group(function () {
     Route::get('/citizen', [CitizenReportController::class, 'create'])->name('citizen.create');

@@ -14,7 +14,15 @@ class CitizenReportTest extends TestCase
     {
         $this->get('/login')
             ->assertOk()
-            ->assertSee(route('citizen.login'));
+            ->assertSee(route('citizen.register'));
+    }
+
+    public function test_authenticated_users_can_open_the_citizen_registration_page(): void
+    {
+        $this->actingAs(User::factory()->create())
+            ->get(route('citizen.register'))
+            ->assertOk()
+            ->assertSee('Create your account');
     }
 
     public function test_citizen_can_submit_a_flood_report(): void

@@ -6,12 +6,12 @@
         </button>
     </div>
 
-    <section class="grid grid-cols-2 gap-4 xl:grid-cols-4">
+    <section class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
         @foreach ([
-            ['label' => 'Active Reports', 'value' => '142', 'color' => 'text-white'],
-            ['label' => 'Validated Events', 'value' => '18', 'color' => 'text-emerald-400'],
-            ['label' => 'Barangays Affected', 'value' => '9', 'color' => 'text-red-400'],
-            ['label' => 'Avg. Confidence (CS)', 'value' => '0.81', 'color' => 'text-blue-400'],
+            ['label' => 'Active Reports', 'value' => '142', 'color' => 'text-slate-900 dark:text-slate-100'],
+            ['label' => 'Validated Events', 'value' => '18', 'color' => 'text-emerald-600 dark:text-emerald-400'],
+            ['label' => 'Barangays Affected', 'value' => '9', 'color' => 'text-rose-600 dark:text-rose-400'],
+            ['label' => 'Avg. Confidence (CS)', 'value' => '0.81', 'color' => 'text-blue-700 dark:text-blue-400'],
         ] as $stat)
             <div class="rounded-2xl border border-blue-900/50 bg-[#071738]/80 p-5 shadow-lg shadow-blue-950/10 transition hover:-translate-y-0.5 hover:border-blue-700/70">
                 <p class="text-xs font-semibold text-slate-400">{{ $stat['label'] }}</p>
@@ -20,7 +20,7 @@
         @endforeach
     </section>
 
-    <section class="mt-5 rounded-2xl border border-blue-900/50 bg-[#071738]/80 p-5">
+    <section class="portal-card mt-5 rounded-2xl border border-blue-900/50 bg-[#071738]/80 p-5">
         <div class="flex flex-col justify-between gap-4 md:flex-row md:items-center">
             <div>
                 <p class="text-sm font-bold text-white">Weather Condition - Davao City</p>
@@ -75,13 +75,21 @@
                         </div>
                         <p class="mt-2 text-[10px] leading-relaxed text-slate-300">{{ $report['text'] }}</p>
                         @if ($loop->index < 2)
-                            <div class="mt-2 flex gap-2"><button class="rounded bg-blue-600 px-3 py-1 text-[10px] font-bold text-white">Confirm</button><button class="rounded bg-blue-950 px-3 py-1 text-[10px] font-bold text-blue-200">False Alarm</button></div>
+                            <div class="mt-2 flex flex-wrap gap-2"><button type="button" data-report-action class="rounded-lg bg-blue-600 px-3 py-2 text-[10px] font-bold text-white transition hover:bg-blue-500">Confirm</button><button type="button" data-report-action class="rounded-lg border border-rose-500/30 bg-rose-500/10 px-3 py-2 text-[10px] font-bold text-rose-600 dark:text-rose-300 transition hover:bg-rose-500/20">False Alarm</button></div>
                         @elseif ($loop->index === 2)
-                            <button class="mt-2 rounded bg-blue-600 px-3 py-1 text-[10px] font-bold text-white">Broadcast Alert</button>
+                            <button type="button" data-broadcast-alert class="mt-2 rounded-lg bg-blue-600 px-3 py-2 text-[10px] font-bold text-white transition hover:bg-blue-500">Broadcast Alert</button>
                         @endif
                     </article>
                 @endforeach
             </div>
         </div>
     </section>
+    <div data-broadcast-modal class="fixed inset-0 z-50 hidden items-center justify-center bg-slate-950/70 p-5 backdrop-blur-sm">
+        <form data-broadcast-form class="w-full max-w-md rounded-2xl border border-blue-900/50 bg-white p-5 shadow-2xl dark:bg-[#071738]">
+            <div class="flex items-center justify-between"><h2 class="text-lg font-black text-slate-900 dark:text-white">Broadcast alert</h2><button type="button" data-close-broadcast class="text-2xl text-slate-500">×</button></div>
+            <label for="broadcast-message" class="mt-5 block text-xs font-bold text-slate-600 dark:text-slate-300">Message</label>
+            <textarea id="broadcast-message" required class="mt-2 min-h-28 w-full rounded-xl border border-slate-200 bg-slate-50 p-3 text-sm text-slate-900 outline-none focus:ring-2 focus:ring-blue-500 dark:border-blue-900/60 dark:bg-slate-950/40 dark:text-white" placeholder="Describe the alert for affected residents"></textarea>
+            <button type="submit" class="mt-4 w-full rounded-xl bg-blue-600 px-4 py-3 text-sm font-bold text-white hover:bg-blue-500">Send notification</button>
+        </form>
+    </div>
 </x-layouts.app>

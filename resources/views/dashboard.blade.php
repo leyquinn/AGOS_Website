@@ -8,12 +8,12 @@
             <a href="{{ route('operations') }}" class="rounded-xl border border-blue-700/60 bg-blue-600 px-4 py-2.5 text-xs font-bold text-white shadow-lg shadow-blue-950/20 transition hover:bg-blue-500">Open operations</a>
         </div>
 
-        <section class="grid grid-cols-2 gap-4 xl:grid-cols-4" aria-label="Portal overview metrics">
+        <section class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4" aria-label="Portal overview metrics">
             @foreach ([
-                ['label' => 'Active Reports', 'value' => '142', 'detail' => '+12 today', 'color' => 'text-white', 'detailColor' => 'text-emerald-400'],
-                ['label' => 'Validated Events', 'value' => '18', 'detail' => '4 awaiting review', 'color' => 'text-emerald-400', 'detailColor' => 'text-amber-300'],
-                ['label' => 'Barangays Affected', 'value' => '9', 'detail' => '2 high priority', 'color' => 'text-red-400', 'detailColor' => 'text-red-300'],
-                ['label' => 'Avg. Confidence', 'value' => '0.81', 'detail' => '+0.06 this week', 'color' => 'text-blue-400', 'detailColor' => 'text-blue-300'],
+                ['label' => 'Active Reports', 'value' => '142', 'detail' => '+12 today', 'color' => 'text-slate-900 dark:text-slate-100', 'detailColor' => 'text-emerald-600 dark:text-emerald-400'],
+                ['label' => 'Validated Events', 'value' => '18', 'detail' => '4 awaiting review', 'color' => 'text-emerald-600 dark:text-emerald-400', 'detailColor' => 'text-amber-600 dark:text-amber-400'],
+                ['label' => 'Barangays Affected', 'value' => '9', 'detail' => '2 high priority', 'color' => 'text-rose-600 dark:text-rose-400', 'detailColor' => 'text-rose-600 dark:text-rose-400'],
+                ['label' => 'Avg. Confidence', 'value' => '0.81', 'detail' => '+0.06 this week', 'color' => 'text-blue-700 dark:text-blue-400', 'detailColor' => 'text-blue-700 dark:text-blue-400'],
             ] as $stat)
                 <article class="rounded-2xl border border-blue-900/50 bg-[#071738]/80 p-5 shadow-lg shadow-blue-950/10">
                     <p class="text-xs font-semibold text-slate-400">{{ $stat['label'] }}</p>
