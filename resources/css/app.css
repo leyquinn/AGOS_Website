@@ -196,10 +196,6 @@
 .citizen-auth-lead { margin: 9px 0 24px; color: #65748a; font-size: 13px; line-height: 1.5; }
 .citizen-auth-message { margin-bottom: 16px; padding: 10px 12px; border-radius: 10px; font-size: 12px; }
 .citizen-auth-error { border: 1px solid #f0b7c1; background: #fff0f2; color: #a6293c; }
-.citizen-demo-account { display: grid; gap: 5px; margin: 0 0 17px; padding: 12px 13px; border: 1px solid #b9d3f0; border-radius: 11px; background: #eef6ff; color: #46617f; font-size: 11px; line-height: 1.4; }
-.citizen-demo-account strong { color: #0757bd; font-size: 11px; }
-.citizen-demo-account b { color: #203858; font-weight: 700; }
-.citizen-demo-account small { margin-top: 2px; color: #74859b; font-size: 10px; }
 .citizen-auth-form { display: grid; gap: 13px; }
 .citizen-auth-form label { display: grid; gap: 7px; color: #203858; font-size: 12px; font-weight: 700; }
 .citizen-auth-form input:not([type="checkbox"]) { width: 100%; box-sizing: border-box; padding: 12px 13px; border: 1px solid #c7d5e7; border-radius: 10px; outline: none; background: #f8fbff; color: #173657; font-size: 13px; }
@@ -1417,8 +1413,7 @@ body.theme-light .agos-citizen-link:focus-visible {
 }
 
 .citizen-auth-lead,
-.citizen-auth-switch,
-.citizen-demo-account small {
+.citizen-auth-switch {
     color: var(--citizen-muted);
     font-size: 14px;
     line-height: 1.5;
@@ -1465,13 +1460,6 @@ body.theme-light .agos-citizen-link:focus-visible {
 
 .citizen-auth-form input::placeholder {
     color: var(--citizen-muted);
-}
-
-.citizen-demo-account {
-    border: 1px solid rgba(6, 182, 212, 0.35);
-    border-radius: 14px;
-    background: rgba(6, 182, 212, 0.1);
-    color: var(--citizen-subtle);
 }
 
 .barangay-title {

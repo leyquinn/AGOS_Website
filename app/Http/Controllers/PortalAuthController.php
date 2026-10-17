@@ -49,6 +49,6 @@ class PortalAuthController extends Controller
         $request->session()->invalidate();
         $request->session()->regenerateToken();
 
-        return to_route('landing');
+        return to_route('login');
     }
 }

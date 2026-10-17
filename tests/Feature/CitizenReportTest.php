@@ -64,16 +64,16 @@ class CitizenReportTest extends TestCase
         $this->assertDatabaseHas('users', ['email' => 'juan@example.com']);
     }
 
-    public function test_demo_citizen_account_can_sign_in(): void
+    public function test_citizen_can_sign_in(): void
     {
         User::factory()->create([
-            'email' => 'citizen.demo@agos.test',
-            'password' => 'Citizen@12345',
+            'email' => 'citizen@example.com',
+            'password' => 'Password123!',
         ]);
 
         $this->post(route('citizen.login.store'), [
-            'email' => 'citizen.demo@agos.test',
-            'password' => 'Citizen@12345',
+            'email' => 'citizen@example.com',
+            'password' => 'Password123!',
         ])->assertRedirect(route('citizen.create'));
 
         $this->assertAuthenticated();

@@ -12,7 +12,7 @@ class LogoutSecurityTest extends TestCase
 {
     use RefreshDatabase;
 
-    public function test_citizen_logout_returns_to_landing_and_expires_private_page_cache(): void
+    public function test_citizen_logout_returns_to_registration_and_expires_private_page_cache(): void
     {
         $user = User::factory()->create([
             'role_id' => Role::firstOrCreate(['name' => 'citizen'])->id,
@@ -27,12 +27,12 @@ class LogoutSecurityTest extends TestCase
         $this->assertGuest();
     }
 
-    public function test_stale_citizen_logout_url_redirects_to_landing(): void
+    public function test_stale_citizen_logout_url_redirects_to_registration(): void
     {
         $this->get('/citizen/logout')->assertRedirect(route('citizen.register'));
     }
 
-    public function test_admin_logout_returns_to_landing_and_expires_private_page_cache(): void
+    public function test_admin_logout_returns_to_admin_login_and_expires_private_page_cache(): void
     {
         $user = User::factory()->create([
             'role_id' => Role::firstOrCreate(['name' => 'super_admin'])->id,
@@ -43,13 +43,13 @@ class LogoutSecurityTest extends TestCase
         $this->assertStringContainsString('no-store', $privatePage->headers->get('Cache-Control'));
 
         $this->actingAs($user)->post(route('logout'))
-            ->assertRedirect(route('landing'));
+            ->assertRedirect(route('login'));
 
         $this->assertGuest();
     }
 
-    public function test_stale_admin_logout_url_redirects_to_landing(): void
+    public function test_stale_admin_logout_url_redirects_to_admin_login(): void
     {
-        $this->get('/logout')->assertRedirect(route('landing'));
+        $this->get('/logout')->assertRedirect(route('login'));
     }
 }

@@ -24,13 +24,6 @@
                 <div class="citizen-auth-message citizen-auth-error" role="alert">Please check your email and password and try again.</div>
             @endif
 
-            <div class="citizen-demo-account">
-                <strong>Demo account for interface testing</strong>
-                <span>Email: <b>citizen.demo@agos.test</b></span>
-                <span>Password: <b>Citizen@12345</b></span>
-                <small>Replace this account with registered users before production.</small>
-            </div>
-
             <form action="{{ route('citizen.login.store') }}" method="POST" class="citizen-auth-form">
                 @csrf
                 <label>Email address<input type="email" name="email" value="{{ old('email') }}" autocomplete="email" required placeholder="you@example.com"></label>
