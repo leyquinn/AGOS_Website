@@ -35,7 +35,12 @@
                     <p class="mt-3 text-base leading-relaxed text-slate-400">Sign in to continue to the AGOS operations console.</p>
                 </div>
 
-                <form action="{{ route('operations') }}" method="GET" class="space-y-6">
+                @if ($errors->any())
+                    <div class="mb-6 rounded-xl border border-rose-400/30 bg-rose-500/15 px-4 py-3 text-sm text-rose-100" role="alert">{{ $errors->first() }}</div>
+                @endif
+
+                <form action="{{ route('login.store') }}" method="POST" class="space-y-6">
+                    @csrf
                     <div>
                         <label for="email" class="mb-2 block text-sm font-semibold text-slate-200">Email</label>
                         <input id="email" name="email" type="email" autocomplete="email" required placeholder="you@organization.gov.ph"
