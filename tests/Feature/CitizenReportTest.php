@@ -79,6 +79,21 @@ class CitizenReportTest extends TestCase
         $this->assertAuthenticated();
     }
 
+    public function test_citizen_login_does_not_use_an_admin_intended_url(): void
+    {
+        $citizen = User::factory()->create([
+            'email' => 'citizen@example.com',
+            'password' => 'Password123!',
+        ]);
+
+        $this->withSession(['url.intended' => route('dashboard')])
+            ->post(route('citizen.login.store'), [
+                'email' => $citizen->email,
+                'password' => 'Password123!',
+            ])
+            ->assertRedirect(route('citizen.create'));
+    }
+
     public function test_super_admin_cannot_sign_in_to_citizen_app(): void
     {
         $admin = User::factory()->create([

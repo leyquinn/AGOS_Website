@@ -75,7 +75,7 @@ class CitizenReportController extends Controller
 
         $request->session()->regenerate();
 
-        return redirect()->intended(route('citizen.create'));
+        return redirect()->route('citizen.create');
     }
 
     public function logout(Request $request): RedirectResponse
