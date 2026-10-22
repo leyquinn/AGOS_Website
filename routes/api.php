@@ -3,13 +3,16 @@
 use App\Http\Controllers\Api\AdminManagementController;
 use App\Http\Controllers\Api\CitizenAuthController;
 use App\Http\Controllers\Api\CitizenReportController;
+use App\Http\Controllers\Api\AnalyticsController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
 
 Route::prefix('v1')->group(function () {
-    Route::post('/auth/citizen/register', [CitizenAuthController::class, 'register']);
-    Route::post('/auth/login', [CitizenAuthController::class, 'login']);
+    Route::post('/auth/citizen/register', [CitizenAuthController::class, 'register'])
+        ->middleware('database.available');
+    Route::post('/auth/login', [CitizenAuthController::class, 'login'])
+        ->middleware('database.available');
     Route::get('/barangays', [AdminManagementController::class, 'listBarangays']);
 
     Route::middleware('web')->get('/user', function (Request $request) {
@@ -37,6 +40,7 @@ Route::prefix('v1')->group(function () {
     });
 
     Route::middleware('auth:sanctum')->group(function () {
+        Route::get('/analytics/flood-activity', [AnalyticsController::class, 'floodActivity']);
         Route::post('/reports/submit', [CitizenReportController::class, 'store']);
         Route::get('/reports', [CitizenReportController::class, 'index']);
 

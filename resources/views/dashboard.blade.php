@@ -23,34 +23,48 @@
             @endforeach
         </section>
 
-        <section class="mt-5 grid gap-5 xl:grid-cols-[1.35fr_0.65fr]">
-            <article class="overflow-hidden rounded-2xl border border-blue-900/50 bg-[#071738]/80">
-                <div class="flex items-center justify-between border-b border-blue-900/50 px-5 py-4">
-                    <div>
-                        <h2 class="text-sm font-bold text-white">Flood intelligence activity</h2>
-                        <p class="mt-1 text-[10px] text-slate-400">Incoming reports and validated events over the last 7 days</p>
-                    </div>
-                    <a href="{{ route('reports') }}" class="text-[10px] font-bold text-blue-300 hover:text-blue-200">View reports →</a>
+        <section class="mt-5" data-flood-dashboard>
+            <div class="mb-4 flex flex-col gap-3 rounded-2xl border border-blue-900/50 bg-[#071738]/80 p-4 sm:flex-row sm:items-center sm:justify-between">
+                <div>
+                    <h2 class="text-sm font-bold text-white">Flood intelligence activity</h2>
+                    <p class="mt-1 text-[10px] text-slate-400">Incoming reports and validated events for <span data-period-label>Last 7 Days</span></p>
                 </div>
-                <div class="relative h-64 px-5 pb-8 pt-6">
-                    <div class="absolute inset-x-5 top-6 bottom-9 flex items-end justify-around gap-2 border-b border-blue-900/60 bg-[linear-gradient(to_top,rgba(59,130,246,.12)_1px,transparent_1px)] bg-[length:100%_25%]">
-                        @foreach ([['Mon', 38, 18], ['Tue', 54, 26], ['Wed', 46, 22], ['Thu', 72, 34], ['Fri', 62, 29], ['Sat', 88, 45], ['Sun', 76, 39]] as $day)
-                            <div class="flex h-full flex-1 items-end justify-center gap-1">
-                                <span class="w-3 rounded-t bg-blue-400/70 sm:w-5" style="height: {{ $day[1] }}%"></span>
-                                <span class="w-3 rounded-t bg-emerald-400 sm:w-5" style="height: {{ $day[2] }}%"></span>
-                            </div>
+                <div class="flex flex-wrap items-center gap-2">
+                    <div class="flex rounded-lg border border-blue-900/60 bg-[#031027] p-1" role="group" aria-label="Analytics time period">
+                        @foreach ([['key' => '7d', 'label' => '7 Days'], ['key' => '4w', 'label' => '4 Weeks'], ['key' => '12m', 'label' => '12 Months'], ['key' => 'ytd', 'label' => 'YTD']] as $filter)
+                            <button type="button" data-chart-filter="{{ $filter['key'] }}" aria-pressed="{{ $filter['key'] === '7d' ? 'true' : 'false' }}" class="rounded-md px-2.5 py-1.5 text-[10px] font-bold transition {{ $filter['key'] === '7d' ? 'bg-blue-600 text-white' : 'text-slate-400 hover:text-white' }}">{{ $filter['label'] }}</button>
                         @endforeach
                     </div>
-                    <div class="absolute inset-x-5 bottom-2 flex justify-around text-[9px] text-slate-500"><span>Mon</span><span>Tue</span><span>Wed</span><span>Thu</span><span>Fri</span><span>Sat</span><span>Sun</span></div>
+                    <span class="group relative inline-flex cursor-help items-center gap-1 rounded-full border border-amber-500/40 bg-amber-500/10 px-2.5 py-1.5 text-[9px] font-bold text-amber-300" title="Live ML model sync will connect to this data layer.">
+                        <span aria-hidden="true">●</span> Static Benchmark Mode
+                        <span class="pointer-events-none absolute bottom-full right-0 mb-2 hidden w-52 rounded-lg bg-slate-900 p-2 text-[10px] font-normal leading-relaxed text-slate-200 shadow-xl group-hover:block">Live ML model sync will connect to this data layer when the classification and clustering services are ready.</span>
+                    </span>
                 </div>
-                <div class="flex gap-5 border-t border-blue-900/50 px-5 py-3 text-[10px] text-slate-400"><span><i class="mr-1 inline-block h-2 w-2 bg-blue-400"></i>Reports harvested</span><span><i class="mr-1 inline-block h-2 w-2 bg-emerald-400"></i>Validated events</span></div>
-            </article>
+            </div>
 
+            <div class="grid gap-5 xl:grid-cols-[1.35fr_0.65fr]">
+                <article class="rounded-2xl border border-blue-900/50 bg-[#071738]/80 p-5">
+                    <div class="mb-3 flex items-center justify-between"><div><h3 class="text-xs font-bold text-white">Flood Incident Volume vs. Validated Alerts</h3><p class="mt-1 text-[10px] text-slate-400">Reports harvested and alerts confirmed by intelligence review</p></div><a href="{{ route('reports') }}" class="text-[10px] font-bold text-blue-300 hover:text-blue-200">View reports →</a></div>
+                    <div class="h-64"><canvas data-chart="activity" aria-label="Flood incident volume line chart"></canvas></div>
+                </article>
+                <article class="rounded-2xl border border-blue-900/50 bg-[#071738]/80 p-5">
+                    <h3 class="text-xs font-bold text-white">Confidence Score Distribution</h3><p class="mt-1 text-[10px] text-slate-400">Classification confidence across crowd signals</p>
+                    <div class="mt-3 h-56"><canvas data-chart="confidence" aria-label="Confidence score distribution bar chart"></canvas></div>
+                </article>
+                <article class="rounded-2xl border border-blue-900/50 bg-[#071738]/80 p-5">
+                    <h3 class="text-xs font-bold text-white">Top Affected Davao Barangays</h3><p class="mt-1 text-[10px] text-slate-400">Validated flood alerts by location</p>
+                    <div class="mt-3 h-64"><canvas data-chart="barangays" aria-label="Top affected barangays horizontal bar chart"></canvas></div>
+                </article>
+                <article class="rounded-2xl border border-blue-900/50 bg-[#071738]/80 p-5">
+                    <h3 class="text-xs font-bold text-white">Source Signal Breakdown</h3><p class="mt-1 text-[10px] text-slate-400">Origin of signals included in the benchmark</p>
+                    <div class="mt-3 h-64"><canvas data-chart="sources" aria-label="Source signal breakdown doughnut chart"></canvas></div>
+                </article>
+            </div>
+        </section>
+
+        <section class="mt-5 grid gap-5 xl:grid-cols-2">
             <article class="rounded-2xl border border-blue-900/50 bg-[#071738]/80 p-5">
-                <div class="flex items-center justify-between">
-                    <h2 class="text-sm font-bold text-white">System health</h2>
-                    <span class="rounded-full bg-emerald-500 px-2.5 py-1 text-[9px] font-bold text-emerald-950">Operational</span>
-                </div>
+                <div class="flex items-center justify-between"><h2 class="text-sm font-bold text-white">System health</h2><span class="rounded-full bg-emerald-500 px-2.5 py-1 text-[9px] font-bold text-emerald-950">Operational</span></div>
                 <div class="mt-5 space-y-4">
                     @foreach ([['label' => 'Facebook', 'value' => 'Connected', 'class' => 'text-emerald-400'], ['label' => 'Twitter / X', 'value' => 'Connected', 'class' => 'text-emerald-400'], ['label' => 'Reddit', 'value' => 'Degraded', 'class' => 'text-red-400'], ['label' => 'Preprocessing queue', 'value' => '12 pending', 'class' => 'text-amber-300'], ['label' => 'ML analysis queue', 'value' => '47 pending', 'class' => 'text-amber-300']] as $health)
                         <div class="flex items-center justify-between border-b border-blue-900/40 pb-3 last:border-0 last:pb-0"><span class="text-xs text-slate-400">{{ $health['label'] }}</span><span class="text-xs font-bold {{ $health['class'] }}">{{ $health['value'] }}</span></div>

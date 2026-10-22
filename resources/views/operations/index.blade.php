@@ -39,20 +39,21 @@
 
     <section class="mt-5 grid gap-5 xl:grid-cols-[1.4fr_0.8fr]">
         <div class="overflow-hidden rounded-2xl border border-blue-900/50 bg-[#071738]/80">
-            <div class="flex items-center justify-between border-b border-blue-900/50 px-5 py-4">
-                <h2 class="text-sm font-bold text-white">Barangay flood map</h2>
-                <div class="flex gap-2 text-[10px] font-semibold">
-                    <span class="rounded bg-blue-500 px-2 py-1 text-white">Markers</span>
-                    <span class="rounded bg-blue-950 px-2 py-1 text-slate-400">Heatmap</span>
+            <div class="flex flex-col gap-3 border-b border-blue-900/50 px-5 py-4 sm:flex-row sm:items-center sm:justify-between">
+                <div>
+                    <h2 class="text-sm font-bold text-white">Barangay flood heatmap</h2>
+                    <p data-map-status class="mt-1 text-[10px] text-slate-400">Loading Davao City barangay boundaries...</p>
                 </div>
+                <label class="flex items-center gap-2 text-[10px] font-semibold text-slate-400">
+                    <span class="sr-only">Filter by barangay</span>
+                    <select data-barangay-filter class="rounded-lg border border-blue-900/60 bg-[#031027] px-3 py-2 text-[10px] text-slate-200 outline-none focus:border-cyan-400 focus:ring-1 focus:ring-cyan-400">
+                        <option value="">All barangays</option>
+                    </select>
+                </label>
             </div>
-            <div class="relative h-[24rem] overflow-hidden bg-[#0b2852] bg-[linear-gradient(25deg,transparent_45%,rgba(147,197,253,.2)_46%,transparent_48%),linear-gradient(115deg,transparent_45%,rgba(147,197,253,.2)_46%,transparent_48%)] bg-[length:90px_70px]">
-                <div class="absolute inset-0 flex flex-wrap content-center justify-center gap-4 p-12 opacity-90">
-                    @foreach (range(1, 55) as $marker)
-                        <span class="h-3 w-3 rounded-full {{ $marker % 5 === 0 ? 'bg-red-400' : ($marker % 3 === 0 ? 'bg-amber-300' : 'bg-cyan-400') }} shadow-lg shadow-cyan-300/30"></span>
-                    @endforeach
-                </div>
-                <div class="absolute bottom-0 left-0 right-0 bg-[#071738]/80 px-5 py-3 text-xs text-slate-400">● High CS &nbsp; <span class="text-amber-400">●</span> Medium &nbsp; <span class="text-red-400">●</span> Low / outlier</div>
+            <div class="relative h-[24rem] bg-[#0b2852]">
+                <div data-flood-map data-boundary-url="{{ asset('data/davao-barangays.geojson') }}" class="h-full w-full"></div>
+                <div class="pointer-events-none absolute bottom-0 left-0 right-0 bg-[#071738]/85 px-5 py-3 text-xs text-slate-400">Heat intensity clipped to the active barangay boundary</div>
             </div>
         </div>
 

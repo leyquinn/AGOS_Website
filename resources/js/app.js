@@ -1,4 +1,6 @@
 import './bootstrap';
+import './dashboard-charts';
+import './map';
 
 document.querySelectorAll('[data-carousel]').forEach((carousel) => {
     const carouselId = carousel.id;
