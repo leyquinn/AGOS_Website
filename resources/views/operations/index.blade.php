@@ -1,6 +1,6 @@
 <x-layouts.app title="Operations">
     <div class="mb-6 flex items-center justify-between">
-        <p class="hidden text-sm text-slate-400 sm:block">Monitor incoming reports and validate emerging flood events.</p>
+        <p class="hidden text-sm text-slate-400 sm:block">Monitor automatically processed reports and emerging flood events.</p>
         <button type="button" class="ml-auto rounded-xl border border-blue-700/60 bg-blue-600 px-4 py-2.5 text-xs font-bold text-white shadow-lg shadow-blue-950/20 transition hover:bg-blue-500">
             ↻ &nbsp; Refresh
         </button>
@@ -58,7 +58,7 @@
 
         <div class="rounded-2xl border border-blue-900/50 bg-[#071738]/80 p-5">
             <div class="mb-4 flex items-center justify-between">
-                <h2 class="text-sm font-bold text-white">Validated Report Feed</h2>
+                <h2 class="text-sm font-bold text-white">Processed Report Feed</h2>
                 <span class="text-[10px] text-slate-400">Sort: Confidence ▼</span>
             </div>
             <div class="space-y-3">
@@ -74,9 +74,7 @@
                             <span class="{{ $report['color'] }} rounded px-2 py-1 text-[9px] font-bold text-white">{{ $report['score'] }}</span>
                         </div>
                         <p class="mt-2 text-[10px] leading-relaxed text-slate-300">{{ $report['text'] }}</p>
-                        @if ($loop->index < 2)
-                            <div class="mt-2 flex flex-wrap gap-2"><button type="button" data-report-action class="rounded-lg bg-blue-600 px-3 py-2 text-[10px] font-bold text-white transition hover:bg-blue-500">Confirm</button><button type="button" data-report-action class="rounded-lg border border-rose-500/30 bg-rose-500/10 px-3 py-2 text-[10px] font-bold text-rose-600 dark:text-rose-300 transition hover:bg-rose-500/20">False Alarm</button></div>
-                        @elseif ($loop->index === 2)
+                        @if ($loop->index === 2)
                             <button type="button" data-broadcast-alert class="mt-2 rounded-lg bg-blue-600 px-3 py-2 text-[10px] font-bold text-white transition hover:bg-blue-500">Broadcast Alert</button>
                         @endif
                     </article>

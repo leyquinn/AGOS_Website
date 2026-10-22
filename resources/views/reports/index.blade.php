@@ -5,9 +5,9 @@
                 <p class="text-xs font-semibold text-slate-400">Brgy. Poblacion • Aug 23, 2026 • 10:15:00</p>
                 <div class="mt-5 flex flex-wrap items-center gap-3">
                     <h2 class="text-2xl font-black tracking-tight text-white sm:text-3xl">Reports #1234</h2>
-                    <span class="rounded-full bg-emerald-400 px-3 py-1 text-[10px] font-black uppercase tracking-wide text-emerald-950">● Validated</span>
+                    <span class="rounded-full bg-emerald-400 px-3 py-1 text-[10px] font-black uppercase tracking-wide text-emerald-950">● System Classified</span>
                 </div>
-                <p class="mt-2 text-xs text-slate-400">Captured from social media feed 14 mins ago</p>
+                <p class="mt-2 text-xs text-slate-400">Captured from scraped public source 14 mins ago</p>
             </div>
             <div class="flex gap-2">
                 <button type="button" class="rounded-xl bg-blue-200/80 px-4 py-2 text-xs font-bold text-slate-700 transition hover:bg-blue-100">↗ &nbsp; Share</button>
@@ -87,11 +87,13 @@
                     </div>
                 </section>
 
+                <p class="rounded-xl border border-blue-200/60 bg-[#d4e0f3] px-3 py-3 text-[10px] leading-relaxed text-slate-600">
+                    Reviewer actions are available for uncertain system outputs or possible false positives.
+                </p>
                 <div class="grid grid-cols-2 gap-3">
-                    <button type="button" class="rounded-xl bg-emerald-500 px-3 py-3 text-xs font-bold text-white transition hover:bg-emerald-400">✓ &nbsp; Confirm</button>
-                    <button type="button" class="rounded-xl bg-red-500 px-3 py-3 text-xs font-bold text-white transition hover:bg-red-400">× &nbsp; False Alarm</button>
+                    <button type="button" data-review-action="confirm" class="rounded-xl bg-emerald-500 px-3 py-3 text-xs font-bold text-white transition hover:bg-emerald-400">✓ &nbsp; Confirm Flood-Related</button>
+                    <button type="button" data-review-action="false-positive" class="rounded-xl bg-red-500 px-3 py-3 text-xs font-bold text-white transition hover:bg-red-400">× &nbsp; Mark False Positive</button>
                 </div>
-                <button type="button" class="mx-auto block rounded-xl bg-orange-400 px-4 py-2.5 text-xs font-bold text-white transition hover:bg-orange-300">⚑ &nbsp; Escalate for Review</button>
             </aside>
         </div>
     </div>

@@ -100,9 +100,6 @@
                     <h2>Details</h2>
                     <label class="citizen-field"><span>Describe What You See</span><textarea name="description" required maxlength="2000" placeholder="e.g Water is rising quickly, road is completely covered">{{ old('description') }}</textarea></label>
                     @error('description')<small class="citizen-error">{{ $message }}</small>@enderror
-                    <h2>Add Photo <small>(Optional)</small></h2>
-                    <label class="photo-upload" for="report-photo">▣<span data-photo-label>Tap to add photo</span></label>
-                    <input id="report-photo" class="sr-only" type="file" name="photo" accept="image/*" capture="environment">
                     <div class="citizen-extra-fields">
                         <label class="citizen-field"><span>Your name (optional)</span><input name="reporter_name" value="{{ old('reporter_name') }}"></label>
                         <label class="citizen-field"><span>Contact number (optional)</span><input name="reporter_contact" value="{{ old('reporter_contact') }}"></label>

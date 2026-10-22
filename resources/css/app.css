@@ -112,7 +112,7 @@
 
 .citizen-report-intro { margin: 14px 2px; color: #6d7484; font-size: 10px; }.citizen-report-intro span { display: block; width: fit-content; margin-top: 8px; padding: 4px 7px; border-radius: 10px; background: #b9cbe8; color: #6e7890; font-size: 7px; }.validation-card { margin: 0 6px 20px; padding: 17px; border-radius: 15px; background: #b9cbe8; text-align: center; }.validation-card strong { font-size: 10px; }.validation-card p { margin: 9px auto 0; max-width: 180px; color: #717d92; font-size: 8px; line-height: 1.4; text-align: left; }
 .citizen-form h2 { margin: 16px 2px 10px; font-size: 12px; }.citizen-form h2 small { color: #798294; font-size: 10px; font-weight: 400; }.current-location-field { display: flex; align-items: center; gap: 11px; margin: 0 9px 14px; padding: 10px 12px; border-radius: 14px; background: #b9cbe8; font-size: 9px; }.current-location-field > span:first-child { font-size: 24px; color: #000; }.current-location-field span:nth-child(2) { flex: 1; }.current-location-field small { display: block; margin-top: 4px; color: #778195; font-size: 7px; }.current-location-field button { border: 0; background: none; color: #778195; font-size: 9px; }
-.citizen-field { display: block; margin: 0 9px 10px; color: #788194; font-size: 10px; }.citizen-field input, .citizen-field textarea { display: block; width: 100%; box-sizing: border-box; margin-top: 6px; padding: 9px 12px; border: 0; border-radius: 12px; outline: none; background: #b8c3d4; color: #26364d; font-size: 9px; }.citizen-field textarea { min-height: 68px; resize: vertical; }.water-levels { display: grid; grid-template-columns: repeat(3, 1fr); gap: 25px; margin: 0 2px; }.water-levels label { display: grid; justify-items: center; gap: 6px; padding: 12px 4px; border-radius: 13px; background: #b9cbe8; color: #053e8c; font-size: 9px; cursor: pointer; }.water-levels input { position: absolute; opacity: 0; }.water-levels label:has(input:checked) { outline: 2px solid #0963d1; }.water-levels label span { color: #000; font-size: 23px; }.photo-upload { display: grid; justify-items: center; gap: 7px; width: calc(100% - 20px); margin: 0 10px; padding: 25px; border: 0; border-radius: 14px; background: #b9cbe8; color: #000; font-size: 22px; cursor: pointer; }.photo-upload span { color: #fff; font-size: 10px; }.citizen-extra-fields { margin-top: 16px; }.submit-report { width: calc(100% - 20px); margin: 15px 10px 0; padding: 13px; border: 0; border-radius: 14px; background: #0757bd; color: #fff; font-weight: 700; cursor: pointer; }.citizen-error { display: block; margin: 4px 10px; color: #d3233c; font-size: 8px; }
+.citizen-field { display: block; margin: 0 9px 10px; color: #788194; font-size: 10px; }.citizen-field input, .citizen-field textarea { display: block; width: 100%; box-sizing: border-box; margin-top: 6px; padding: 9px 12px; border: 0; border-radius: 12px; outline: none; background: #b8c3d4; color: #26364d; font-size: 9px; }.citizen-field textarea { min-height: 68px; resize: vertical; }.water-levels { display: grid; grid-template-columns: repeat(3, 1fr); gap: 25px; margin: 0 2px; }.water-levels label { display: grid; justify-items: center; gap: 6px; padding: 12px 4px; border-radius: 13px; background: #b9cbe8; color: #053e8c; font-size: 9px; cursor: pointer; }.water-levels input { position: absolute; opacity: 0; }.water-levels label:has(input:checked) { outline: 2px solid #0963d1; }.water-levels label span { color: #000; font-size: 23px; }.citizen-extra-fields { margin-top: 16px; }.submit-report { width: calc(100% - 20px); margin: 15px 10px 0; padding: 13px; border: 0; border-radius: 14px; background: #0757bd; color: #fff; font-weight: 700; cursor: pointer; }.citizen-error { display: block; margin: 4px 10px; color: #d3233c; font-size: 8px; }
 
 .barangay-title { margin: 17px 0 8px; color: #737c8c; font-size: 11px; font-weight: 700; }.barangay-tags { display: flex; flex-wrap: wrap; gap: 6px; }.barangay-tags span, .barangay-tags button { padding: 5px 8px; border: 0; border-radius: 12px; background: #b9cbe8; color: #283b55; font-size: 8px; }.barangay-tags button { cursor: pointer; }.alert-list { margin-top: 19px; }.alert-list article { margin: 12px 18px; padding: 10px; }.alert-badge { padding: 4px 8px; border-radius: 6px; color: #fff; font-size: 7px; font-weight: 700; }.badge-red { background: #ff334e; }.alert-list article strong { display: block; margin-top: 9px; font-size: 10px; }.alert-list article p { margin: 6px 0 0; color: #66758d; font-size: 8px; line-height: 1.35; }
 .profile-card { margin: 14px 15px; padding: 18px 15px 13px; text-align: center; }.profile-avatar { display: grid; place-items: center; width: 55px; height: 55px; margin: 0 auto 10px; border: 5px solid #fff; border-radius: 50%; color: #fff; font-size: 24px; }.profile-card h2 { margin: 0; font-size: 17px; }.profile-card > p { margin: 5px 0; color: #737f92; font-size: 12px; }.contributor-badge { display: inline-block; margin: 2px 0 9px; padding: 5px 9px; border-radius: 10px; background: #31c65a; color: #fff; font-size: 7px; }.profile-copy { max-width: 220px; margin: auto !important; font-size: 9px !important; }.profile-card button { margin-top: 12px; padding: 8px 26px; border: 0; border-radius: 16px; background: #0757bd; color: #fff; font-size: 9px; }.profile-reports-title { margin-top: 20px; padding: 12px; border-radius: 14px 14px 0 0; background: #b9cbe8; }.my-report { display: flex; align-items: center; gap: 10px; margin: 0 10px; padding: 12px; }.my-report > span { color: #ff334e; font-size: 23px; }.my-report div { flex: 1; }.my-report strong, .my-report small { display: block; }.my-report strong { font-size: 9px; }.my-report small { margin-top: 4px; color: #778195; font-size: 7px; }
@@ -164,7 +164,6 @@
 .citizen-field input:focus, .citizen-field textarea:focus { box-shadow: 0 0 0 2px rgba(7, 87, 189, .22); }
 .water-levels label { min-height: 65px; justify-content: center; background: #c3d4ec; box-shadow: 0 2px 7px rgba(53, 82, 124, .1); }
 .water-levels label:has(input:checked) { background: #0a5bc1; color: #fff; }
-.photo-upload { border: 2px dashed #8faed5; background: #c3d4ec; }
 .submit-report { min-height: 46px; font-size: 13px; box-shadow: 0 4px 10px rgba(7, 87, 189, .22); }
 .citizen-bottom-nav { box-shadow: 0 -3px 12px rgba(53, 82, 124, .12); }
 .citizen-bottom-nav button { min-height: 39px; color: #334155; }
@@ -1489,20 +1488,6 @@ body.theme-light .agos-citizen-link:focus-visible {
     font-size: 14px;
 }
 
-.photo-upload {
-    width: 100%;
-    margin: 0;
-    padding: 28px 16px;
-    border: 2px dashed var(--citizen-border);
-    background: var(--citizen-surface);
-    color: var(--citizen-subtle);
-    font-size: 24px;
-}
-
-.photo-upload span {
-    color: var(--citizen-subtle);
-    font-size: 13px;
-}
 
 .profile-card {
     margin: 16px 0;

@@ -8,16 +8,16 @@
 
         <section class="grid gap-4 md:grid-cols-3" aria-label="Platform connections">
             @foreach ([
-                ['name' => 'Facebook', 'status' => 'Connected', 'usage' => '620 / 1000 req', 'refresh' => 'resets in 14 min', 'width' => '62%', 'statusClass' => 'bg-emerald-400 text-emerald-950'],
-                ['name' => 'Twitter / X', 'status' => 'Connected', 'usage' => '310 / 1000 req', 'refresh' => 'resets in 41 min', 'width' => '31%', 'statusClass' => 'bg-emerald-400 text-emerald-950'],
-                ['name' => 'Reddit', 'status' => 'Degraded', 'usage' => '620 / 1000 req', 'refresh' => 'resets in 3 min', 'width' => '62%', 'statusClass' => 'bg-red-500 text-white', 'alert' => true],
+                ['name' => 'Facebook', 'status' => 'Connected', 'usage' => '620 posts collected', 'refresh' => 'last scrape 14 min ago', 'width' => '62%', 'statusClass' => 'bg-emerald-400 text-emerald-950'],
+                ['name' => 'Twitter / X', 'status' => 'Connected', 'usage' => '310 posts collected', 'refresh' => 'last scrape 41 min ago', 'width' => '31%', 'statusClass' => 'bg-emerald-400 text-emerald-950'],
+                ['name' => 'Reddit', 'status' => 'Degraded', 'usage' => '620 posts collected', 'refresh' => 'last scrape 3 min ago', 'width' => '62%', 'statusClass' => 'bg-red-500 text-white', 'alert' => true],
             ] as $platform)
                 <article class="rounded-2xl bg-[#b7c9e5] p-4 text-slate-700 shadow-lg shadow-blue-950/10">
                     <div class="flex items-center justify-between gap-3">
                         <h2 class="text-sm font-black">{{ $platform['name'] }}</h2>
                         <span class="{{ $platform['statusClass'] }} rounded-full px-2.5 py-1 text-[9px] font-bold">{{ $platform['status'] }}</span>
                     </div>
-                    <p class="mt-4 text-[10px] font-semibold text-slate-500">API rate limit usage</p>
+                    <p class="mt-4 text-[10px] font-semibold text-slate-500">Scraped content collected</p>
                     <div class="mt-2 h-1.5 rounded-full bg-slate-200">
                         <div class="h-1.5 rounded-full {{ $platform['alert'] ?? false ? 'bg-red-500' : 'bg-blue-700' }}" style="width: {{ $platform['width'] }}"></div>
                     </div>

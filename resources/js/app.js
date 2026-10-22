@@ -242,16 +242,6 @@ if (citizenApp) {
             showToast('Barangay removed from alerts');
         }
 
-        document.querySelectorAll('[data-report-action]').forEach((button) => {
-            button.addEventListener('click', () => {
-                const isFalseAlarm = button.textContent.includes('False Alarm');
-                button.textContent = isFalseAlarm ? 'Marked false alarm' : '✓ Confirmed';
-                button.disabled = true;
-                button.classList.add('cursor-not-allowed', 'opacity-60');
-                showToast(isFalseAlarm ? 'Report marked as a false alarm' : 'Report marked as validated');
-            });
-        });
-
         const broadcastModal = document.querySelector('[data-broadcast-modal]');
         document.querySelectorAll('[data-broadcast-alert]').forEach((button) => {
             button.addEventListener('click', () => {
@@ -318,14 +308,6 @@ if (citizenApp) {
         }
     });
 
-    const photoInput = citizenApp.querySelector('#report-photo');
-    photoInput?.addEventListener('change', () => {
-        const file = photoInput.files?.[0];
-        if (file) {
-            citizenApp.querySelector('[data-photo-label]').textContent = file.name;
-            showToast('Photo attached to report');
-        }
-    });
 }
 
 document.addEventListener('click', (event) => {
@@ -349,22 +331,19 @@ document.addEventListener('click', (event) => {
         button.textContent = '✓ Refreshed';
         showToast('Portal data refreshed');
         window.setTimeout(() => { button.textContent = '↻  Refresh'; }, 1800);
-    } else if (label.includes('Confirm')) {
+    } else if (button.dataset.reviewAction === 'confirm') {
         button.textContent = '✓ Confirmed';
         button.disabled = true;
         button.classList.add('opacity-60', 'cursor-not-allowed');
-        showToast('Report marked as validated');
-    } else if (label.includes('False Alarm')) {
-        button.textContent = 'Marked false alarm';
+        showToast('Uncertain output confirmed as flood-related');
+    } else if (button.dataset.reviewAction === 'false-positive') {
+        button.textContent = 'Marked false positive';
         button.disabled = true;
         button.classList.add('opacity-60', 'cursor-not-allowed');
-        showToast('Report marked as a false alarm');
+        showToast('System output marked as a false positive');
     } else if (label.includes('Broadcast')) {
         button.textContent = '✓ Alert broadcast';
         showToast('Alert broadcast to response channels');
-    } else if (label.includes('Escalate')) {
-        button.textContent = '✓ Escalated for review';
-        showToast('Report escalated for review');
     } else if (label.includes('Share')) {
         navigator.clipboard?.writeText(window.location.href);
         showToast('Report link copied');

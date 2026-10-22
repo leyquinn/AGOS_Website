@@ -75,7 +75,7 @@
             <article class="portal-card overflow-hidden rounded-2xl bg-[#b7c9e5] text-slate-700 shadow-lg shadow-blue-950/10">
                 <div class="p-4">
                     <h2 class="text-sm font-black">F1 Score Across Model Versions</h2>
-                    <p class="text-[10px] text-slate-500">Improvement from active-learning retraining on confirmed/false-alarm feedback</p>
+                    <p class="text-[10px] text-slate-500">Improvement from active-learning retraining on reviewer feedback</p>
                 </div>
                 <div class="relative h-60 border-t border-blue-200/70 px-5 pb-8 pt-5">
                     <div class="absolute inset-x-7 top-8 bottom-9 border-b border-slate-300/70 bg-[linear-gradient(to_top,rgba(255,255,255,.18)_1px,transparent_1px)] bg-[length:100%_25%]">
