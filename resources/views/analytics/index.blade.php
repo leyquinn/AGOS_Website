@@ -1,26 +1,29 @@
 <x-layouts.app title="Model Analytics">
-    <div class="w-full">
+    <div class="w-full" data-model-analytics>
         <div class="mb-8 flex flex-wrap items-start justify-between gap-4">
             <p class="max-w-md text-xs leading-relaxed text-slate-400">
                 Evaluation metrics for the thesis defense baseline vs. integrated pipeline.
             </p>
-            <select class="rounded-full border-0 bg-[#b7c9e5] px-4 py-2 text-[10px] font-bold text-slate-600 outline-none focus:ring-2 focus:ring-blue-500" aria-label="Select model version">
-                <option>mtl-xlmr-v1.2 (current)</option>
-                <option>mtl-xlmr-v1.1</option>
-                <option>v1.0 (baseline)</option>
-            </select>
+            <div class="flex items-center gap-2">
+                <span class="rounded-full border border-amber-400/40 bg-amber-400/10 px-3 py-2 text-[9px] font-bold uppercase tracking-wide text-amber-600 dark:text-amber-300">Static benchmark</span>
+                <select data-model-version class="rounded-full border-0 bg-[#b7c9e5] px-4 py-2 text-[10px] font-bold text-slate-600 outline-none focus:ring-2 focus:ring-blue-500" aria-label="Select model version">
+                    <option value="v1.2">mtl-xlmr-v1.2 (current)</option>
+                    <option value="v1.1">mtl-xlmr-v1.1</option>
+                    <option value="v1.0">v1.0 (baseline)</option>
+                </select>
+            </div>
         </div>
 
         <section class="grid grid-cols-2 gap-4 xl:grid-cols-4" aria-label="Model summary metrics">
             @foreach ([
-                ['label' => 'Accuracy', 'value' => '142', 'class' => 'text-slate-500'],
-                ['label' => 'Precision', 'value' => '18', 'class' => 'text-slate-500'],
-                ['label' => 'Recall', 'value' => '9', 'class' => 'text-slate-500'],
-                ['label' => 'F1-Score', 'value' => '0.81', 'class' => 'text-blue-700'],
+                ['label' => 'Accuracy', 'key' => 'accuracy', 'value' => '0.94', 'class' => 'text-slate-500'],
+                ['label' => 'Precision', 'key' => 'precision', 'value' => '0.91', 'class' => 'text-slate-500'],
+                ['label' => 'Recall', 'key' => 'recall', 'value' => '0.89', 'class' => 'text-slate-500'],
+                ['label' => 'F1-Score', 'key' => 'f1', 'value' => '0.90', 'class' => 'text-blue-700'],
             ] as $metric)
                 <article class="portal-card rounded-2xl bg-[#b7c9e5] px-4 py-3 text-center shadow-lg shadow-blue-950/10">
                     <p class="text-xs font-bold text-slate-500">{{ $metric['label'] }}</p>
-                    <p class="mt-2 text-3xl font-black {{ $metric['class'] }}">{{ $metric['value'] }}</p>
+                    <p data-model-metric="{{ $metric['key'] }}" class="mt-2 text-3xl font-black {{ $metric['class'] }}">{{ $metric['value'] }}</p>
                 </article>
             @endforeach
         </section>
@@ -34,8 +37,8 @@
                             <tr><th class="pb-3 text-left font-semibold">Barangay</th><th class="pb-3 font-semibold">Precision</th><th class="pb-3 font-semibold">Recall</th><th class="pb-3 font-semibold">F1</th></tr>
                         </thead>
                         <tbody class="text-slate-500">
-                            @foreach ([['Poblacion', '0.94', '0.91', '0.92'], ['Matina', '0.87', '0.83', '0.85'], ['Talomo', '0.96', '0.95', '0.95'], ['Bunawan', '0.79', '0.74', '0.76']] as $row)
-                                <tr><td class="py-1.5 text-left">{{ $row[0] }}</td><td>{{ $row[1] }}</td><td>{{ $row[2] }}</td><td>{{ $row[3] }}</td></tr>
+                            @foreach (['Poblacion', 'Matina', 'Talomo', 'Bunawan'] as $barangay)
+                                <tr data-performance-row="{{ $barangay }}"><td class="py-1.5 text-left">{{ $barangay }}</td><td data-performance="precision">0.94</td><td data-performance="recall">0.91</td><td data-performance="f1">0.92</td></tr>
                             @endforeach
                         </tbody>
                     </table>
@@ -46,8 +49,8 @@
                 <h2 class="text-xs font-black">Confusion Matrix (valid set)</h2>
                 <div class="mt-5 grid grid-cols-[5rem_1fr_1fr] items-center gap-2 text-center text-[9px] text-slate-500">
                     <span></span><span>Prediction flood</span><span>Prediction non-flood</span>
-                    <span class="text-left">Actual flood</span><strong class="rounded-lg border border-emerald-500/20 bg-emerald-500/10 px-3 py-2 text-emerald-700 dark:text-emerald-300">412</strong><strong class="rounded-lg border border-rose-500/20 bg-rose-500/10 px-3 py-2 text-rose-700 dark:text-rose-300">38</strong>
-                    <span class="text-left">Actual non-flood</span><strong class="rounded-lg border border-rose-500/20 bg-rose-500/10 px-3 py-2 text-rose-700 dark:text-rose-300">29</strong><strong class="rounded-lg border border-emerald-500/20 bg-emerald-500/10 px-3 py-2 text-emerald-700 dark:text-emerald-300">551</strong>
+                    <span class="text-left">Actual flood</span><strong data-confusion="0" class="rounded-lg border border-emerald-500/20 bg-emerald-500/10 px-3 py-2 text-emerald-700 dark:text-emerald-300">412</strong><strong data-confusion="1" class="rounded-lg border border-rose-500/20 bg-rose-500/10 px-3 py-2 text-rose-700 dark:text-rose-300">38</strong>
+                    <span class="text-left">Actual non-flood</span><strong data-confusion="2" class="rounded-lg border border-rose-500/20 bg-rose-500/10 px-3 py-2 text-rose-700 dark:text-rose-300">29</strong><strong data-confusion="3" class="rounded-lg border border-emerald-500/20 bg-emerald-500/10 px-3 py-2 text-emerald-700 dark:text-emerald-300">551</strong>
                 </div>
             </article>
         </section>
@@ -58,16 +61,8 @@
                     <h2 class="text-sm font-black">Baseline vs. Integrated Pipeline</h2>
                     <p class="text-[10px] text-slate-500">Classification-only (w2 = 0) vs. multi-task + K-Means++ consensus</p>
                 </div>
-                <div class="relative h-52 border-t border-blue-200/70 px-5 pb-8 pt-5">
-                    <div class="absolute inset-x-5 top-5 bottom-8 flex items-end justify-around border-b border-slate-300/70 bg-[linear-gradient(to_top,rgba(255,255,255,.18)_1px,transparent_1px)] bg-[length:100%_25%]">
-                        @foreach ([['0.82', '0.94'], ['0.78', '0.91'], ['0.75', '0.89'], ['0.77', '0.90']] as $bars)
-                            <div class="flex h-full items-end gap-1.5">
-                                <span class="w-7 rounded-t bg-[#9bb5e1]" style="height: {{ $bars[0] * 100 }}%"></span>
-                                <span class="w-7 rounded-t bg-blue-800" style="height: {{ $bars[1] * 100 }}%"></span>
-                            </div>
-                        @endforeach
-                    </div>
-                    <div class="absolute inset-x-5 bottom-2 flex justify-around text-[9px] text-slate-500"><span>Accuracy</span><span>Precision</span><span>Recall</span><span>F1-score</span></div>
+                <div class="relative h-52 border-t border-blue-200/70 px-5 pb-3 pt-5">
+                    <canvas data-model-chart="comparison" aria-label="Baseline versus integrated pipeline metrics"></canvas>
                 </div>
                 <div class="flex gap-5 border-t border-blue-200/70 px-5 py-3 text-[9px] text-slate-500"><span><i class="mr-1 inline-block h-2 w-2 bg-[#9bb5e1]"></i>Baseline (classification only)</span><span><i class="mr-1 inline-block h-2 w-2 bg-blue-800"></i>Integrated (MTL + K-Means++)</span></div>
             </article>
@@ -77,14 +72,8 @@
                     <h2 class="text-sm font-black">F1 Score Across Model Versions</h2>
                     <p class="text-[10px] text-slate-500">Improvement from active-learning retraining on reviewer feedback</p>
                 </div>
-                <div class="relative h-60 border-t border-blue-200/70 px-5 pb-8 pt-5">
-                    <div class="absolute inset-x-7 top-8 bottom-9 border-b border-slate-300/70 bg-[linear-gradient(to_top,rgba(255,255,255,.18)_1px,transparent_1px)] bg-[length:100%_25%]">
-                        <svg class="h-full w-full overflow-visible" viewBox="0 0 100 100" preserveAspectRatio="none" aria-label="F1 score trend">
-                            <polyline points="0,62 50,38 100,28" fill="none" stroke="#06499f" stroke-width="2" vector-effect="non-scaling-stroke"></polyline>
-                            <circle cx="0" cy="62" r="2" fill="#06499f"></circle><circle cx="50" cy="38" r="2" fill="#06499f"></circle><circle cx="100" cy="28" r="2" fill="#06499f"></circle>
-                        </svg>
-                    </div>
-                    <div class="absolute inset-x-5 bottom-2 flex justify-between text-[9px] text-slate-500"><span>v1.0 (baseline)</span><span>v1.1</span><span>v1.2 (current)</span></div>
+                <div class="relative h-60 border-t border-blue-200/70 px-5 pb-3 pt-5">
+                    <canvas data-model-chart="f1" aria-label="F1 score across model versions"></canvas>
                 </div>
             </article>
         </section>

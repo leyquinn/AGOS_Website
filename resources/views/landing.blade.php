@@ -99,7 +99,7 @@
             <div class="min-w-[85%] shrink-0 snap-start p-6 sm:min-w-[45%] lg:min-w-[32%] bg-[#071738]/40 border border-blue-900/30 rounded-2xl">
                 <span class="text-xs font-bold text-slate-400">01</span>
                 <h3 class="text-base font-bold text-white uppercase mt-4 mb-3">Harvest</h3>
-                <p class="text-sm sm:text-base text-slate-400 leading-relaxed">Keyword / hashtag listeners pull posts from Facebook, Twitter/X, Reddit.</p>
+                <p class="text-sm sm:text-base text-slate-400 leading-relaxed">Keyword / hashtag listeners pull flood intelligence posts from Facebook.</p>
             </div>
             <div class="min-w-[85%] shrink-0 snap-start p-6 sm:min-w-[45%] lg:min-w-[32%] bg-[#071738]/40 border border-blue-900/30 rounded-2xl">
                 <span class="text-xs font-bold text-slate-400">02</span>

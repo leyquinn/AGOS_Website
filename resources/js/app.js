@@ -1,5 +1,6 @@
 import './bootstrap';
 import './dashboard-charts';
+import './model-analytics';
 import './map';
 
 document.querySelectorAll('[data-carousel]').forEach((carousel) => {
@@ -147,6 +148,33 @@ const showToast = (message) => {
     clearTimeout(Number(toast.dataset.timeout));
     toast.dataset.timeout = String(window.setTimeout(() => toast.classList.add('hidden'), 2200));
 };
+
+const harvestSettingsStorageKey = 'agos-harvest-settings';
+const harvestIntervalLabels = {
+    '1h': '1 hour',
+    '2h': '2 hours',
+    '6h': '6 hours',
+    '12h': '12 hours',
+    '24h': '24 hours',
+};
+const savedHarvestSettings = JSON.parse(localStorage.getItem(harvestSettingsStorageKey) || '{}');
+const harvestIntervalSelect = document.querySelector('[data-harvest-interval]');
+const alertThresholdSelect = document.querySelector('[data-alert-threshold]');
+if (harvestIntervalSelect) harvestIntervalSelect.value = harvestIntervalLabels[savedHarvestSettings.interval] ? savedHarvestSettings.interval : '1h';
+if (alertThresholdSelect) alertThresholdSelect.value = savedHarvestSettings.threshold || '0.80';
+document.querySelectorAll('[data-harvest-interval-display]').forEach((display) => {
+    display.textContent = harvestIntervalLabels[savedHarvestSettings.interval] || '1 hour';
+});
+const saveHarvestSettings = () => {
+    const interval = harvestIntervalSelect?.value || '1h';
+    const threshold = alertThresholdSelect?.value || '0.80';
+    localStorage.setItem(harvestSettingsStorageKey, JSON.stringify({ interval, threshold }));
+    document.querySelectorAll('[data-harvest-interval-display]').forEach((display) => {
+        display.textContent = harvestIntervalLabels[interval];
+    });
+};
+harvestIntervalSelect?.addEventListener('change', saveHarvestSettings);
+alertThresholdSelect?.addEventListener('change', saveHarvestSettings);
 
 const notificationsToggle = document.querySelector('[data-notifications-toggle]');
 const notificationsMenu = document.querySelector('[data-notifications-menu]');

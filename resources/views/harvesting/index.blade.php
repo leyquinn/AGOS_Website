@@ -6,11 +6,9 @@
             </p>
         </div>
 
-        <section class="grid gap-4 md:grid-cols-3" aria-label="Platform connections">
+        <section class="grid gap-4 md:grid-cols-2" aria-label="Platform connections">
             @foreach ([
                 ['name' => 'Facebook', 'status' => 'Connected', 'usage' => '620 posts collected', 'refresh' => 'last scrape 14 min ago', 'width' => '62%', 'statusClass' => 'bg-emerald-400 text-emerald-950'],
-                ['name' => 'Twitter / X', 'status' => 'Connected', 'usage' => '310 posts collected', 'refresh' => 'last scrape 41 min ago', 'width' => '31%', 'statusClass' => 'bg-emerald-400 text-emerald-950'],
-                ['name' => 'Reddit', 'status' => 'Degraded', 'usage' => '620 posts collected', 'refresh' => 'last scrape 3 min ago', 'width' => '62%', 'statusClass' => 'bg-red-500 text-white', 'alert' => true],
             ] as $platform)
                 <article class="rounded-2xl bg-[#b7c9e5] p-4 text-slate-700 shadow-lg shadow-blue-950/10">
                     <div class="flex items-center justify-between gap-3">
@@ -33,14 +31,14 @@
             <h2 class="text-lg font-black">Pipeline Queue &amp; Health</h2>
             <div class="mt-6 grid gap-5 text-center sm:grid-cols-2 xl:grid-cols-4">
                 @foreach ([
-                    ['label' => 'Harvest Interval', 'value' => '2 min', 'class' => 'text-blue-700 dark:text-blue-400'],
-                    ['label' => 'Clustering Pass Interval', 'value' => '5 min', 'class' => 'text-blue-700 dark:text-blue-400'],
+                    ['label' => 'Harvest Interval', 'value' => '1 hour', 'class' => 'text-blue-700 dark:text-blue-400', 'key' => 'harvest'],
+                    ['label' => 'Clustering Pass Interval', 'value' => '1 hour', 'class' => 'text-blue-700 dark:text-blue-400'],
                     ['label' => 'Preprocessing Queue', 'value' => '12 pending', 'class' => 'text-emerald-500'],
                     ['label' => 'ML Analysis Queue', 'value' => '47 pending', 'class' => 'text-orange-500'],
                 ] as $metric)
                     <div>
                         <p class="text-sm font-medium text-slate-500">{{ $metric['label'] }}</p>
-                        <p class="mt-1 text-xl font-black {{ $metric['class'] }}">{{ $metric['value'] }}</p>
+                        <p class="mt-1 text-xl font-black {{ $metric['class'] }}" @isset($metric['key']) data-harvest-interval-display @endisset>{{ $metric['value'] }}</p>
                     </div>
                 @endforeach
             </div>
@@ -57,17 +55,14 @@
                     <input id="listener-keyword" type="text" placeholder="e.g #bahaDavao" class="min-w-0 flex-1 rounded-xl border-0 bg-[#8fa8d0] px-3 py-2.5 text-xs text-slate-800 placeholder-slate-500 outline-none focus:ring-2 focus:ring-blue-500">
                     <label class="sr-only" for="listener-platform">Listener platform</label>
                     <select id="listener-platform" class="w-24 rounded-xl border-0 bg-slate-100 px-2 py-2.5 text-[10px] font-semibold text-slate-600 outline-none focus:ring-2 focus:ring-blue-500 sm:w-28">
-                        <option>All Platforms</option>
                         <option>Facebook</option>
-                        <option>Twitter / X</option>
-                        <option>Reddit</option>
                     </select>
                 </div>
                 <div class="mt-5 space-y-3">
                     @foreach ([
-                        ['keyword' => '#bahaDavao', 'platform' => 'Twitter / X · Facebook', 'count' => '88 matches today'],
-                        ['keyword' => 'grabe baha', 'platform' => 'Twitter / X · Facebook', 'count' => '88 matches today'],
-                        ['keyword' => 'tulo ang tubig', 'platform' => 'All platforms', 'count' => '12 matches today'],
+                        ['keyword' => '#bahaDavao', 'platform' => 'Facebook', 'count' => '88 matches today'],
+                        ['keyword' => 'grabe baha', 'platform' => 'Facebook', 'count' => '88 matches today'],
+                        ['keyword' => 'tulo ang tubig', 'platform' => 'Facebook', 'count' => '12 matches today'],
                     ] as $listener)
                         <div class="flex items-center justify-between gap-3 rounded-lg bg-[#91acd5] px-3 py-2.5">
                             <div class="min-w-0">
@@ -92,9 +87,7 @@
                 </p>
                 <div class="mt-5 space-y-3">
                     @foreach ([
-                        ['name' => '@DavaoCityDRRMO', 'platform' => 'Twitter / X', 'date' => 'verified 2025-02-02'],
                         ['name' => 'Davao City DRRMO Page', 'platform' => 'Facebook', 'date' => 'verified 2025-11-02'],
-                        ['name' => '@PAGASA_DOST', 'platform' => 'Twitter / X', 'date' => 'verified 2025-11-02'],
                     ] as $source)
                         <div class="flex items-center justify-between gap-3 rounded-lg bg-[#91acd5] px-3 py-2.5">
                             <div class="min-w-0">

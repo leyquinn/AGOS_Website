@@ -66,7 +66,7 @@
             <article class="rounded-2xl border border-blue-900/50 bg-[#071738]/80 p-5">
                 <div class="flex items-center justify-between"><h2 class="text-sm font-bold text-white">System health</h2><span class="rounded-full bg-emerald-500 px-2.5 py-1 text-[9px] font-bold text-emerald-950">Operational</span></div>
                 <div class="mt-5 space-y-4">
-                    @foreach ([['label' => 'Facebook', 'value' => 'Connected', 'class' => 'text-emerald-400'], ['label' => 'Twitter / X', 'value' => 'Connected', 'class' => 'text-emerald-400'], ['label' => 'Reddit', 'value' => 'Degraded', 'class' => 'text-red-400'], ['label' => 'Preprocessing queue', 'value' => '12 pending', 'class' => 'text-amber-300'], ['label' => 'ML analysis queue', 'value' => '47 pending', 'class' => 'text-amber-300']] as $health)
+                    @foreach ([['label' => 'Facebook', 'value' => 'Connected', 'class' => 'text-emerald-400'], ['label' => 'Preprocessing queue', 'value' => '12 pending', 'class' => 'text-amber-300'], ['label' => 'ML analysis queue', 'value' => '47 pending', 'class' => 'text-amber-300']] as $health)
                         <div class="flex items-center justify-between border-b border-blue-900/40 pb-3 last:border-0 last:pb-0"><span class="text-xs text-slate-400">{{ $health['label'] }}</span><span class="text-xs font-bold {{ $health['class'] }}">{{ $health['value'] }}</span></div>
                     @endforeach
                 </div>
