@@ -590,6 +590,68 @@ body.theme-light .portal-main [class*="bg-[#b7c9e5"] [class*="bg-[#9fb8dc"] {
     box-shadow: var(--citizen-shadow);
 }
 
+.citizen-auth-body {
+    display: block;
+    min-height: 100vh;
+    padding: 0;
+    background: var(--citizen-shell-gradient);
+}
+
+.citizen-auth-page {
+    display: grid;
+    min-height: 100vh;
+    place-items: center;
+    padding: 40px 20px;
+}
+
+.citizen-auth-card {
+    width: min(100%, 460px);
+    padding: 32px;
+    border-radius: 24px;
+}
+
+.citizen-auth-brand {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.citizen-auth-brand img {
+    width: 112px;
+    height: auto;
+}
+
+.citizen-auth-form select {
+    min-height: 50px;
+    margin-top: 7px;
+    padding: 12px 14px;
+    border: 1px solid var(--citizen-border);
+    border-radius: 12px;
+    background: var(--citizen-input);
+    color: var(--citizen-text);
+    font-size: 14px;
+}
+
+.citizen-auth-form select:focus {
+    border-color: #2563eb;
+    outline: 3px solid rgba(37, 99, 235, 0.2);
+}
+
+.citizen-auth-body.theme-light {
+    background: var(--citizen-shell-gradient);
+}
+
+@media (min-width: 768px) {
+    .citizen-auth-page {
+        padding: 56px 24px;
+    }
+
+    .citizen-auth-card {
+        width: min(100%, 480px);
+        padding: 40px;
+    }
+}
+
 .citizen-header {
     position: sticky;
     top: 0;
@@ -1361,6 +1423,160 @@ body.theme-light .agos-citizen-link:focus-visible {
     padding: 24px 16px;
     background: var(--citizen-shell-gradient);
     color: var(--citizen-text);
+}
+
+@media (min-width: 768px) {
+    .citizen-body {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        min-height: 100vh;
+        padding: 32px 16px;
+    }
+
+    .citizen-app {
+        width: 390px;
+        height: 844px;
+        min-height: 0;
+        margin: 0;
+        overflow: hidden;
+        border: 8px solid #1e293b;
+        border-radius: 48px;
+        background: #0f172a;
+        box-shadow: 0 25px 60px rgba(2, 6, 23, .6);
+    }
+
+    .citizen-viewport {
+        position: relative;
+        height: 100%;
+        overflow: hidden;
+        border-radius: 40px;
+    }
+
+    .citizen-device-notch {
+        position: absolute;
+        top: 12px;
+        left: 50%;
+        z-index: 60;
+        display: block;
+        width: 112px;
+        height: 20px;
+        border-radius: 999px;
+        background: #000;
+        transform: translateX(-50%);
+    }
+
+    .citizen-header {
+        height: 92px;
+        padding-top: 32px;
+        border-radius: 40px 40px 0 0;
+    }
+
+    .citizen-main {
+        height: calc(100% - 92px);
+        min-height: 0;
+        scrollbar-width: none;
+    }
+
+    .citizen-main::-webkit-scrollbar {
+        display: none;
+    }
+
+    .citizen-bottom-nav {
+        position: absolute;
+        right: 0;
+        bottom: 0;
+        left: 0;
+        width: auto;
+        max-width: none;
+        border-radius: 0 0 40px 40px;
+        transform: none;
+        backdrop-filter: blur(16px);
+    }
+}
+
+@media (max-width: 767px) {
+    .citizen-body,
+    .citizen-app {
+        width: 100%;
+        min-height: 100vh;
+        margin: 0;
+        border: 0;
+        border-radius: 0;
+        box-shadow: none;
+    }
+
+    .citizen-device-notch {
+        display: none;
+    }
+
+    .citizen-viewport {
+        position: relative;
+        min-height: 100vh;
+        overflow: hidden;
+    }
+
+    .citizen-header {
+        padding-top: max(12px, env(safe-area-inset-top));
+    }
+
+    .citizen-bottom-nav {
+        position: fixed;
+        right: 0;
+        bottom: 0;
+        left: 0;
+        width: 100%;
+        max-width: none;
+        border-radius: 0;
+        transform: none;
+    }
+}
+
+.profile-identity {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    margin-bottom: 14px;
+    text-align: left;
+}
+
+.profile-avatar {
+    display: flex;
+    width: 48px;
+    height: 48px;
+    flex: 0 0 48px;
+    align-items: center;
+    justify-content: center;
+    border: 2px solid #fff;
+    border-radius: 999px;
+    background: #2563eb;
+    color: #fff;
+    font-size: 16px;
+    font-weight: 700;
+    user-select: none;
+    box-shadow: 0 1px 3px rgba(15, 23, 42, .2);
+}
+
+.citizen-body:not(.theme-light) .profile-avatar {
+    border-color: #1e293b;
+}
+
+.profile-name,
+.profile-role-label {
+    margin: 0 !important;
+}
+
+.profile-name {
+    color: var(--citizen-text) !important;
+    font-size: 15px !important;
+    font-weight: 600;
+    text-transform: capitalize;
+}
+
+.profile-role-label {
+    color: var(--citizen-muted) !important;
+    font-size: 11px !important;
 }
 
 .citizen-auth-card {

@@ -6,7 +6,7 @@
     <title>Create Citizen Account - AGOS</title>
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
-<body class="citizen-body">
+<body class="citizen-body citizen-auth-body">
     <main class="citizen-auth-page">
         <section class="citizen-auth-card">
             <div class="citizen-auth-topbar">

@@ -8,6 +8,8 @@
 </head>
 <body class="citizen-body">
     <div class="citizen-app" data-citizen-app data-csrf-token="{{ csrf_token() }}">
+        <div class="citizen-device-notch" aria-hidden="true"></div>
+        <div class="citizen-viewport">
         <header class="citizen-header">
             <button type="button" class="citizen-header-button" data-citizen-menu aria-label="Open menu">
                 <span class="sr-only">Menu</span>
@@ -134,8 +136,20 @@
 
             <section class="citizen-screen" data-citizen-screen="profile">
                 <div class="citizen-screen-title"><button type="button" data-citizen-nav="home">←</button><h1>PROFILE</h1><span></span></div>
+                @php
+                    $profileName = trim((auth()->user()->first_name ?? '') . ' ' . (auth()->user()->last_name ?? ''));
+                    $profileName = $profileName !== '' ? $profileName : (auth()->user()->name ?? 'Citizen Reporter');
+                    $profileWords = preg_split('/\s+/', $profileName, -1, PREG_SPLIT_NO_EMPTY);
+                    $profileInitials = strtoupper(substr($profileWords[0] ?? 'C', 0, 1) . substr($profileWords[count($profileWords) - 1] ?? 'R', 0, 1));
+                @endphp
                 <div class="profile-card" data-citizen-profile-card>
-                    <div class="profile-avatar" data-profile-initials>●</div>
+                    <div class="profile-identity">
+                        <div class="profile-avatar" data-profile-initials>{{ $profileInitials }}</div>
+                        <div>
+                            <p class="profile-name" data-profile-name>{{ $profileName }}</p>
+                            <p class="profile-role-label">Citizen Reporter</p>
+                        </div>
+                    </div>
                     <form action="{{ route('citizen.profile.update') }}" method="POST" class="citizen-profile-form">
                         @csrf
                         <label class="citizen-field"><span>Full name</span><input name="name" value="{{ trim(auth()->user()->first_name.' '.auth()->user()->last_name) }}" required></label>
@@ -172,6 +186,7 @@
             <button type="button" data-citizen-nav="alerts"><span>♟</span>Alerts</button>
             <button type="button" data-citizen-nav="profile"><span>☻</span>Profile</button>
         </nav>
+        </div>
     </div>
     <script>
         window.addEventListener('pageshow', async (event) => {
