@@ -19,7 +19,7 @@ class CitizenAuthController extends Controller
             'email' => ['required', 'email', 'max:255', 'unique:users,email'],
             'phone_number' => ['required', 'string', 'max:255', 'unique:users,phone_number'],
             'password' => ['required', 'string', 'min:8', 'confirmed'],
-            'barangay_id' => ['nullable', 'exists:barangays,id'],
+            'barangay_id' => ['required', 'exists:barangays,id'],
         ]);
 
         $user = User::create([

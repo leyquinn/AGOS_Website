@@ -161,6 +161,10 @@
 .validation-card strong { color: #063d86; font-size: 11px; }
 .citizen-form h2 { color: #063d86; font-size: 13px; }
 .citizen-field input, .citizen-field textarea { background: #c3ccda; color: #1f3553; font-size: 10px; }
+.citizen-field select { display: block; width: 100%; box-sizing: border-box; margin-top: 6px; padding: 9px 12px; border: 0; border-radius: 12px; outline: none; background: #c3ccda; color: #1f3553; font-size: 10px; }
+.citizen-location-help { display: block; margin: -7px 10px 12px; color: #778195; font-size: 8px; line-height: 1.4; }
+.citizen-profile-form { display: grid; gap: 4px; text-align: left; }
+.citizen-profile-form button { display: block; margin: 8px auto 10px; }
 .citizen-field input:focus, .citizen-field textarea:focus { box-shadow: 0 0 0 2px rgba(7, 87, 189, .22); }
 .water-levels label { min-height: 65px; justify-content: center; background: #c3d4ec; box-shadow: 0 2px 7px rgba(53, 82, 124, .1); }
 .water-levels label:has(input:checked) { background: #0a5bc1; color: #fff; }

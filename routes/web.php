@@ -3,6 +3,7 @@
 use App\Http\Controllers\Api\AdminManagementController;
 use App\Http\Controllers\CitizenReportController;
 use App\Http\Controllers\PortalAuthController;
+use App\Http\Controllers\ReportsController;
 use Illuminate\Support\Facades\Route;
 
 // Public Landing Page
@@ -27,6 +28,7 @@ Route::get('/logout', [PortalAuthController::class, 'destroy'])->name('logout.ge
 
 Route::middleware(['auth', 'role:citizen', 'no-back'])->group(function () {
     Route::get('/citizen', [CitizenReportController::class, 'create'])->name('citizen.create');
+    Route::post('/citizen/profile', [CitizenReportController::class, 'updateProfile'])->name('citizen.profile.update');
     Route::post('/citizen/reports', [CitizenReportController::class, 'store'])->name('citizen.reports.store');
     Route::post('/citizen/logout', [CitizenReportController::class, 'logout'])->name('citizen.logout');
 });
@@ -49,9 +51,7 @@ Route::middleware(['auth', 'role:super_admin,barangay_admin', 'no-back'])->group
         return view('operations.index');
     })->name('operations');
 
-    Route::get('/reports', function () {
-        return view('reports.index');
-    })->name('reports');
+    Route::get('/reports', [ReportsController::class, 'index'])->name('reports');
 
     Route::get('/harvesting', function () {
         return view('harvesting.index');

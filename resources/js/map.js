@@ -3,7 +3,7 @@ import 'leaflet/dist/leaflet.css';
 
 const DEFAULT_BOUNDARY_URL = '/data/davao-barangays.geojson';
 const DAVAO_CENTER = [7.0731, 125.6128];
-const heatPoints = [
+const defaultHeatPoints = [
     [7.0731, 125.6128, 0.92], [7.0668, 125.6082, 0.8], [7.0814, 125.6049, 0.66],
     [7.0534, 125.5904, 0.72], [7.0458, 125.6185, 0.86], [7.0972, 125.6324, 0.78],
     [7.1141, 125.6458, 0.55], [7.0288, 125.6534, 0.62], [7.0153, 125.5937, 0.48],
@@ -49,7 +49,7 @@ const pointInGeometry = (point, geometry) => {
 
 const featureContainsPoint = (point, feature) => pointInGeometry(point, feature.geometry);
 
-const createHeatLayer = (map) => {
+const createHeatLayer = (map, points) => {
     const layer = L.Layer.extend({
         initialize(points) {
             this.points = points;
@@ -122,7 +122,7 @@ const createHeatLayer = (map) => {
         },
     });
 
-    return new layer(heatPoints).addTo(map);
+    return new layer(points).addTo(map);
 };
 
 const initOperationsMap = async () => {
@@ -140,7 +140,13 @@ const initOperationsMap = async () => {
     const boundaryUrl = mapElement.dataset.boundaryUrl || DEFAULT_BOUNDARY_URL;
     let boundaryLayer;
     let features = [];
-    const heatLayer = createHeatLayer(map);
+    let heatPoints = defaultHeatPoints;
+    try {
+        heatPoints = JSON.parse(mapElement.dataset.heatPoints || 'null') || defaultHeatPoints;
+    } catch (error) {
+        console.error('Unable to parse report heatmap points.', error);
+    }
+    const heatLayer = createHeatLayer(map, heatPoints);
 
     try {
         const response = await fetch(boundaryUrl, { headers: { Accept: 'application/geo+json, application/json' } });

@@ -3,6 +3,7 @@
 namespace Tests\Feature;
 
 use App\Models\Role;
+use App\Models\Barangay;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
@@ -27,7 +28,9 @@ class CitizenReportTest extends TestCase
 
     public function test_citizen_can_submit_a_flood_report(): void
     {
-        $response = $this->actingAs(User::factory()->create())
+        $user = User::factory()->create();
+
+        $response = $this->actingAs($user)
             ->post(route('citizen.reports.store'), [
                 'reporter_name' => 'Maria Santos',
                 'reporter_contact' => '09171234567',
@@ -37,10 +40,11 @@ class CitizenReportTest extends TestCase
             ]);
 
         $response->assertRedirect(route('citizen.create'));
-        $this->assertDatabaseHas('flood_reports', [
-            'location' => 'Barangay Matina',
-            'water_level' => 'knee',
-            'status' => 'pending',
+        $this->assertDatabaseHas('citizen_reports', [
+            'user_id' => $user->id,
+            'report_text' => 'Water is rising near the elementary school.',
+            'water_level_status' => 'knee_deep',
+            'verification_status' => 'pending',
         ]);
     }
 
@@ -57,11 +61,42 @@ class CitizenReportTest extends TestCase
             'email' => 'juan@example.com',
             'password' => 'password123',
             'password_confirmation' => 'password123',
+            'barangay_id' => Barangay::create(['name' => 'Poblacion', 'district' => '1st District'])->id,
         ]);
 
         $response->assertRedirect(route('citizen.create'));
         $this->assertAuthenticated();
         $this->assertDatabaseHas('users', ['email' => 'juan@example.com']);
+    }
+
+    public function test_citizen_can_update_assigned_barangay_and_submit_report_to_that_barangay(): void
+    {
+        $barangay = Barangay::create(['name' => 'Matina Crossing', 'district' => '1st District']);
+        $citizen = User::factory()->create();
+
+        $this->actingAs($citizen)
+            ->post(route('citizen.profile.update'), [
+                'name' => 'Updated Citizen',
+                'barangay_id' => $barangay->id,
+            ])
+            ->assertRedirect(route('citizen.create'));
+
+        $this->actingAs($citizen)
+            ->post(route('citizen.reports.store'), [
+                'location' => 'Matina Crossing',
+                'water_level' => 'impassable',
+                'description' => 'Road is not passable.',
+                'latitude' => 7.0731,
+                'longitude' => 125.6128,
+            ])
+            ->assertRedirect(route('citizen.create'));
+
+        $this->assertDatabaseHas('citizen_reports', [
+            'user_id' => $citizen->id,
+            'barangay_id' => $barangay->id,
+            'water_level_status' => 'roof_top',
+            'latitude' => 7.0731,
+        ]);
     }
 
     public function test_citizen_can_sign_in(): void

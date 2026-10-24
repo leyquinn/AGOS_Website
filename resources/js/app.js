@@ -194,18 +194,22 @@ const loadCitizenProfile = async (citizenApp) => {
 
         const fullName = user.full_name || `${user.first_name || ''} ${user.last_name || ''}`.trim();
         const barangayName = user.barangay?.name || 'Barangay not assigned';
-        card.querySelector('[data-profile-name]').textContent = fullName || 'Profile unavailable';
-        card.querySelector('[data-profile-location]').textContent = `⌖  ${barangayName}`;
-        card.querySelector('[data-profile-email]').textContent = user.email || 'Email not available';
-        card.querySelector('[data-profile-phone]').textContent = user.phone_number || 'Phone number not available';
-        card.querySelector('[data-profile-role]').textContent = (user.role || 'contributor').replace('_', ' ').toUpperCase();
-        card.querySelector('[data-profile-initials]').textContent = fullName
+        const setProfileText = (selector, value) => {
+            const element = card.querySelector(selector);
+            if (element) element.textContent = value;
+        };
+        setProfileText('[data-profile-name]', fullName || 'Profile unavailable');
+        setProfileText('[data-profile-location]', `⌖  ${barangayName}`);
+        setProfileText('[data-profile-email]', user.email || 'Email not available');
+        setProfileText('[data-profile-phone]', user.phone_number || 'Phone number not available');
+        setProfileText('[data-profile-role]', (user.role || 'contributor').replace('_', ' ').toUpperCase());
+        setProfileText('[data-profile-initials]', fullName
             .split(' ')
             .filter(Boolean)
             .map((part) => part[0])
             .join('')
             .slice(0, 2)
-            .toUpperCase() || '●';
+            .toUpperCase() || '●');
     } catch (error) {
         console.error('Unable to load authenticated citizen profile.', error);
         showToast('Unable to load your profile');
@@ -214,6 +218,47 @@ const loadCitizenProfile = async (citizenApp) => {
 
 const citizenApp = document.querySelector('[data-citizen-app]');
 if (citizenApp) {
+    const reportLatitude = citizenApp.querySelector('[data-report-latitude]');
+    const reportLongitude = citizenApp.querySelector('[data-report-longitude]');
+    const locationButton = citizenApp.querySelector('[data-use-current-location]');
+    const locationLabel = citizenApp.querySelector('[data-location-label]');
+    const locationStatus = citizenApp.querySelector('[data-location-status]');
+    const requestCurrentLocation = () => {
+        if (!('geolocation' in navigator)) {
+            locationStatus.textContent = 'Device location is not supported by this browser.';
+            return;
+        }
+
+        locationStatus.textContent = 'Requesting permission to access your device location…';
+        navigator.geolocation.getCurrentPosition(
+            ({ coords }) => {
+                reportLatitude.value = coords.latitude.toFixed(8);
+                reportLongitude.value = coords.longitude.toFixed(8);
+                locationLabel.textContent = `Pinned at ${coords.latitude.toFixed(5)}, ${coords.longitude.toFixed(5)}`;
+                locationStatus.textContent = 'Exact location pinned. Submit the report to share it with the response team.';
+            },
+            () => {
+                locationStatus.textContent = 'Location permission was not granted. You can still submit with your assigned barangay.';
+            },
+            { enableHighAccuracy: true, maximumAge: 300000, timeout: 10000 },
+        );
+    };
+    locationButton?.addEventListener('click', requestCurrentLocation);
+    if (reportLatitude && reportLongitude && 'geolocation' in navigator) {
+        navigator.geolocation.getCurrentPosition(
+            ({ coords }) => {
+                reportLatitude.value = coords.latitude.toFixed(8);
+                reportLongitude.value = coords.longitude.toFixed(8);
+                locationLabel.textContent = `Pinned at ${coords.latitude.toFixed(5)}, ${coords.longitude.toFixed(5)}`;
+                locationStatus.textContent = 'Device location detected. Tap Edit to refresh the pin.';
+            },
+            () => {
+                // Location is optional; the report can still be submitted without coordinates.
+            },
+            { enableHighAccuracy: true, maximumAge: 300000, timeout: 10000 },
+        );
+    }
+
     loadCitizenProfile(citizenApp);
     const citizenScreens = citizenApp.querySelectorAll('[data-citizen-screen]');
     const citizenNavItems = citizenApp.querySelectorAll('[data-citizen-nav]');

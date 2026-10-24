@@ -30,6 +30,15 @@
                 @error('name')<small>{{ $message }}</small>@enderror
                 <label>Email address<input type="email" name="email" value="{{ old('email') }}" autocomplete="email" required placeholder="you@example.com"></label>
                 @error('email')<small>{{ $message }}</small>@enderror
+                <label>Assigned barangay
+                    <select name="barangay_id" required>
+                        <option value="">Select your barangay</option>
+                        @foreach ($barangays as $barangay)
+                            <option value="{{ $barangay->id }}" @selected(old('barangay_id') == $barangay->id)>{{ $barangay->name }}</option>
+                        @endforeach
+                    </select>
+                </label>
+                @error('barangay_id')<small>{{ $message }}</small>@enderror
                 <label>Password<input type="password" name="password" autocomplete="new-password" required placeholder="At least 8 characters"></label>
                 @error('password')<small>{{ $message }}</small>@enderror
                 <label>Confirm password<input type="password" name="password_confirmation" autocomplete="new-password" required placeholder="Repeat your password"></label>

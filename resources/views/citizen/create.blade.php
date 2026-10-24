@@ -86,15 +86,22 @@
                 <div class="validation-card"><strong>♣ &nbsp; Collaborative Validation</strong><p>Your report will be combined with other nearby to verify flood levels accurately.</p></div>
                 <form action="{{ route('citizen.reports.store') }}" method="POST" class="citizen-form">
                     @csrf
+                    <input type="hidden" name="latitude" data-report-latitude>
+                    <input type="hidden" name="longitude" data-report-longitude>
                     <h2>Location</h2>
-                    <label class="current-location-field"><span>◉</span><span>Current Location<small>Brgy. Poblacion</small></span><button type="button">Edit</button></label>
+                    <input type="hidden" name="barangay_id" value="{{ auth()->user()->barangay_id }}">
+                    <label class="current-location-field" data-location-control>
+                        <span>◉</span><span>Current Location<small data-location-label>{{ auth()->user()->barangay?->name ?? 'Location permission not granted' }}</small></span>
+                        <button type="button" data-use-current-location>Edit</button>
+                    </label>
+                    <small class="citizen-location-help" data-location-status>Tap Edit to allow device location and pin your exact position.</small>
                     <label class="citizen-field"><span>Nearest Landmark (Optional)</span><input name="location" value="{{ old('location') }}" required placeholder="e.g San Jose Church"></label>
                     @error('location')<small class="citizen-error">{{ $message }}</small>@enderror
                     <h2>Water Level</h2>
                     <div class="water-levels">
-                        <label><input type="radio" name="water_level" value="ankle" @checked(old('water_level') === 'ankle') required><span>◕</span>Ankle</label>
-                        <label><input type="radio" name="water_level" value="knee" @checked(old('water_level') === 'knee')><span>≋</span>Knee-Deep</label>
-                        <label><input type="radio" name="water_level" value="impassable" @checked(old('water_level') === 'impassable')><span>≋</span>Impassable</label>
+                        @foreach ([['value' => 'ankle', 'label' => 'Ankle', 'icon' => '◕'], ['value' => 'knee', 'label' => 'Knee-Deep', 'icon' => '≋'], ['value' => 'waist', 'label' => 'Waist-Deep', 'icon' => '≋'], ['value' => 'chest', 'label' => 'Chest-Deep', 'icon' => '≋'], ['value' => 'roof', 'label' => 'Roof-Top', 'icon' => '≋'], ['value' => 'impassable', 'label' => 'Impassable', 'icon' => '≋']] as $level)
+                            <label><input type="radio" name="water_level" value="{{ $level['value'] }}" @checked(old('water_level') === $level['value']) required><span>{{ $level['icon'] }}</span>{{ $level['label'] }}</label>
+                        @endforeach
                     </div>
                     @error('water_level')<small class="citizen-error">{{ $message }}</small>@enderror
                     <h2>Details</h2>
@@ -129,16 +136,31 @@
                 <div class="citizen-screen-title"><button type="button" data-citizen-nav="home">←</button><h1>PROFILE</h1><span></span></div>
                 <div class="profile-card" data-citizen-profile-card>
                     <div class="profile-avatar" data-profile-initials>●</div>
-                    <h2 data-profile-name>Loading profile…</h2>
-                    <p data-profile-location>⌖ &nbsp; Loading barangay…</p>
+                    <form action="{{ route('citizen.profile.update') }}" method="POST" class="citizen-profile-form">
+                        @csrf
+                        <label class="citizen-field"><span>Full name</span><input name="name" value="{{ trim(auth()->user()->first_name.' '.auth()->user()->last_name) }}" required></label>
+                        <label class="citizen-field"><span>Assigned barangay</span>
+                            <select name="barangay_id" required>
+                                <option value="">Select your barangay</option>
+                                @foreach ($barangays as $barangay)
+                                    <option value="{{ $barangay->id }}" @selected(auth()->user()->barangay_id === $barangay->id)>{{ $barangay->name }}</option>
+                                @endforeach
+                            </select>
+                        </label>
+                        <button type="submit">Save Profile</button>
+                    </form>
+                    <p data-profile-location>⌖ &nbsp; {{ auth()->user()->barangay?->name ?? 'Barangay not assigned' }}</p>
                     <p data-profile-email>Loading email…</p>
                     <p data-profile-phone>Loading phone number…</p>
                     <span class="contributor-badge">♟ &nbsp; <span data-profile-role>CONTRIBUTOR</span></span>
                     <p class="profile-copy">Committed to community safety. Active reporter in flood-prone areas of Davao City.</p>
-                    <button type="button" data-edit-profile>⌁ &nbsp; Edit Profile</button>
                 </div>
-                <div class="citizen-section-title profile-reports-title"><strong>My Reports</strong><button type="button">View All</button></div>
-                <article class="my-report"><span>♦</span><div><strong>Knee-Deep Flooding</strong><small>Brgy. Roxas District, D.C</small></div><small>2h ago</small></article>
+                <div class="citizen-section-title profile-reports-title"><strong>My Reports</strong><span>{{ $citizenReports->count() }} total</span></div>
+                @forelse ($citizenReports as $report)
+                    <article class="my-report"><span>♦</span><div><strong>{{ str_replace('_', ' ', ucfirst($report->water_level_status)) }} Flooding</strong><small>{{ $report->barangay?->name ?? 'Barangay pending' }}</small></div><small>{{ $report->created_at->diffForHumans() }}</small></article>
+                @empty
+                    <article class="my-report"><div><strong>No reports yet</strong><small>Your submitted reports will appear here.</small></div></article>
+                @endforelse
                 <form action="{{ route('citizen.logout.get') }}" method="GET" class="citizen-logout-form"><button type="submit">Log Out</button></form>
             </section>
         </main>
