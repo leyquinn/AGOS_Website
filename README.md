@@ -20,7 +20,7 @@ The repository currently contains the Laravel web application shell and the init
 - Laravel’s default User, cache, and jobs database migrations.
 - Example Unit and Feature test suites.
 
-Several portal values and health indicators are currently static UI data. The production data pipeline, social-media connectors, trained NLP service, clustering service, mobile client, and responder integrations should be treated as planned work unless they have been added separately.
+The portal provides the core web experience for LGU and responder workflows, while citizen reporting is supported through the web routes and versioned API endpoints. The production data pipeline, social-media connectors, trained NLP service, clustering service, and responder integrations are being developed as the system's intelligence and integration layers.
 
 ## Project goals
 
@@ -35,9 +35,9 @@ The planned research architecture uses:
 
 - **Multi-task XLM-RoBERTa** for multilingual and code-switched text classification.
 - **K-Means++ clustering** for grouping validated reports by location.
-- **REST/JSON services** for communication with a future mobile application.
+- **REST/JSON services** for communication with the citizen-facing application and other clients.
 
-These model and integration components are part of the project direction; they are not currently exposed as working services by the Laravel routes in this repository.
+These model and integration components define the broader project architecture and are being connected through the Laravel application and its API contract.
 
 ## Technology stack
 
@@ -137,7 +137,7 @@ Then open [http://localhost:8000](http://localhost:8000).
 If you prefer separate processes, use:
 
 ```bash
-php artisan serve
+php artisan serve --host=localhost --port=8000
 npm run dev
 ```
 
@@ -234,7 +234,7 @@ agos/
 
 ### Adding API functionality
 
-Keep API routes in `routes/api.php`, protect private resources with Sanctum middleware, and use JSON responses or API Resources for stable client-facing output. Treat the API as a separate contract because it is intended to support a future mobile application as well as other clients.
+Keep API routes in `routes/api.php`, protect private resources with Sanctum middleware, and use JSON responses or API Resources for stable client-facing output. Treat the API as a separate contract because it supports the citizen-facing application as well as other clients.
 
 ## Testing
 
@@ -290,10 +290,10 @@ External social-media credentials, model-service URLs, map providers, and notifi
 
 Planned work includes:
 
-- Replace static portal metrics with persisted report and incident data.
+- Expand portal metrics with persisted report and incident data.
 - Add role-aware authentication and authorization for LGU, analyst, dispatcher, and field users.
 - Define report, incident, barangay, source, validation, and location data models.
-- Implement report submission and moderation APIs for the mobile client.
+- Expand report submission and moderation APIs for the citizen-facing application.
 - Add ingestion adapters with rate limits, retries, provenance, and provider-compliant data handling.
 - Connect a Python NLP service for relevance, severity, language, and location extraction.
 - Implement validated-event clustering and map-based visualization.
