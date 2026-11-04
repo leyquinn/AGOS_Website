@@ -47,12 +47,11 @@ class CitizenReportController extends Controller
             'email' => $validated['email'],
             'phone_number' => 'web-'.str()->uuid(),
             'password' => Hash::make($validated['password']),
+            'status' => 'pending',
         ]);
 
-        Auth::login($user);
-        $request->session()->regenerate();
-
-        return redirect()->route('citizen.create');
+        return redirect()->route('citizen.login')
+            ->with('status', 'Your registration is under review by your Barangay Admin. You will receive an email notification once reviewed.');
     }
 
     public function login(Request $request): RedirectResponse
@@ -74,6 +73,22 @@ class CitizenReportController extends Controller
             throw ValidationException::withMessages([
                 'email' => 'Only citizen accounts can access the Citizen App.',
             ]);
+        }
+
+        $user = Auth::user();
+
+        if (! $user->isApproved()) {
+            Auth::logout();
+
+            $message = $user->barangay
+                ? "Your registration for Barangay {$user->barangay->name} is under review by your Barangay Admin. You will receive an email notification once reviewed."
+                : 'Your registration is under review by your Barangay Admin. You will receive an email notification once reviewed.';
+
+            if ($user->status === 'declined') {
+                $message = 'Your registration was declined. Please contact your barangay office for assistance.';
+            }
+
+            throw ValidationException::withMessages(['email' => $message]);
         }
 
         $request->session()->regenerate();

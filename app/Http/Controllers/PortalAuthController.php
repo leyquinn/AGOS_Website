@@ -30,7 +30,7 @@ class PortalAuthController extends Controller
 
         $user = Auth::guard('web')->user();
 
-        if (! $user->isSuperAdmin() && ! $user->isBarangayAdmin()) {
+        if (! $user->isApproved() || (! $user->isSuperAdmin() && ! $user->isBarangayAdmin())) {
             Auth::guard('web')->logout();
 
             throw ValidationException::withMessages([

@@ -22,6 +22,8 @@ The repository currently contains the Laravel web application shell and the init
 
 The portal provides the core web experience for LGU and responder workflows, while citizen reporting is supported through the web routes and versioned API endpoints. The production data pipeline, social-media connectors, trained NLP service, clustering service, and responder integrations are being developed as the system's intelligence and integration layers.
 
+Citizen registration is moderated through a Barangay Admin approval workflow. New citizen accounts remain pending until an administrator assigned to the selected barangay approves or declines them; only approved accounts can receive Sanctum tokens and use protected citizen API resources. The operational and privacy design is documented in [Chapter 3: Operational Framework & User Administration](docs/CHAPTER_3_OPERATIONAL_FRAMEWORK.md).
+
 ## Project goals
 
 AGOS is designed around four related goals:
@@ -85,7 +87,7 @@ The `composer setup` script runs the following steps:
 1. `composer install`
 2. Copies `.env.example` to `.env` when `.env` does not exist
 3. Generates `APP_KEY`
-4. Runs database migrations
+4. Runs database migrations and seeds the roles, default administrator, and Davao barangays
 5. Installs npm dependencies
 6. Builds production frontend assets
 
@@ -102,6 +104,39 @@ The repository includes `database/database.sqlite`. If you create a new local SQ
 ```bash
 php artisan migrate
 ```
+
+If the database has already been migrated but the barangay list is empty, populate the
+registration options with:
+
+```bash
+php artisan db:seed --class=DavaoBarangaySeeder
+```
+
+### Approval email delivery
+
+Approval and decline emails are queued. For Gmail, create a Google App Password
+(do not use your normal Gmail password), then set these values in `.env`:
+
+```dotenv
+MAIL_MAILER=smtp
+MAIL_SCHEME=tls
+MAIL_HOST=smtp.gmail.com
+MAIL_PORT=587
+MAIL_USERNAME=your-gmail-address@gmail.com
+MAIL_PASSWORD=your-16-character-app-password
+MAIL_FROM_ADDRESS=your-gmail-address@gmail.com
+MAIL_FROM_NAME="AGOS"
+```
+
+Run a queue worker while developing so queued notifications are delivered:
+
+```bash
+php artisan queue:work
+```
+
+If `MAIL_MAILER=log`, messages are written to `storage/logs/laravel.log` instead
+of being delivered to Gmail. If the queue worker is not running, notifications
+remain in the `jobs` table.
 
 To use MySQL instead, update the database values in `.env`:
 

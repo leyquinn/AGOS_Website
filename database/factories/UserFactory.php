@@ -33,6 +33,7 @@ class UserFactory extends Factory
             'phone_number' => fake()->unique()->numerify('09#########'),
             'email_verified_at' => now(),
             'password' => static::$password ??= Hash::make('password'),
+            'status' => 'approved',
             'remember_token' => Str::random(10),
         ];
     }

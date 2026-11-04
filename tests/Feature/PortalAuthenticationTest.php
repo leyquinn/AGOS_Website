@@ -69,6 +69,34 @@ class PortalAuthenticationTest extends TestCase
         $this->actingAs($admin)->get(route('admin.barangays'))->assertForbidden();
     }
 
+    public function test_assigned_barangay_admin_can_log_in_with_the_assigned_credentials(): void
+    {
+        $superAdmin = User::factory()->create([
+            'role_id' => Role::firstOrCreate(['name' => 'super_admin'])->id,
+            'status' => 'approved',
+        ]);
+        $barangay = \App\Models\Barangay::create([
+            'name' => 'Poblacion',
+            'district' => '1st District',
+        ]);
+
+        $this->actingAs($superAdmin)->post(route('admin.assign-barangay-admin'), [
+            'first_name' => 'Barangay',
+            'last_name' => 'Admin',
+            'email' => 'barangay-admin@example.com',
+            'phone_number' => '09171234567',
+            'password' => 'Password123!',
+            'barangay_id' => $barangay->id,
+        ])->assertRedirect(route('admin.barangays'));
+
+        $this->post(route('login.store'), [
+            'email' => 'barangay-admin@example.com',
+            'password' => 'Password123!',
+        ])->assertRedirect(route('dashboard'));
+
+        $this->assertAuthenticatedAs(User::where('email', 'barangay-admin@example.com')->first());
+    }
+
     public function test_citizen_cannot_open_admin_portal(): void
     {
         $citizen = User::factory()->create([

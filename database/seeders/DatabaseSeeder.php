@@ -28,6 +28,7 @@ class DatabaseSeeder extends Seeder
                 'phone_number' => '+639000000000',
                 'password' => Hash::make('Password123!'),
                 'is_active' => true,
+                'status' => 'approved',
                 'email_verified_at' => now(),
             ],
         );

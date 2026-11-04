@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Middleware\EnsureUserHasRole;
+use App\Http\Middleware\EnsureAccountIsApproved;
 use App\Http\Middleware\PreventBackHistory;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
@@ -20,6 +21,7 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->alias([
             'no-back' => PreventBackHistory::class,
             'role' => EnsureUserHasRole::class,
+            'approved' => EnsureAccountIsApproved::class,
         ]);
 
         $middleware->redirectGuestsTo(function (Request $request): string {

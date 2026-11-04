@@ -199,11 +199,14 @@
 .citizen-auth-lead { margin: 9px 0 24px; color: #65748a; font-size: 13px; line-height: 1.5; }
 .citizen-auth-message { margin-bottom: 16px; padding: 10px 12px; border-radius: 10px; font-size: 12px; }
 .citizen-auth-error { border: 1px solid #f0b7c1; background: #fff0f2; color: #a6293c; }
+.citizen-auth-success { border: 1px solid #a8d9bc; background: #effaf2; color: #237342; }
+.citizen-auth-required { color: #bd2e44; font-size: 11px; font-weight: 400; }
 .citizen-auth-form { display: grid; gap: 13px; }
 .citizen-auth-form label { display: grid; gap: 7px; color: #203858; font-size: 12px; font-weight: 700; }
 .citizen-auth-form input:not([type="checkbox"]) { width: 100%; box-sizing: border-box; padding: 12px 13px; border: 1px solid #c7d5e7; border-radius: 10px; outline: none; background: #f8fbff; color: #173657; font-size: 13px; }
 .citizen-auth-form input:not([type="checkbox"]):focus { border-color: #1670d4; box-shadow: 0 0 0 3px rgba(22, 112, 212, .14); }
 .citizen-auth-form small { margin-top: -8px; color: #bd2e44; font-size: 11px; }
+.citizen-auth-form .citizen-auth-help { margin-top: -3px; color: #63748b; font-weight: 400; line-height: 1.4; }
 .citizen-auth-form .citizen-check { display: flex; grid-template-columns: 16px 1fr; align-items: center; gap: 8px; color: #62738b; font-size: 11px; font-weight: 400; }
 .citizen-auth-form button { min-height: 45px; margin-top: 5px; border: 0; border-radius: 10px; background: #0757bd; color: #fff; font-size: 13px; font-weight: 700; cursor: pointer; box-shadow: 0 5px 12px rgba(7, 87, 189, .2); }
 .citizen-auth-form button:hover { background: #064a9f; }

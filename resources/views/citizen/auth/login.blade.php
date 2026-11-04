@@ -20,6 +20,9 @@
             <h1>Welcome back</h1>
             <p class="citizen-auth-lead">Sign in to continue to the AGOS Citizen App.</p>
 
+            @if (session('status'))
+                <div class="citizen-auth-message citizen-auth-success" role="status">{{ session('status') }}</div>
+            @endif
             @if ($errors->any())
                 <div class="citizen-auth-message citizen-auth-error" role="alert">Please check your email and password and try again.</div>
             @endif

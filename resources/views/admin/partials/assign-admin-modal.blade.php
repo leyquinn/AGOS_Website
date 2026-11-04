@@ -22,6 +22,7 @@
             <div>
                 <div class="mb-2 flex items-center justify-between gap-3"><label for="password" class="block text-xs font-bold text-blue-100">Temporary password</label><button type="button" data-generate-password class="text-xs font-bold text-blue-300 hover:text-blue-200">Generate random password</button></div>
                 <input id="password" name="password" type="password" minlength="8" required class="w-full rounded-xl border border-blue-900 bg-[#061633] px-3 py-3 text-sm text-white outline-none focus:ring-2 focus:ring-blue-500">
+                <p class="mt-2 text-xs text-slate-400">Give the assigned admin this exact email address and password. A generated password is shown only before you submit the form.</p>
             </div>
             <div class="flex justify-end gap-3 border-t border-blue-900/70 pt-5"><button type="button" data-close-assign-admin class="rounded-xl px-4 py-3 text-sm font-bold text-slate-300 hover:bg-blue-900">Cancel</button><button type="submit" class="rounded-xl bg-blue-600 px-5 py-3 text-sm font-bold text-white hover:bg-blue-500">Assign Admin</button></div>
         </form>

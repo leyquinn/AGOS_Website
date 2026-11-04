@@ -57,6 +57,7 @@ class AdminManagementController extends Controller
 
         return User::create([
             ...$validated,
+            'status' => 'approved',
             'role_id' => Role::firstOrCreate(
                 ['name' => 'barangay_admin'],
                 ['description' => 'Administrator assigned to one barangay'],

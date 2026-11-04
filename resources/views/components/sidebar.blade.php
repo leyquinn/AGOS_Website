@@ -25,6 +25,9 @@
                 if (auth()->user()?->isSuperAdmin()) {
                     $items[] = ['route' => 'admin.barangays', 'label' => 'Barangay Admins', 'icon' => '♟'];
                 }
+                if (auth()->user()?->isBarangayAdmin()) {
+                    $items[] = ['route' => 'admin.citizen-approvals', 'label' => 'Citizen Approvals', 'icon' => '✓'];
+                }
             @endphp
             @foreach ($items as $item)
                 <a href="{{ route($item['route']) }}" class="sidebar-nav-item group relative flex items-center gap-3 rounded-xl border px-3 py-2.5 text-sm font-medium transition {{ request()->routeIs($item['route']) ? 'border-blue-300/20 bg-blue-500/20 text-white' : 'border-transparent text-blue-100/70 hover:bg-blue-900/60 hover:text-white' }}" @if(request()->routeIs($item['route'])) aria-current="page" @endif>

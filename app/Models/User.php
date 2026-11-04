@@ -30,6 +30,8 @@ class User extends Authenticatable
         'phone_number',
         'password',
         'is_active',
+        'status',
+        'rejection_reason',
     ];
 
     /**
@@ -84,5 +86,20 @@ class User extends Authenticatable
     public function isCitizen(): bool
     {
         return $this->role?->name === 'citizen';
+    }
+
+    public function isApproved(): bool
+    {
+        return $this->status === 'approved';
+    }
+
+    public function isPending(): bool
+    {
+        return $this->status === 'pending';
+    }
+
+    public function belongsToBarangay(Barangay|int $barangay): bool
+    {
+        return $this->barangay_id === ($barangay instanceof Barangay ? $barangay->getKey() : $barangay);
     }
 }

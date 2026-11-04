@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Api\AdminManagementController;
+use App\Http\Controllers\Api\CitizenApprovalController;
 use App\Http\Controllers\CitizenReportController;
 use App\Http\Controllers\PortalAuthController;
 use App\Http\Controllers\ReportsController;
@@ -64,4 +65,13 @@ Route::middleware(['auth', 'role:super_admin,barangay_admin', 'no-back'])->group
     Route::get('/settings', function () {
         return view('settings.index');
     })->name('settings');
+});
+
+Route::middleware(['auth', 'role:barangay_admin', 'no-back'])->prefix('admin')->group(function () {
+    Route::get('/citizen-approvals', [CitizenApprovalController::class, 'pendingPage'])
+        ->name('admin.citizen-approvals');
+    Route::post('/citizen-approvals/{user}/approve', [CitizenApprovalController::class, 'approveWeb'])
+        ->name('admin.citizen-approvals.approve');
+    Route::post('/citizen-approvals/{user}/decline', [CitizenApprovalController::class, 'declineWeb'])
+        ->name('admin.citizen-approvals.decline');
 });

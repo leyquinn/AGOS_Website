@@ -54,7 +54,7 @@ class CitizenReportTest extends TestCase
             ->assertRedirect(route('citizen.login'));
     }
 
-    public function test_citizen_can_register_and_is_signed_in(): void
+    public function test_citizen_registration_requires_barangay_review(): void
     {
         $response = $this->post(route('citizen.register.store'), [
             'name' => 'Juan Dela Cruz',
@@ -64,9 +64,27 @@ class CitizenReportTest extends TestCase
             'barangay_id' => Barangay::create(['name' => 'Poblacion', 'district' => '1st District'])->id,
         ]);
 
-        $response->assertRedirect(route('citizen.create'));
-        $this->assertAuthenticated();
-        $this->assertDatabaseHas('users', ['email' => 'juan@example.com']);
+        $response->assertRedirect(route('citizen.login'));
+        $this->assertGuest();
+        $this->assertDatabaseHas('users', [
+            'email' => 'juan@example.com',
+            'status' => 'pending',
+        ]);
+        $response->assertSessionHas('status', 'Your registration is under review by your Barangay Admin. You will receive an email notification once reviewed.');
+    }
+
+    public function test_citizen_registration_requires_an_email_address(): void
+    {
+        $response = $this->from(route('citizen.register'))
+            ->post(route('citizen.register.store'), [
+                'name' => 'Juan Dela Cruz',
+                'password' => 'password123',
+                'password_confirmation' => 'password123',
+                'barangay_id' => Barangay::create(['name' => 'Poblacion', 'district' => '1st District'])->id,
+            ]);
+
+        $response->assertRedirect(route('citizen.register'))
+            ->assertSessionHasErrors('email');
     }
 
     public function test_citizen_can_update_assigned_barangay_and_submit_report_to_that_barangay(): void

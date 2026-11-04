@@ -12,7 +12,7 @@ class EnsureUserHasRole
     {
         $user = $request->user();
 
-        if (! $user || ! $user->role || ! in_array($user->role->name, $roles, true)) {
+        if (! $user || ! $user->isApproved() || ! $user->role || ! in_array($user->role->name, $roles, true)) {
             return response()->json([
                 'message' => 'Unauthorized access for your role level.',
             ], 403);

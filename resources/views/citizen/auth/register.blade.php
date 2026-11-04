@@ -28,14 +28,20 @@
                 @csrf
                 <label>Full name<input type="text" name="name" value="{{ old('name') }}" autocomplete="name" required placeholder="Your full name"></label>
                 @error('name')<small>{{ $message }}</small>@enderror
-                <label>Email address<input type="email" name="email" value="{{ old('email') }}" autocomplete="email" required placeholder="you@example.com"></label>
+                <label>
+                    Email address <span class="citizen-auth-required">(required)</span>
+                    <input type="email" name="email" value="{{ old('email') }}" autocomplete="email" required placeholder="you@example.com">
+                    <small class="citizen-auth-help">We will send your account approval or decline notification to this email.</small>
+                </label>
                 @error('email')<small>{{ $message }}</small>@enderror
                 <label>Assigned barangay
                     <select name="barangay_id" required>
                         <option value="">Select your barangay</option>
-                        @foreach ($barangays as $barangay)
+                        @forelse ($barangays as $barangay)
                             <option value="{{ $barangay->id }}" @selected(old('barangay_id') == $barangay->id)>{{ $barangay->name }}</option>
-                        @endforeach
+                        @empty
+                            <option value="" disabled>No barangays are currently available</option>
+                        @endforelse
                     </select>
                 </label>
                 @error('barangay_id')<small>{{ $message }}</small>@enderror
