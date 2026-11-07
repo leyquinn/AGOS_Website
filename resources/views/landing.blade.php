@@ -2,11 +2,11 @@
     <!-- Section 1: Hero (Home) -->
     <section id="home" data-scroll-fade class="relative isolate w-full overflow-hidden px-5 sm:px-8 lg:px-12 pt-32 sm:pt-40 pb-24 min-h-screen flex flex-col justify-center items-center text-center">
         <!-- Replace this temporary background layer with your hero image later. -->
-        <div class="pointer-events-none absolute inset-0 -z-10 bg-[radial-gradient(circle_at_50%_35%,rgba(37,99,235,0.42),transparent_38%),linear-gradient(135deg,#071738_0%,#031027_55%,#020b1a_100%)]"></div>
+        <div data-landing-hero-bg class="pointer-events-none absolute inset-0 -z-10 bg-[radial-gradient(circle_at_50%_35%,rgba(37,99,235,0.42),transparent_38%),linear-gradient(135deg,#071738_0%,#031027_55%,#020b1a_100%)]"></div>
         <div class="pointer-events-none absolute inset-0 -z-10 opacity-30 [background-image:linear-gradient(rgba(96,165,250,0.14)_1px,transparent_1px),linear-gradient(90deg,rgba(96,165,250,0.14)_1px,transparent_1px)] [background-size:42px_42px]"></div>
-        <div class="pointer-events-none absolute inset-0 -z-10 bg-gradient-to-b from-[#031027]/10 via-[#031027]/30 to-[#031027]"></div>
+        <div data-landing-hero-overlay class="pointer-events-none absolute inset-0 -z-10 bg-gradient-to-b from-[#031027]/10 via-[#031027]/30 to-[#031027]"></div>
 
-        <span class="inline-flex items-center gap-2 text-[11px] uppercase tracking-[0.2em] text-blue-200 font-semibold px-4 py-1.5 bg-blue-950/60 border border-blue-400/40 rounded-full mb-8">
+        <span class="landing-hero-badge inline-flex items-center gap-2 text-[11px] uppercase tracking-[0.16em] text-blue-100 font-bold px-4 py-1.5 bg-blue-950/80 border border-blue-300/60 rounded-full mb-8 shadow-sm">
             <span class="h-1.5 w-1.5 rounded-full bg-emerald-400 shadow-[0_0_10px_rgba(52,211,153,0.8)]"></span>
             Flood intelligence, built for the barangay
         </span>
@@ -20,11 +20,11 @@
         </p>
 
         <div class="mt-10 flex flex-col sm:flex-row gap-4 justify-center items-center">
-            <a href="#" class="bg-white hover:bg-slate-100 text-slate-900 font-bold px-8 py-3.5 rounded-xl transition-all flex items-center gap-3 shadow-lg">
+            <a href="{{ asset('thesis_paper.pdf') }}" target="_blank" rel="noopener" class="landing-action w-full bg-white px-8 py-3.5 font-bold text-slate-900 shadow-lg hover:border-blue-600 hover:bg-blue-600 hover:text-white sm:w-auto">
                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
                 Read Thesis (PDF)
             </a>
-            <a href="{{ route('login') }}" class="bg-blue-950/60 hover:bg-blue-900/60 border border-blue-800/50 text-white font-medium px-8 py-3.5 rounded-xl transition-all flex items-center gap-2">
+            <a href="{{ route('login') }}" class="landing-action w-full border border-blue-800/50 bg-blue-950/60 px-8 py-3.5 font-medium text-white shadow-lg shadow-blue-950/10 hover:border-blue-500 hover:bg-blue-600 sm:w-auto">
                 Explore Dashboard
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"></path></svg>
             </a>
@@ -86,52 +86,52 @@
         </h2>
 
         <div class="mb-5 flex items-center justify-between">
-            <button type="button" data-carousel-prev="process-carousel" class="rounded-full border border-blue-800/50 bg-blue-950/40 p-2 text-blue-300 transition hover:border-blue-500 hover:text-blue-200 disabled:cursor-not-allowed disabled:opacity-40" aria-label="Previous process step">
+            <button type="button" data-carousel-prev="process-carousel" class="rounded-full border border-blue-800/50 bg-blue-950/40 p-2 text-blue-300 transition hover:border-blue-500 hover:bg-blue-600 hover:text-white disabled:cursor-not-allowed disabled:opacity-40" aria-label="Previous process step">
                 <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path></svg>
             </button>
-            <button type="button" data-carousel-next="process-carousel" class="rounded-full border border-blue-800/50 bg-blue-950/40 p-2 text-blue-300 transition hover:border-blue-500 hover:text-blue-200 disabled:cursor-not-allowed disabled:opacity-40" aria-label="Next process step">
+            <button type="button" data-carousel-next="process-carousel" class="rounded-full border border-blue-800/50 bg-blue-950/40 p-2 text-blue-300 transition hover:border-blue-500 hover:bg-blue-600 hover:text-white disabled:cursor-not-allowed disabled:opacity-40" aria-label="Next process step">
                 <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
             </button>
         </div>
 
-        <div id="process-carousel" data-carousel class="overflow-hidden pb-3" aria-label="How it works process steps">
+        <div id="process-carousel" data-carousel class="overflow-hidden pb-3 pt-2" aria-label="How it works process steps">
             <div data-carousel-track class="flex gap-4 transition-transform duration-1000 ease-in-out">
-            <div class="min-w-[85%] shrink-0 snap-start p-6 sm:min-w-[45%] lg:min-w-[32%] bg-[#071738]/40 border border-blue-900/30 rounded-2xl">
-                <span class="text-xs font-bold text-slate-400">01</span>
-                <h3 class="text-base font-bold text-white uppercase mt-4 mb-3">Harvest</h3>
-                <p class="text-sm sm:text-base text-slate-400 leading-relaxed">Keyword / hashtag listeners pull flood intelligence posts from Facebook.</p>
+            <div data-process-card class="min-w-[85%] shrink-0 snap-start rounded-2xl border border-slate-300 bg-white p-6 transition-all duration-300 hover:-translate-y-1 hover:border-blue-500 hover:bg-blue-50 hover:shadow-xl hover:shadow-blue-500/10 sm:min-w-[45%] lg:min-w-[32%] dark:border-slate-700 dark:bg-slate-900/50 dark:hover:border-cyan-400 dark:hover:bg-cyan-400/10">
+                <span class="text-xs font-bold text-blue-600 dark:text-cyan-300">01</span>
+                <h3 class="mt-4 mb-3 text-base font-bold uppercase text-slate-900 dark:text-white">Harvest the signal</h3>
+                <p class="text-sm leading-relaxed text-slate-600 sm:text-base dark:text-slate-300">Keyword and hashtag listeners collect dialect-aware flood reports from public feeds across Davao City hotspots.</p>
             </div>
-            <div class="min-w-[85%] shrink-0 snap-start p-6 sm:min-w-[45%] lg:min-w-[32%] bg-[#071738]/40 border border-blue-900/30 rounded-2xl">
-                <span class="text-xs font-bold text-slate-400">02</span>
-                <h3 class="text-base font-bold text-white uppercase mt-4 mb-3">Preprocess</h3>
-                <p class="text-sm sm:text-base text-slate-400 leading-relaxed">Clean, normalize, tokenize, and remove duplicates.</p>
+            <div data-process-card class="min-w-[85%] shrink-0 snap-start rounded-2xl border border-slate-300 bg-white p-6 transition-all duration-300 hover:-translate-y-1 hover:border-blue-500 hover:bg-blue-50 hover:shadow-xl hover:shadow-blue-500/10 sm:min-w-[45%] lg:min-w-[32%] dark:border-slate-700 dark:bg-slate-900/50 dark:hover:border-cyan-400 dark:hover:bg-cyan-400/10">
+                <span class="text-xs font-bold text-blue-600 dark:text-cyan-300">02</span>
+                <h3 class="mt-4 mb-3 text-base font-bold uppercase text-slate-900 dark:text-white">Preprocess the noise</h3>
+                <p class="text-sm leading-relaxed text-slate-600 sm:text-base dark:text-slate-300">A deterministic six-layer cleaner removes commercial ads, normalizes panic text, and deduplicates related posts.</p>
             </div>
-            <div class="min-w-[85%] shrink-0 snap-start p-6 sm:min-w-[45%] lg:min-w-[32%] bg-[#0a2357] border-2 border-blue-500 rounded-2xl shadow-xl shadow-blue-500/10">
-                <span class="text-xs font-bold text-blue-400">03</span>
-                <h3 class="text-base font-bold text-white uppercase mt-4 mb-3">Multi-task NLP</h3>
-                <p class="text-sm sm:text-base text-slate-300 leading-relaxed">XLM-RoBERTa classifies relevance and extracts barangay-level entities, one model one pass.</p>
+            <div data-process-card class="min-w-[85%] shrink-0 snap-start rounded-2xl border border-slate-300 bg-white p-6 transition-all duration-300 hover:-translate-y-1 hover:border-blue-500 hover:bg-blue-50 hover:shadow-xl hover:shadow-blue-500/10 sm:min-w-[45%] lg:min-w-[32%] dark:border-slate-700 dark:bg-slate-900/50 dark:hover:border-cyan-400 dark:hover:bg-cyan-400/10">
+                <span class="text-xs font-bold text-blue-600 dark:text-cyan-300">03</span>
+                <h3 class="mt-4 mb-3 text-base font-bold uppercase text-slate-900 dark:text-white">Understand with multi-task NLP</h3>
+                <p class="text-sm leading-relaxed text-slate-600 sm:text-base dark:text-slate-300">One shared XLM-RoBERTa encoder classifies flood relevance and extracts barangay entities in one pass.</p>
             </div>
-            <div class="min-w-[85%] shrink-0 snap-start p-6 sm:min-w-[45%] lg:min-w-[32%] bg-[#071738]/40 border border-blue-900/30 rounded-2xl">
-                <span class="text-xs font-bold text-slate-400">04</span>
-                <h3 class="text-base font-bold text-white uppercase mt-4 mb-3">Consensus</h3>
-                <p class="text-sm sm:text-base text-slate-400 leading-relaxed">K-Means++ clusters reports spatially and temporally, flagging outliers as noise.</p>
+            <div data-process-card class="min-w-[85%] shrink-0 snap-start rounded-2xl border border-slate-300 bg-white p-6 transition-all duration-300 hover:-translate-y-1 hover:border-blue-500 hover:bg-blue-50 hover:shadow-xl hover:shadow-blue-500/10 sm:min-w-[45%] lg:min-w-[32%] dark:border-slate-700 dark:bg-slate-900/50 dark:hover:border-cyan-400 dark:hover:bg-cyan-400/10">
+                <span class="text-xs font-bold text-blue-600 dark:text-cyan-300">04</span>
+                <h3 class="mt-4 mb-3 text-base font-bold uppercase text-slate-900 dark:text-white">Check spatial consensus</h3>
+                <p class="text-sm leading-relaxed text-slate-600 sm:text-base dark:text-slate-300">K-Means++ compares reports across time and location to separate clustered events from isolated anomalies.</p>
             </div>
-            <div class="min-w-[85%] shrink-0 snap-start p-6 sm:min-w-[45%] lg:min-w-[32%] bg-[#071738]/40 border border-blue-900/30 rounded-2xl">
-                <span class="text-xs font-bold text-slate-400">05</span>
-                <h3 class="text-base font-bold text-white uppercase mt-4 mb-3">Validated Output</h3>
-                <p class="text-sm sm:text-base text-slate-400 leading-relaxed">A confidence score, verified location, and event summary reach the LGU dashboard.</p>
+            <div data-process-card class="min-w-[85%] shrink-0 snap-start rounded-2xl border border-slate-300 bg-white p-6 transition-all duration-300 hover:-translate-y-1 hover:border-blue-500 hover:bg-blue-50 hover:shadow-xl hover:shadow-blue-500/10 sm:min-w-[45%] lg:min-w-[32%] dark:border-slate-700 dark:bg-slate-900/50 dark:hover:border-cyan-400 dark:hover:bg-cyan-400/10">
+                <span class="text-xs font-bold text-blue-600 dark:text-cyan-300">05</span>
+                <h3 class="mt-4 mb-3 text-base font-bold uppercase text-slate-900 dark:text-white">Deliver validated output</h3>
+                <p class="text-sm leading-relaxed text-slate-600 sm:text-base dark:text-slate-300">The LGU receives a confidence score, verified barangay location, and concise event summary for action.</p>
             </div>
             </div>
         </div>
 
         <!-- Formula Banner -->
-        <div class="mt-8 p-6 bg-[#071738]/80 border border-blue-900/40 rounded-2xl flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+        <div data-process-formula class="mt-8 flex flex-col items-start justify-between gap-5 rounded-2xl border border-slate-300 bg-white p-6 transition-colors duration-300 md:flex-row md:items-center dark:border-slate-700 dark:bg-slate-900/70">
             <div>
-                <h4 class="text-sm font-bold text-white">The Confidence Score Formula</h4>
-                <p class="text-xs font-mono text-blue-300 mt-1">CS = w₁(Pre₁) + w₂(Dclusters)</p>
-                <p class="text-[10px] text-slate-400 mt-0.5">Source Authority Override (CS = 1.0) for verified accounts</p>
+                <h4 class="text-base font-bold text-slate-900 dark:text-white">The Confidence Score Formula</h4>
+                <p class="mt-2 font-mono text-base font-semibold text-blue-700 sm:text-lg dark:text-cyan-300">CS = w₁·P(rel) + w₂·D(cluster)</p>
+                <p class="mt-1 text-xs leading-relaxed text-slate-600 sm:text-sm dark:text-slate-400">w₁ = 0.30, w₂ = 0.70 · Source Authority Override: CS = 1.0 for verified accounts</p>
             </div>
-            <a href="#" class="text-xs text-blue-400 font-semibold hover:text-blue-300 flex items-center gap-2">
+            <a href="{{ route('login') }}" class="landing-action shrink-0 border border-blue-200 bg-white px-4 py-2 text-sm font-bold text-blue-700 shadow-sm hover:border-blue-600 hover:bg-blue-600 hover:text-white dark:border-cyan-400/30 dark:bg-slate-900/70 dark:text-cyan-300 dark:hover:border-cyan-400 dark:hover:bg-cyan-400 dark:hover:text-slate-950">
                 View Report Detail &rarr;
             </a>
         </div>
@@ -139,32 +139,35 @@
 
     <!-- Section 4: Results -->
     <section id="results" data-scroll-fade class="w-full px-5 sm:px-8 lg:px-12 py-20 sm:py-28">
-        <span class="text-sm uppercase tracking-[0.2em] text-blue-400 font-bold">Evaluation</span>
-        <h2 class="text-3xl sm:text-4xl md:text-5xl font-black text-white mt-3 mb-5 max-w-3xl leading-tight">
-            Better signals lead to better response.
-        </h2>
-        <p class="mb-12 max-w-2xl text-base leading-relaxed text-slate-400 sm:mb-16 sm:text-lg">A quick look at the model’s evaluation results, designed to make the value of validated reporting easy to understand.</p>
-
-        <div class="grid grid-cols-2 md:grid-cols-4 gap-6">
-            <div data-landing-card class="p-8 bg-[#071738]/60 border border-blue-900/40 rounded-2xl text-center">
-                <span class="text-xs font-bold text-slate-400 uppercase tracking-widest">Accuracy</span>
-                <div class="text-5xl font-black text-white mt-3">0.93</div>
-                <span class="text-xs font-semibold text-emerald-400 mt-2 block">+12% vs Baseline</span>
+        <div class="lg:grid lg:grid-cols-[minmax(15rem,0.75fr)_minmax(0,1.25fr)] lg:items-start lg:gap-x-14">
+            <div>
+                <span class="text-sm uppercase tracking-[0.2em] text-blue-400 font-bold">Evaluation</span>
+                <h2 class="text-3xl sm:text-4xl md:text-5xl font-black text-white mt-3 mb-5 leading-tight">
+                    Better signals lead to better response.
+                </h2>
+                <p class="mb-12 max-w-2xl text-base leading-relaxed text-slate-400 sm:mb-16 sm:text-lg">A quick look at the model’s evaluation results, designed to make the value of validated reporting easy to understand.</p>
             </div>
-            <div data-landing-card class="p-8 bg-[#071738]/60 border border-blue-900/40 rounded-2xl text-center">
-                <span class="text-xs font-bold text-slate-400 uppercase tracking-widest">Precision</span>
-                <div class="text-5xl font-black text-white mt-3">0.90</div>
-                <span class="text-xs font-semibold text-emerald-400 mt-2 block">+13% vs Baseline</span>
-            </div>
-            <div data-landing-card class="p-8 bg-[#071738]/60 border border-blue-900/40 rounded-2xl text-center">
-                <span class="text-xs font-bold text-slate-400 uppercase tracking-widest">Recall</span>
-                <div class="text-5xl font-black text-white mt-3">0.88</div>
-                <span class="text-xs font-semibold text-emerald-400 mt-2 block">+14% vs Baseline</span>
-            </div>
-            <div data-landing-card class="p-8 bg-[#071738]/60 border border-blue-800/80 rounded-2xl text-center bg-blue-950/20">
-                <span class="text-xs font-bold text-blue-400 uppercase tracking-widest">F1-Score</span>
-                <div class="text-5xl font-black text-blue-400 mt-3">0.89</div>
-                <span class="text-xs font-semibold text-emerald-400 mt-2 block">+14% vs Baseline</span>
+            <div class="grid grid-cols-2 gap-6 lg:col-start-2">
+                <div data-landing-card class="p-8 bg-[#071738]/60 border border-blue-900/40 rounded-2xl text-center">
+                    <span class="text-xs font-bold text-slate-400 uppercase tracking-widest">Accuracy</span>
+                    <div class="text-5xl font-black text-white mt-3">0.93</div>
+                    <span class="text-xs font-semibold text-emerald-400 mt-2 block">+12% vs Baseline</span>
+                </div>
+                <div data-landing-card class="p-8 bg-[#071738]/60 border border-blue-900/40 rounded-2xl text-center">
+                    <span class="text-xs font-bold text-slate-400 uppercase tracking-widest">Precision</span>
+                    <div class="text-5xl font-black text-white mt-3">0.90</div>
+                    <span class="text-xs font-semibold text-emerald-400 mt-2 block">+13% vs Baseline</span>
+                </div>
+                <div data-landing-card class="p-8 bg-[#071738]/60 border border-blue-900/40 rounded-2xl text-center">
+                    <span class="text-xs font-bold text-slate-400 uppercase tracking-widest">Recall</span>
+                    <div class="text-5xl font-black text-white mt-3">0.88</div>
+                    <span class="text-xs font-semibold text-emerald-400 mt-2 block">+14% vs Baseline</span>
+                </div>
+                <div data-landing-card class="p-8 bg-[#071738]/60 border border-blue-800/80 rounded-2xl text-center bg-blue-950/20">
+                    <span class="text-xs font-bold text-blue-400 uppercase tracking-widest">F1-Score</span>
+                    <div class="text-5xl font-black text-blue-400 mt-3">0.89</div>
+                    <span class="text-xs font-semibold text-emerald-400 mt-2 block">+14% vs Baseline</span>
+                </div>
             </div>
         </div>
     </section>
@@ -178,8 +181,9 @@
         <p class="mb-12 max-w-2xl text-base leading-relaxed text-slate-400 sm:mb-16 sm:text-lg">AGOS connects the people who report what they see with the teams who decide what happens next.</p>
 
         <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
-            <div data-landing-card class="bg-[#071738]/80 border border-blue-900/40 rounded-3xl overflow-hidden flex flex-col justify-between">
+            <a href="{{ route('login') }}" data-landing-card class="bg-[#071738]/80 border border-blue-900/40 rounded-3xl overflow-hidden flex flex-col justify-between">
                 <div class="relative h-64 overflow-hidden bg-[#091b40] p-6">
+                    <img src="{{ asset('images/lgu-operations.png') }}" alt="LGU Operations Console preview" class="absolute inset-0 z-10 h-full w-full object-cover" onerror="this.style.display='none'">
                     <div class="absolute inset-x-8 top-8 h-2 rounded-full bg-blue-900/80"></div>
                     <div class="absolute left-8 top-20 h-28 w-2/3 rounded-2xl border border-blue-700/50 bg-blue-600/20"></div>
                     <div class="absolute right-8 top-20 space-y-3">
@@ -192,14 +196,15 @@
                 <div class="p-8">
                     <h3 class="text-2xl font-bold text-white mb-2">LGU Operations Console</h3>
                     <p class="text-slate-400 text-sm mb-6">Signal strip, live map, and model analytics for DRRMO personnel</p>
-                    <a href="{{ route('login') }}" class="text-xs font-semibold text-blue-400 hover:text-blue-300 flex items-center gap-2">
+                    <span class="text-xs font-semibold text-blue-400 hover:text-blue-300 flex items-center gap-2">
                         Launch Console &rarr;
-                    </a>
+                    </span>
                 </div>
-            </div>
+            </a>
 
-            <div data-landing-card class="bg-[#071738]/80 border border-blue-900/40 rounded-3xl overflow-hidden flex flex-col justify-between">
+            <a href="{{ route('citizen.login') }}" data-landing-card class="bg-[#071738]/80 border border-blue-900/40 rounded-3xl overflow-hidden flex flex-col justify-between">
                 <div class="relative h-64 overflow-hidden bg-[#091b40] p-6">
+                    <img src="{{ asset('images/citizen-reporting-app.png') }}" alt="Citizen Reporting App preview" class="absolute inset-0 z-10 h-full w-full object-cover" onerror="this.style.display='none'">
                     <div class="absolute left-1/2 top-6 h-48 w-28 -translate-x-1/2 rounded-[1.5rem] border-4 border-blue-800 bg-[#071738] p-3 shadow-2xl shadow-blue-950/50">
                         <span class="mb-4 block h-2 w-10 rounded-full bg-slate-600 mx-auto"></span>
                         <span class="mb-3 block h-16 rounded-xl bg-blue-600/30"></span>
@@ -211,39 +216,45 @@
                 <div class="p-8">
                     <h3 class="text-2xl font-bold text-white mb-2">Citizen Reporting App</h3>
                     <p class="text-slate-400 text-sm mb-6">Mobile-first interface for residents to submit reports and view validated alerts</p>
-                    <a href="#" class="text-xs font-semibold text-blue-400 hover:text-blue-300 flex items-center gap-2">
-                        Launch Console &rarr;
-                    </a>
+                    <span class="text-xs font-semibold text-blue-400 hover:text-blue-300 flex items-center gap-2">
+                        Launch App &rarr;
+                    </span>
                 </div>
-            </div>
+            </a>
         </div>
     </section>
 
     <!-- Section 6: Team -->
     <section id="team" data-scroll-fade class="w-full px-5 sm:px-8 lg:px-12 py-20 sm:py-28">
-        <span class="text-sm uppercase tracking-[0.2em] text-blue-400 font-bold">The Researchers</span>
-        <h2 class="text-3xl sm:text-4xl md:text-5xl font-black text-white mt-3 mb-2 leading-tight">
-            Bachelor of Science in Computer Science
-        </h2>
-        <p class="text-xl sm:text-2xl font-bold text-slate-300 mb-5">Ateneo de Davao University</p>
-        <p class="mb-16 max-w-2xl text-base leading-relaxed text-slate-400">A student-built research platform focused on making local flood intelligence more useful, explainable, and actionable.</p>
+        <div class="max-w-4xl">
+            <span class="text-sm uppercase tracking-[0.2em] text-blue-400 font-bold">The Researchers</span>
+            <h2 class="text-3xl sm:text-4xl md:text-5xl font-black text-white mt-3 mb-2 leading-tight">
+                Research designed for local action.
+            </h2>
+            <p class="text-xl sm:text-2xl font-bold text-slate-300 mb-5">Bachelor of Science in Computer Science</p>
+            <p class="text-base font-semibold text-blue-300 mb-4">Ateneo de Davao University • Computer Studies Cluster</p>
+            <p class="mb-16 max-w-2xl text-base leading-relaxed text-slate-400">A student-built research platform focused on making local flood intelligence more useful, explainable, and actionable.</p>
+        </div>
 
         <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <div class="p-8 bg-[#071738]/60 border border-blue-900/40 rounded-2xl text-center">
-                <div class="w-16 h-16 bg-blue-950 border border-blue-800/50 text-blue-400 font-bold text-lg rounded-full mx-auto flex items-center justify-center mb-6">HC</div>
+            <div data-landing-card class="p-8 bg-[#071738]/60 border border-blue-900/40 rounded-2xl text-center">
+                <div class="w-16 h-16 bg-gradient-to-br from-blue-500/20 to-cyan-400/10 border border-blue-400/70 text-blue-300 font-bold text-lg rounded-full mx-auto flex items-center justify-center mb-6">HC</div>
                 <h3 class="text-lg font-bold text-white">Harley Love N. Cuba</h3>
+                <p class="mt-3 text-sm text-slate-400">Platform implementation and database</p>
                 <span class="text-xs font-semibold text-slate-400 uppercase tracking-widest mt-2 block">Researcher</span>
             </div>
 
-            <div class="p-8 bg-[#071738]/60 border border-blue-900/40 rounded-2xl text-center">
-                <div class="w-16 h-16 bg-blue-950 border border-blue-800/50 text-blue-400 font-bold text-lg rounded-full mx-auto flex items-center justify-center mb-6">FE</div>
+            <div data-landing-card class="p-8 bg-[#071738]/60 border border-blue-900/40 rounded-2xl text-center">
+                <div class="w-16 h-16 bg-gradient-to-br from-blue-500/20 to-cyan-400/10 border border-blue-400/70 text-blue-300 font-bold text-lg rounded-full mx-auto flex items-center justify-center mb-6">FE</div>
                 <h3 class="text-lg font-bold text-white">Franz Sedrick F. Embuscado</h3>
+                <p class="mt-3 text-sm text-slate-400">Model engineering</p>
                 <span class="text-xs font-semibold text-slate-400 uppercase tracking-widest mt-2 block">Researcher</span>
             </div>
 
-            <div class="p-8 bg-[#071738]/60 border border-blue-900/40 rounded-2xl text-center">
-                <div class="w-16 h-16 bg-blue-950 border border-blue-800/50 text-blue-400 font-bold text-lg rounded-full mx-auto flex items-center justify-center mb-6">JF</div>
+            <div data-landing-card class="p-8 bg-[#071738]/60 border border-blue-900/40 rounded-2xl text-center">
+                <div class="w-16 h-16 bg-gradient-to-br from-blue-500/20 to-cyan-400/10 border border-blue-400/70 text-blue-300 font-bold text-lg rounded-full mx-auto flex items-center justify-center mb-6">JF</div>
                 <h3 class="text-lg font-bold text-white">Jan-Aceryl N. Futalan</h3>
+                <p class="mt-3 text-sm text-slate-400">NLP &amp; validation</p>
                 <span class="text-xs font-semibold text-slate-400 uppercase tracking-widest mt-2 block">Researcher</span>
             </div>
         </div>
