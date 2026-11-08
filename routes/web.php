@@ -53,6 +53,7 @@ Route::middleware(['auth', 'role:super_admin,barangay_admin', 'no-back'])->group
     })->name('operations');
 
     Route::get('/reports', [ReportsController::class, 'index'])->name('reports');
+    Route::get('/notifications', [ReportsController::class, 'notifications'])->name('notifications');
 
     Route::get('/harvesting', function () {
         return view('harvesting.index');

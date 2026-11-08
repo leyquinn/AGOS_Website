@@ -95,15 +95,18 @@ const createHeatLayer = (map, points) => {
             });
         },
         _draw() {
-            if (!this._canvas || !this._map || !this.activeFeatures.length) return;
+            if (!this._canvas || !this._map) return;
             const context = this._canvas.getContext('2d');
             context.clearRect(0, 0, this._canvas.width, this._canvas.height);
-            context.save();
-            context.beginPath();
-            this._clipPath(context);
-            context.clip('evenodd');
+            if (this.activeFeatures.length) {
+                context.save();
+                context.beginPath();
+                this._clipPath(context);
+                context.clip('evenodd');
+            }
 
             const visiblePoints = this.points.filter(([latitude, longitude]) => {
+                if (!this.activeFeatures.length) return true;
                 const point = L.latLng(latitude, longitude);
                 return this.activeFeatures.some((feature) => featureContainsPoint(point, feature));
             });
@@ -118,7 +121,7 @@ const createHeatLayer = (map, points) => {
                 context.fillStyle = gradient;
                 context.fillRect(point.x - radius, point.y - radius, radius * 2, radius * 2);
             });
-            context.restore();
+            if (this.activeFeatures.length) context.restore();
         },
     });
 
@@ -146,7 +149,24 @@ const initOperationsMap = async () => {
     } catch (error) {
         console.error('Unable to parse report heatmap points.', error);
     }
+    heatPoints = heatPoints.map((point) => Array.isArray(point)
+        ? point
+        : [point.latitude, point.longitude, point.intensity, point.barangay]);
     const heatLayer = createHeatLayer(map, heatPoints);
+    const reportBarangays = [...new Set(heatPoints.map((point) => point[3]).filter(Boolean))].sort();
+    const populateSelector = (names) => {
+        if (!selector) return;
+        selector.innerHTML = '<option value="">All barangays</option>';
+        names.forEach((name) => selector.add(new Option(name, name)));
+        selector.disabled = false;
+    };
+    const updateFallbackFilter = (event) => {
+        const selectedName = event.target.value;
+        const selectedPoints = selectedName ? heatPoints.filter((point) => point[3] === selectedName) : heatPoints;
+        heatLayer.points = selectedPoints;
+        heatLayer.setBoundary([]);
+        status.textContent = selectedName ? `Showing reports for ${selectedName}` : 'Showing all citizen report locations';
+    };
 
     try {
         const response = await fetch(boundaryUrl, { headers: { Accept: 'application/geo+json, application/json' } });
@@ -190,7 +210,8 @@ const initOperationsMap = async () => {
     } catch (error) {
         console.error('Unable to load Davao barangay boundaries.', error);
         status.textContent = 'Barangay boundaries could not be loaded. Add the GeoJSON file to public/data.';
-        selector.disabled = true;
+        populateSelector(reportBarangays);
+        selector?.addEventListener('change', updateFallbackFilter);
     }
 };
 

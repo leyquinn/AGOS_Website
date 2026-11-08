@@ -1361,6 +1361,249 @@ html:not(.theme-light) body {
     background-image: radial-gradient(circle at 50% 0%, rgba(37, 99, 235, 0.15), transparent 45%);
 }
 
+/* Portal shell layout */
+.portal-sidebar {
+    width: 16rem;
+    overflow: hidden;
+    transition: width 300ms ease-in-out, transform 300ms ease-in-out, background-color 300ms ease-in-out;
+}
+
+.portal-sidebar.is-collapsed {
+    width: 5rem !important;
+}
+
+.portal-sidebar.is-collapsed .sidebar-label {
+    width: 0;
+    overflow: hidden;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 200ms ease, width 300ms ease;
+}
+
+.portal-sidebar.is-collapsed .sidebar-header {
+    justify-content: center;
+}
+
+.portal-sidebar.is-collapsed .sidebar-brand {
+    justify-content: center;
+    padding-left: 0;
+    padding-right: 0;
+}
+
+.portal-sidebar.is-collapsed nav a,
+.portal-sidebar.is-collapsed [data-logout] {
+    justify-content: center;
+    gap: 0;
+    padding-left: 0;
+    padding-right: 0;
+}
+
+.portal-sidebar.is-collapsed .sidebar-nav-icon {
+    margin: 0 auto;
+}
+
+.portal-sidebar.is-collapsed .sidebar-collapse-toggle svg {
+    transform: rotate(180deg);
+}
+
+.sidebar-nav-item.is-active::before {
+    position: absolute;
+    left: -1px;
+    top: 0.65rem;
+    bottom: 0.65rem;
+    width: 3px;
+    border-radius: 999px;
+    background: #2563eb;
+    content: "";
+}
+
+html.theme-light body .portal-sidebar,
+body.theme-light .portal-sidebar {
+    border-color: #e2e8f0 !important;
+    background-color: #ffffff !important;
+}
+
+html.theme-light body .portal-header,
+body.theme-light .portal-header {
+    border-color: #e2e8f0 !important;
+    background-color: #f8fafc !important;
+}
+
+html:not(.theme-light) body .portal-sidebar {
+    border-color: #1e293b !important;
+    background-color: #020617 !important;
+}
+
+html:not(.theme-light) body .portal-header {
+    border-color: #1e293b !important;
+    background-color: #172033 !important;
+}
+
+html:not(.theme-light) body .portal-sidebar .sidebar-nav-item {
+    color: #cbd5e1 !important;
+}
+
+html:not(.theme-light) body .portal-sidebar .sidebar-nav-item:hover,
+html:not(.theme-light) body .portal-sidebar .sidebar-nav-item.is-active {
+    color: #f8fafc !important;
+}
+
+html:not(.theme-light) body .portal-sidebar .sidebar-nav-icon,
+html:not(.theme-light) body .portal-sidebar [data-logout] {
+    color: #94a3b8 !important;
+}
+
+html:not(.theme-light) body .portal-sidebar .sidebar-nav-item:hover .sidebar-nav-icon,
+html:not(.theme-light) body .portal-sidebar .sidebar-nav-item.is-active .sidebar-nav-icon {
+    color: #f8fafc !important;
+}
+
+html:not(.theme-light) body .portal-header h1 {
+    color: #f8fafc !important;
+}
+
+html:not(.theme-light) body .portal-sidebar .sidebar-brand,
+html:not(.theme-light) body .portal-sidebar .sidebar-label {
+    color: #f8fafc !important;
+}
+
+html:not(.theme-light) body .portal-header button,
+html:not(.theme-light) body .portal-header a {
+    color: #cbd5e1 !important;
+}
+
+html.theme-light body .portal-sidebar,
+body.theme-light .portal-sidebar {
+    background-color: #f8fafc !important;
+}
+
+html:not(.theme-light) body .portal-sidebar {
+    background-color: #172033 !important;
+    border-color: #2a3850 !important;
+}
+
+html:not(.theme-light) body .portal-sidebar .sidebar-brand:hover,
+html:not(.theme-light) body .portal-sidebar .sidebar-nav-item:hover,
+html:not(.theme-light) body .portal-sidebar .sidebar-nav-item.is-active {
+    background-color: #22304a !important;
+}
+
+html:not(.theme-light) body .portal-sidebar .sidebar-nav-item.is-active {
+    border-color: #3b4d6b !important;
+}
+
+html.theme-light body .portal-sidebar .sidebar-nav-item,
+body.theme-light .portal-sidebar .sidebar-nav-item,
+html.theme-light body .portal-sidebar [data-logout],
+body.theme-light .portal-sidebar [data-logout] {
+    background-color: transparent !important;
+    color: #475569 !important;
+}
+
+html.theme-light body .portal-sidebar .sidebar-nav-item:hover,
+body.theme-light .portal-sidebar .sidebar-nav-item:hover,
+html.theme-light body .portal-sidebar [data-logout]:hover,
+body.theme-light .portal-sidebar [data-logout]:hover {
+    background-color: #e8eef7 !important;
+    color: #0f172a !important;
+}
+
+html.theme-light body .portal-sidebar .sidebar-nav-item.is-active,
+body.theme-light .portal-sidebar .sidebar-nav-item.is-active {
+    border-color: #cbd5e1 !important;
+    background-color: #dbe5f2 !important;
+    color: #0f172a !important;
+}
+
+html.theme-light body .portal-sidebar .sidebar-nav-icon,
+body.theme-light .portal-sidebar .sidebar-nav-icon {
+    background-color: transparent !important;
+    color: #64748b !important;
+}
+
+html.theme-light body .portal-sidebar .sidebar-nav-item:hover .sidebar-nav-icon,
+body.theme-light .portal-sidebar .sidebar-nav-item:hover .sidebar-nav-icon,
+html.theme-light body .portal-sidebar .sidebar-nav-item.is-active .sidebar-nav-icon,
+body.theme-light .portal-sidebar .sidebar-nav-item.is-active .sidebar-nav-icon {
+    color: #1e3a8a !important;
+}
+
+html.theme-light body .portal-header,
+body.theme-light .portal-header,
+html.theme-light body .portal-sidebar,
+body.theme-light .portal-sidebar {
+    background-color: #f8fafc !important;
+}
+
+html:not(.theme-light) body .portal-header,
+html:not(.theme-light) body .portal-sidebar {
+    background-color: #172033 !important;
+}
+
+.report-card {
+    overflow: hidden;
+    border: 1px solid #d5deeb;
+    border-radius: 1rem;
+    background: #ffffff;
+    color: #334155;
+    box-shadow: 0 8px 24px rgba(15, 23, 42, 0.06);
+}
+
+.report-card h2,
+.report-card h3,
+.report-card strong {
+    color: #0f172a;
+}
+
+.report-card [class*="text-white"] {
+    color: #0f172a !important;
+}
+
+.report-card [class*="text-slate-400"],
+.report-card [class*="text-slate-500"] {
+    color: #64748b !important;
+}
+
+html:not(.theme-light) body .report-card {
+    border-color: #263d66;
+    background: rgba(15, 23, 42, 0.78);
+    color: #cbd5e1;
+    box-shadow: 0 20px 45px rgba(2, 11, 26, 0.2);
+}
+
+html:not(.theme-light) body .report-card h2,
+html:not(.theme-light) body .report-card h3,
+html:not(.theme-light) body .report-card strong,
+html:not(.theme-light) body .report-card [class*="text-white"] {
+    color: #f8fafc !important;
+}
+
+html:not(.theme-light) body .report-card [class*="text-slate-400"],
+html:not(.theme-light) body .report-card [class*="text-slate-500"] {
+    color: #94a3b8 !important;
+}
+
+html.theme-light body .report-card,
+body.theme-light .report-card {
+    border-color: #d5deeb !important;
+    background: #ffffff !important;
+    color: #334155 !important;
+}
+
+.portal-main:has(.reports-page) {
+    background: #eef4ff !important;
+}
+
+html:not(.theme-light) body .portal-main:has(.reports-page) {
+    background: #061633 !important;
+}
+
+html.theme-light body .notifications-menu,
+body.theme-light .notifications-menu {
+    border-color: #d5deeb !important;
+    background: #ffffff !important;
+}
+
 [data-carousel] {
     scroll-snap-type: x mandatory;
     touch-action: pan-x;

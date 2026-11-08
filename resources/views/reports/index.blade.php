@@ -1,5 +1,5 @@
 <x-layouts.app title="Reports">
-    <div class="w-full">
+    <div class="reports-page w-full">
         <div class="mb-6 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
             <div>
                 <p class="text-xs font-semibold text-slate-400">Citizen-submitted flood reports • {{ $reports->count() }} total</p>
@@ -9,7 +9,7 @@
             <span class="rounded-full border border-emerald-500/40 bg-emerald-500/10 px-3 py-2 text-[10px] font-bold text-emerald-300">Citizen App source only</span>
         </div>
 
-        <section class="mb-5 overflow-hidden rounded-2xl border border-blue-900/50 bg-[#071738]/80">
+        <section class="report-card mb-6 overflow-hidden">
             <div class="flex flex-col gap-2 border-b border-blue-900/50 px-5 py-4 sm:flex-row sm:items-center sm:justify-between">
                 <div>
                     <h2 class="text-sm font-bold text-white">Citizen report flood heatmap</h2>
@@ -28,7 +28,7 @@
             </div>
         </section>
 
-        <section class="grid gap-5 xl:grid-cols-[minmax(0,1fr)_18rem]">
+        <section class="grid gap-6 xl:grid-cols-[minmax(0,1fr)_18rem]">
             <div class="space-y-5">
                 @forelse ($reports as $report)
                     @php
@@ -37,8 +37,8 @@
                         $clusterScore = $confidence > 0 ? min(0.98, max(0.55, $confidence - 0.05)) : 0.89;
                         $finalScore = min(0.99, ($relevance * 0.35) + ($clusterScore * 0.65));
                     @endphp
-                    <article class="space-y-5">
-                        <section class="rounded-2xl border border-blue-900/50 bg-[#071738]/80 p-5">
+                    <article class="space-y-6">
+                        <section class="report-card p-5">
                             <div class="flex flex-wrap items-start justify-between gap-3">
                                 <div>
                                     <p class="text-[10px] font-semibold uppercase tracking-wide text-blue-300">{{ $report->barangay?->name ?? 'Location pending' }} • {{ $report->created_at->format('M d, Y • H:i') }}</p>
@@ -53,7 +53,7 @@
                             </div>
                         </section>
 
-                        <section class="rounded-2xl border border-blue-900/50 bg-[#071738]/80 p-5">
+                        <section class="report-card p-5">
                             <div class="flex items-center justify-between gap-3">
                                 <h3 class="text-lg font-black text-white">Multi-task NLP Output</h3>
                                 <span class="rounded-full bg-blue-900/70 px-2.5 py-1 text-[9px] font-bold uppercase text-blue-200">Benchmark analysis</span>
@@ -68,7 +68,7 @@
                             <p class="mt-4 text-[9px] font-semibold uppercase tracking-wide text-slate-500">Model: MTL-XLM-R benchmark • Citizen App signal</p>
                         </section>
 
-                        <section class="rounded-2xl border border-blue-900/50 bg-[#071738]/80 p-5">
+                        <section class="report-card p-5">
                             <h3 class="text-lg font-black text-white">Confidence score breakdown</h3>
                             <div class="mt-5 flex flex-wrap justify-center gap-4 text-center">
                                 <div class="rounded-2xl bg-[#0d2b5b] px-6 py-3"><p class="text-xs text-slate-400">P<sub>rel</sub></p><strong class="text-2xl text-white">{{ number_format($relevance, 2) }}</strong></div>
@@ -79,14 +79,14 @@
                         </section>
                     </article>
                 @empty
-                    <div class="rounded-2xl border border-dashed border-blue-900/60 bg-[#071738]/60 p-10 text-center">
+                    <div class="report-card border-dashed p-10 text-center">
                         <p class="text-sm font-bold text-white">No Citizen App reports yet</p>
                         <p class="mt-2 text-xs text-slate-400">Reports submitted by authenticated citizen accounts will appear here.</p>
                     </div>
                 @endforelse
             </div>
-            <aside class="space-y-5">
-                <section class="rounded-2xl border border-blue-900/50 bg-[#071738]/80 p-5">
+            <aside class="space-y-6">
+                <section class="report-card p-5">
                     <h2 class="text-sm font-bold text-white">Cluster Consensus</h2>
                     <p class="mt-1 text-[10px] text-slate-400">{{ $clusterReports->count() }} Citizen App signals • benchmark grouping</p>
                     <div class="mt-4 space-y-2">
@@ -100,7 +100,7 @@
                         @endforelse
                     </div>
                 </section>
-                <section class="rounded-2xl border border-blue-900/50 bg-[#071738]/80 p-5">
+                <section class="report-card p-5">
                 <h2 class="text-sm font-bold text-white">Submission policy</h2>
                 <p class="mt-3 text-xs leading-relaxed text-slate-400">The admin reports feed accepts data only from users authenticated through the AGOS Citizen App. Social media posts and public “original posts” are not displayed or treated as citizen reports.</p>
                 <div class="mt-5 space-y-3 text-[10px]">

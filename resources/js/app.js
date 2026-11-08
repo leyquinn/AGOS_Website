@@ -178,11 +178,57 @@ alertThresholdSelect?.addEventListener('change', saveHarvestSettings);
 
 const notificationsToggle = document.querySelector('[data-notifications-toggle]');
 const notificationsMenu = document.querySelector('[data-notifications-menu]');
+const notificationsList = document.querySelector('[data-notifications-list]');
+const notificationsStatus = document.querySelector('[data-notifications-status]');
+const notificationStorageKey = 'agos-notifications-last-seen';
+let latestNotificationId = Number(localStorage.getItem(notificationStorageKey) || 0);
+let notificationsInitialized = false;
+const escapeNotificationText = (value) => String(value).replace(/[&<>"']/g, (character) => ({
+    '&': '&amp;',
+    '<': '&lt;',
+    '>': '&gt;',
+    '"': '&quot;',
+    "'": '&#039;',
+}[character]));
+
+const renderNotifications = (notifications) => {
+    if (!notificationsList) return;
+    if (!notifications.length) return;
+    notificationsList.innerHTML = notifications.map((notification) => `
+        <div class="rounded-xl border border-slate-200 bg-slate-50 p-3 dark:border-slate-700 dark:bg-slate-800">
+            <p class="text-[10px] font-bold text-slate-700 dark:text-slate-200">New report from ${escapeNotificationText(notification.barangay)}</p>
+            <p class="mt-1 truncate text-[10px] leading-relaxed text-slate-500 dark:text-slate-400">${escapeNotificationText(notification.message)}</p>
+        </div>
+    `).join('');
+};
+
+const loadNotifications = async () => {
+    try {
+        const response = await fetch('/notifications', { headers: { Accept: 'application/json' }, credentials: 'same-origin', cache: 'no-store' });
+        if (!response.ok) throw new Error(`Notification request failed with status ${response.status}`);
+        const { notifications } = await response.json();
+        const newestId = notifications[0]?.id || 0;
+        if (notificationsInitialized && newestId > latestNotificationId) {
+            notificationsStatus?.classList.replace('bg-emerald-500/15', 'bg-amber-500/15');
+            notificationsStatus?.classList.replace('text-emerald-600', 'text-amber-700');
+            if (notificationsStatus) notificationsStatus.textContent = 'New report';
+            document.querySelector('[data-notifications-toggle] span')?.classList.add('bg-amber-500');
+        }
+        latestNotificationId = Math.max(latestNotificationId, newestId);
+        localStorage.setItem(notificationStorageKey, String(latestNotificationId));
+        renderNotifications(notifications);
+        notificationsInitialized = true;
+    } catch (error) {
+        console.error('Unable to load portal notifications.', error);
+    }
+};
 notificationsToggle?.addEventListener('click', (event) => {
     event.stopPropagation();
     const isOpen = !notificationsMenu?.classList.toggle('hidden');
     notificationsToggle.setAttribute('aria-expanded', String(isOpen));
 });
+loadNotifications();
+window.setInterval(loadNotifications, 30000);
 document.addEventListener('click', (event) => {
     if (!event.target.closest('[data-notifications-menu], [data-notifications-toggle]')) {
         notificationsMenu?.classList.add('hidden');
