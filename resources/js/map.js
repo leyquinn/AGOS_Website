@@ -151,6 +151,8 @@ const initOperationsMap = async () => {
     L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
         attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
         maxZoom: 19,
+        keepBuffer: 2,
+        updateWhenZooming: false,
     }).addTo(map);
 
     const status = document.querySelector('[data-map-status]');
@@ -235,5 +237,146 @@ const initOperationsMap = async () => {
     }
 };
 
+const initCitizenHomeMap = async () => {
+    const mapElement = document.querySelector('[data-citizen-map]');
+    if (!mapElement) return;
+
+    const map = L.map(mapElement, { zoomControl: false }).setView([7.0736, 125.6110], 13);
+    L.control.zoom({ position: 'bottomright' }).addTo(map);
+    L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '&copy; OpenStreetMap',
+        maxZoom: 19,
+        keepBuffer: 2,
+        updateWhenZooming: false,
+    }).addTo(map);
+
+    const markers = L.layerGroup().addTo(map);
+    const escapeHtml = (value) => String(value).replace(/[&<>"']/g, (character) => ({
+        '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;',
+    }[character]));
+    const iconFor = (severity) => L.divIcon({
+        className: 'citizen-live-marker',
+        html: `<span class="marker-${severity}"></span>`,
+        iconSize: [14, 14],
+        iconAnchor: [7, 7],
+    });
+
+    const loadReports = async () => {
+        try {
+            const response = await fetch(mapElement.dataset.reportsUrl, {
+                headers: { Accept: 'application/json' },
+                credentials: 'same-origin',
+                cache: 'no-store',
+            });
+            if (!response.ok) throw new Error(`Map reports failed with status ${response.status}`);
+            const { reports } = await response.json();
+            markers.clearLayers();
+            reports.forEach((report) => L.marker([report.latitude, report.longitude], { icon: iconFor(report.severity) })
+                .bindPopup(`<strong>${escapeHtml(report.location)}</strong><br>${escapeHtml(report.water_level)}<br><small>${escapeHtml(report.reported_at)} · ${escapeHtml(report.validation_status)}</small>`)
+                .addTo(markers));
+        } catch (error) {
+            console.error('Unable to load citizen map reports.', error);
+        }
+    };
+
+    const showLocation = ({ latitude, longitude }, label = 'You are here') => {
+        L.marker([latitude, longitude], {
+            icon: L.divIcon({ className: 'citizen-live-marker', html: '<span class="marker-user"></span>', iconSize: [14, 14], iconAnchor: [7, 7] }),
+        }).bindPopup(`<strong>${label}</strong>`).addTo(map).openPopup();
+        map.setView([latitude, longitude], 15);
+    };
+
+    document.querySelector('[data-map-location]')?.addEventListener('click', () => {
+        if (!navigator.geolocation) return;
+        navigator.geolocation.getCurrentPosition(({ coords }) => showLocation(coords), () => {});
+    });
+
+    const searchInput = document.querySelector('[data-map-search]');
+    const results = document.querySelector('[data-map-search-results]');
+    let searchTimer;
+    searchInput?.addEventListener('input', () => {
+        window.clearTimeout(searchTimer);
+        const query = searchInput.value.trim();
+        if (query.length < 2) {
+            results.innerHTML = '';
+            return;
+        }
+        searchTimer = window.setTimeout(async () => {
+            try {
+                const response = await fetch(`${mapElement.dataset.searchUrl}?q=${encodeURIComponent(query)}`, { headers: { Accept: 'application/json' } });
+                const data = await response.json();
+                results.replaceChildren(...data.results.map((result) => {
+                    const button = document.createElement('button');
+                    button.type = 'button';
+                    button.dataset.lat = result.latitude;
+                    button.dataset.lng = result.longitude;
+                    button.textContent = result.label;
+                    return button;
+                }));
+            } catch (error) {
+                console.error('Unable to search map locations.', error);
+                results.innerHTML = '<div class="map-search-empty">No locations found</div>';
+            }
+        }, 300);
+    });
+    results?.addEventListener('click', (event) => {
+        const result = event.target.closest('button');
+        if (!result) return;
+        map.setView([Number(result.dataset.lat), Number(result.dataset.lng)], 16);
+        searchInput.value = result.textContent;
+        results.innerHTML = '';
+    });
+    document.querySelector('[data-citizen-screen="map"]')?.addEventListener('citizen-map-shown', () => window.setTimeout(() => map.invalidateSize(), 50));
+    loadReports();
+};
+
+const initCitizenPreviewMap = async () => {
+    const mapElement = document.querySelector('[data-citizen-preview-map]');
+    if (!mapElement) return;
+
+    const map = L.map(mapElement, {
+        attributionControl: false,
+        zoomControl: false,
+        dragging: false,
+        doubleClickZoom: false,
+        scrollWheelZoom: false,
+        touchZoom: false,
+        zoomSnap: 0.5,
+    }).setView([7.0736, 125.6110], 12);
+
+    L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        maxZoom: 19,
+        keepBuffer: 2,
+        updateWhenZooming: false,
+    }).addTo(map);
+
+    try {
+        const response = await fetch(mapElement.dataset.reportsUrl, {
+            headers: { Accept: 'application/json' },
+            credentials: 'same-origin',
+            cache: 'no-store',
+        });
+        if (!response.ok) throw new Error(`Preview reports failed with status ${response.status}`);
+        const { reports } = await response.json();
+        reports.slice(0, 12).forEach((report) => {
+            L.circleMarker([report.latitude, report.longitude], {
+                radius: 5,
+                color: '#ffffff',
+                weight: 2,
+                fillColor: report.severity === 'critical'
+                    ? '#dc2626'
+                    : report.severity === 'moderate' ? '#f59e0b' : '#16a34a',
+                fillOpacity: 1,
+            }).addTo(map);
+        });
+    } catch (error) {
+        console.error('Unable to load citizen map preview reports.', error);
+    }
+};
+
 if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', initOperationsMap);
 else initOperationsMap();
+if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', initCitizenHomeMap);
+else initCitizenHomeMap();
+if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', initCitizenPreviewMap);
+else initCitizenPreviewMap();

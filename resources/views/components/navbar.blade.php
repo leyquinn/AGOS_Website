@@ -16,7 +16,7 @@
                     <span class="absolute right-2 top-2 h-2 w-2 rounded-full border-2 border-white bg-emerald-500 dark:border-slate-950"></span>
                 </button>
                 <div id="notifications-menu" data-notifications-menu class="notifications-menu absolute right-0 top-12 z-50 hidden w-80 rounded-2xl border border-slate-200 bg-white p-4 shadow-2xl shadow-slate-950/15 dark:border-slate-700 dark:bg-slate-900">
-                    <div class="flex items-center justify-between"><h2 class="text-xs font-bold text-slate-900 dark:text-white">Notifications</h2><span data-notifications-status class="rounded-full bg-emerald-500/15 px-2 py-1 text-[9px] font-bold text-emerald-600 dark:text-emerald-300">All clear</span></div>
+                    <div class="flex items-center justify-between"><h2 class="text-xs font-bold text-slate-900 dark:text-white">Notifications</h2><button type="button" data-notifications-clear class="rounded-full bg-emerald-500/15 px-2 py-1 text-[9px] font-bold text-emerald-600 transition-colors hover:bg-emerald-500/25 dark:text-emerald-300">All clear</button></div>
                     <div data-notifications-list class="mt-3 space-y-2"><div class="notification-item rounded-xl border border-slate-200 bg-slate-50 p-3 dark:border-slate-700 dark:bg-slate-800"><p class="notification-item-title text-[10px] font-bold text-slate-700 dark:text-slate-200">Pipeline operating normally</p><p class="notification-item-message mt-1 text-[10px] leading-relaxed text-slate-500 dark:text-slate-400">No new alerts require your attention.</p></div></div>
                 </div>
             </div>

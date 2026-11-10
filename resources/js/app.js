@@ -7,6 +7,93 @@ import './map';
 window.Alpine = Alpine;
 Alpine.start();
 
+const weatherCard = document.querySelector('[data-weather-card]');
+if (weatherCard) {
+    const refreshButton = document.querySelector('[data-weather-refresh]');
+    const temperature = weatherCard.querySelector('[data-weather-temperature]');
+    const range = weatherCard.querySelector('[data-weather-range]');
+    const rain = weatherCard.querySelector('[data-weather-rain]');
+    const signal = weatherCard.querySelector('[data-weather-signal]');
+    const icon = weatherCard.querySelector('[data-weather-icon]');
+    const condition = weatherCard.querySelector('[data-weather-condition]');
+    const updated = weatherCard.querySelector('[data-weather-updated]');
+    const setLoading = (isLoading) => {
+        refreshButton?.toggleAttribute('disabled', isLoading);
+        refreshButton?.classList.toggle('opacity-60', isLoading);
+        if (isLoading) signal.textContent = 'Loading…';
+    };
+    const loadWeather = async () => {
+        setLoading(true);
+        try {
+            const response = await fetch('/weather', { headers: { Accept: 'application/json' }, credentials: 'same-origin', cache: 'no-store' });
+            if (!response.ok) throw new Error(`Weather request failed with status ${response.status}`);
+            const data = await response.json();
+            temperature.textContent = `${data.temperature}°C`;
+            condition.textContent = data.condition;
+            range.textContent = `${data.high}° / ${data.low}°`;
+            rain.textContent = `${data.rain_chance}%`;
+            signal.textContent = data.rainfall_signal;
+            signal.className = `mt-2 inline-block rounded-lg px-3 py-1 text-xs font-bold ${
+                data.rain_chance >= 70 ? 'bg-amber-400 text-amber-950' : 'bg-emerald-500 text-emerald-950'
+            }`;
+            icon.src = data.icon_url.startsWith('//') ? `https:${data.icon_url}` : data.icon_url;
+            icon.alt = data.condition;
+            icon.hidden = !data.icon_url;
+            const fetchedAt = new Date(data.fetched_at);
+            const providerUpdatedAt = new Date(data.updated_at.replace(' ', 'T'));
+            updated.textContent = `Fetched ${fetchedAt.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} · Source updated ${providerUpdatedAt.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`;
+        } catch (error) {
+            console.error('Unable to load weather data.', error);
+            temperature.textContent = 'Unavailable';
+            condition.textContent = 'Weather service unavailable';
+            range.textContent = '—';
+            rain.textContent = '—';
+            signal.textContent = 'Unavailable';
+            signal.className = 'mt-2 inline-block rounded-lg bg-slate-500 px-3 py-1 text-xs font-bold text-white';
+            updated.textContent = 'Weather service unavailable';
+            icon.hidden = true;
+        } finally {
+            setLoading(false);
+        }
+    };
+    refreshButton?.addEventListener('click', loadWeather);
+    loadWeather();
+}
+
+const citizenWeather = document.querySelector('[data-citizen-weather]');
+if (citizenWeather) {
+    const temperature = citizenWeather.querySelector('[data-citizen-temperature]');
+    const condition = citizenWeather.querySelector('[data-citizen-condition]');
+    const rain = citizenWeather.querySelector('[data-citizen-rain]');
+    const icon = citizenWeather.querySelector('[data-citizen-weather-icon]');
+
+    fetch('/citizen/weather', {
+        headers: { Accept: 'application/json' },
+        credentials: 'same-origin',
+        cache: 'no-store',
+    })
+        .then((response) => {
+            if (!response.ok) throw new Error(`Citizen weather request failed with status ${response.status}`);
+            return response.json();
+        })
+        .then((data) => {
+            temperature.textContent = `${data.temperature}°C`;
+            condition.textContent = data.condition;
+            rain.textContent = `${data.rain_chance}%`;
+            if (data.icon_url) {
+                icon.textContent = '';
+                icon.style.backgroundImage = `url(${data.icon_url.startsWith('//') ? `https:${data.icon_url}` : data.icon_url})`;
+                icon.classList.add('weather-image-icon');
+            }
+        })
+        .catch((error) => {
+            console.error('Unable to load citizen weather data.', error);
+            temperature.textContent = 'Unavailable';
+            condition.textContent = 'Weather unavailable';
+            rain.textContent = '—';
+        });
+}
+
 document.querySelectorAll('[data-carousel]').forEach((carousel) => {
     const carouselId = carousel.id;
     const track = carousel.querySelector('[data-carousel-track]');
@@ -184,6 +271,7 @@ const notificationsToggle = document.querySelector('[data-notifications-toggle]'
 const notificationsMenu = document.querySelector('[data-notifications-menu]');
 const notificationsList = document.querySelector('[data-notifications-list]');
 const notificationsStatus = document.querySelector('[data-notifications-status]');
+const notificationsClear = document.querySelector('[data-notifications-clear]');
 const notificationStorageKey = 'agos-notifications-last-seen';
 let latestNotificationId = Number(localStorage.getItem(notificationStorageKey) || 0);
 let notificationsInitialized = false;
@@ -226,6 +314,13 @@ const loadNotifications = async () => {
         console.error('Unable to load portal notifications.', error);
     }
 };
+notificationsClear?.addEventListener('click', () => {
+    localStorage.setItem(notificationStorageKey, String(latestNotificationId));
+    notificationsStatus?.classList.remove('bg-amber-500/15', 'text-amber-700');
+    notificationsStatus?.classList.add('bg-emerald-500/15', 'text-emerald-600', 'dark:text-emerald-300');
+    if (notificationsStatus) notificationsStatus.textContent = 'All clear';
+    document.querySelector('[data-notifications-toggle] span')?.classList.remove('bg-amber-500');
+});
 notificationsToggle?.addEventListener('click', (event) => {
     event.stopPropagation();
     const isOpen = !notificationsMenu?.classList.toggle('hidden');
@@ -240,9 +335,9 @@ document.addEventListener('click', (event) => {
     }
 });
 
-document.querySelector('[data-logout]')?.addEventListener('click', () => {
-    if (window.confirm('Log out of the AGOS portal?')) {
-        window.location.href = '/login';
+document.querySelector('[data-logout]')?.addEventListener('click', (event) => {
+    if (!window.confirm('Log out of the AGOS portal?')) {
+        event.preventDefault();
     }
 });
 
@@ -344,21 +439,87 @@ if (citizenApp) {
         citizenScreens.forEach((screen) => screen.classList.toggle('is-active', screen.dataset.citizenScreen === screenName));
         citizenNavItems.forEach((item) => item.classList.toggle('is-active', item.dataset.citizenNav === screenName));
         citizenApp.querySelector('.citizen-main')?.scrollTo({ top: 0, behavior: 'smooth' });
+        if (screenName === 'map') {
+            citizenApp.querySelector('[data-citizen-screen="map"]')?.dispatchEvent(new Event('citizen-map-shown'));
+        }
     };
+
+    const initialScreen = citizenApp.dataset.initialScreen || 'home';
+    if (initialScreen !== 'home') {
+        showCitizenScreen(initialScreen);
+    }
 
     citizenNavItems.forEach((item) => {
         item.addEventListener('click', (event) => {
+            if (item.tagName === 'A') {
+                return;
+            }
             event.preventDefault();
             showCitizenScreen(item.dataset.citizenNav);
         });
     });
 
-    citizenApp.querySelector('[data-citizen-alerts]')?.addEventListener('click', () => showCitizenScreen('alerts'));
+    citizenApp.querySelector('[data-citizen-alerts]')?.addEventListener('click', (event) => {
+        if (event.currentTarget.tagName !== 'A') {
+            showCitizenScreen('alerts');
+        }
+    });
     citizenApp.querySelector('[data-citizen-profile]')?.addEventListener('click', () => {
         showCitizenScreen('profile');
         loadCitizenProfile(citizenApp);
     });
-    citizenApp.querySelector('[data-citizen-menu]')?.addEventListener('click', () => showToast('AGOS Citizen App'));
+    const sidebar = citizenApp.querySelector('[data-citizen-sidebar]');
+    const sidebarOverlay = citizenApp.querySelector('[data-citizen-sidebar-overlay]');
+    const setSidebarOpen = (isOpen) => {
+        sidebar?.classList.toggle('is-open', isOpen);
+        sidebarOverlay?.classList.toggle('is-visible', isOpen);
+        sidebar?.setAttribute('aria-hidden', String(!isOpen));
+    };
+    citizenApp.querySelector('[data-citizen-menu]')?.addEventListener('click', () => setSidebarOpen(true));
+    citizenApp.querySelector('[data-citizen-menu-close]')?.addEventListener('click', () => setSidebarOpen(false));
+    sidebarOverlay?.addEventListener('click', () => setSidebarOpen(false));
+    sidebar?.querySelectorAll('a').forEach((link) => link.addEventListener('click', () => setSidebarOpen(false)));
+
+    const detailModal = citizenApp.querySelector('[data-citizen-detail-modal]');
+    const openDetail = (card) => {
+        const detailLabel = card.dataset.detailLabel || 'DETAIL';
+        const modalLabel = detailModal?.querySelector('[data-detail-modal-label]');
+        const sourceBadge = card.querySelector('.citizen-pill, .alert-badge, .status-critical, .status-monitoring, .status-safe');
+        const sourceTone = sourceBadge?.className.match(/(?:pill|badge|status)-(green|orange|blue|red|critical|monitoring|safe)/)?.[1];
+        const tone = { critical: 'red', monitoring: 'orange', safe: 'green' }[sourceTone] || sourceTone || 'blue';
+        modalLabel?.classList.remove('pill-green', 'pill-orange', 'pill-blue', 'pill-red');
+        modalLabel?.classList.add(`pill-${tone}`);
+        modalLabel?.replaceChildren(document.createTextNode(detailLabel));
+        detailModal?.querySelector('[data-detail-modal-title]').replaceChildren(document.createTextNode(card.dataset.detailTitle || 'Details'));
+        detailModal?.querySelector('[data-detail-modal-body]').replaceChildren(document.createTextNode(card.dataset.detailBody || 'No additional information available.'));
+        detailModal?.querySelector('[data-detail-modal-meta]').replaceChildren(document.createTextNode(card.dataset.detailMeta || ''));
+        detailModal?.classList.add('is-visible');
+        detailModal?.setAttribute('aria-hidden', 'false');
+    };
+    const closeDetail = () => {
+        detailModal?.classList.remove('is-visible');
+        detailModal?.setAttribute('aria-hidden', 'true');
+    };
+    citizenApp.querySelectorAll('[data-detail-title]').forEach((card) => {
+        card.setAttribute('tabindex', '0');
+        card.addEventListener('click', () => openDetail(card));
+        card.addEventListener('keydown', (event) => {
+            if (event.key === 'Enter' || event.key === ' ') {
+                event.preventDefault();
+                openDetail(card);
+            }
+        });
+    });
+    citizenApp.querySelector('[data-detail-close]')?.addEventListener('click', closeDetail);
+    detailModal?.addEventListener('click', (event) => {
+        if (event.target === detailModal) closeDetail();
+    });
+    document.addEventListener('keydown', (event) => {
+        if (event.key === 'Escape') {
+            closeDetail();
+            setSidebarOpen(false);
+        }
+    });
 
     citizenApp.addEventListener('click', (event) => {
         const removeButton = event.target.closest('[data-remove-barangay]');

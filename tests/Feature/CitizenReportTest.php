@@ -112,7 +112,7 @@ class CitizenReportTest extends TestCase
         $this->assertDatabaseHas('citizen_reports', [
             'user_id' => $citizen->id,
             'barangay_id' => $barangay->id,
-            'water_level_status' => 'roof_top',
+            'water_level_status' => 'impassable',
             'latitude' => 7.0731,
         ]);
     }
@@ -145,6 +145,26 @@ class CitizenReportTest extends TestCase
                 'password' => 'Password123!',
             ])
             ->assertRedirect(route('citizen.create'));
+    }
+
+    public function test_citizen_login_replaces_an_existing_admin_session(): void
+    {
+        $admin = User::factory()->create([
+            'role_id' => Role::firstOrCreate(['name' => 'super_admin'])->id,
+        ]);
+        $citizen = User::factory()->create([
+            'email' => 'citizen@example.com',
+            'password' => 'Password123!',
+        ]);
+
+        $this->actingAs($admin)
+            ->post(route('citizen.login.store'), [
+                'email' => $citizen->email,
+                'password' => 'Password123!',
+            ])
+            ->assertRedirect(route('citizen.create'));
+
+        $this->assertAuthenticatedAs($citizen);
     }
 
     public function test_super_admin_cannot_sign_in_to_citizen_app(): void

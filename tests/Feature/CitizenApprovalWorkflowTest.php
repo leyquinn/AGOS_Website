@@ -132,6 +132,23 @@ class CitizenApprovalWorkflowTest extends TestCase
         Mail::assertQueued(CitizenAccountApprovedMail::class);
     }
 
+    public function test_web_approval_form_contains_a_csrf_token(): void
+    {
+        $barangay = Barangay::create(['name' => 'Poblacion', 'district' => '1st District']);
+        $admin = User::factory()->create([
+            'role_id' => Role::firstOrCreate(['name' => 'barangay_admin'])->id,
+            'barangay_id' => $barangay->id,
+            'status' => 'approved',
+        ]);
+        $citizen = $this->createCitizen($barangay);
+
+        $this->actingAs($admin)
+            ->get(route('admin.citizen-approvals'))
+            ->assertOk()
+            ->assertSee('name="_token"', false)
+            ->assertSee(route('admin.citizen-approvals.approve', $citizen), false);
+    }
+
     public function test_admin_can_change_approved_or_declined_status_later(): void
     {
         Mail::fake();

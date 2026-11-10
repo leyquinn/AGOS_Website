@@ -15,7 +15,7 @@ class CitizenReportController extends Controller
             'report_text' => ['required', 'string'],
             'latitude' => ['nullable', 'numeric', 'between:-90,90'],
             'longitude' => ['nullable', 'numeric', 'between:-180,180'],
-            'water_level_status' => ['required', 'in:low,knee_deep,waist_deep,chest_deep,roof_top'],
+            'water_level_status' => ['required', 'in:low,knee_deep,waist_deep,chest_deep,roof_top,impassable'],
             'barangay_id' => ['required', 'exists:barangays,id'],
         ]);
 

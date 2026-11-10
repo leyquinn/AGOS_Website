@@ -28,7 +28,7 @@
                             <td class="px-5 py-4">
                                 <div class="flex flex-wrap gap-2">
                                     @if ($status !== 'approved')
-                                        <form action="{{ route('admin.citizen-approvals.approve', $citizen) }}" method="POST">
+                                        <form action="{{ route('admin.citizen-approvals.approve', $citizen) }}" method="POST" class="citizen-approval-form">
                                             @csrf
                                             <button type="submit" class="rounded-lg bg-emerald-600 px-3 py-2 text-xs font-bold text-white hover:bg-emerald-500">Approve</button>
                                         </form>

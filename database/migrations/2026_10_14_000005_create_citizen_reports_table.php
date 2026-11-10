@@ -15,7 +15,7 @@ return new class extends Migration
             $table->text('report_text');
             $table->decimal('latitude', 10, 8)->nullable();
             $table->decimal('longitude', 11, 8)->nullable();
-            $table->enum('water_level_status', ['low', 'knee_deep', 'waist_deep', 'chest_deep', 'roof_top'])->default('low');
+            $table->enum('water_level_status', ['low', 'knee_deep', 'waist_deep', 'chest_deep', 'roof_top', 'impassable'])->default('low');
             $table->enum('verification_status', ['pending', 'verified', 'rejected'])->default('pending');
             $table->decimal('confidence_score', 5, 4)->default(0.0000);
             $table->timestamps();

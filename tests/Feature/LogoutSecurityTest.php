@@ -12,7 +12,7 @@ class LogoutSecurityTest extends TestCase
 {
     use RefreshDatabase;
 
-    public function test_citizen_logout_returns_to_registration_and_expires_private_page_cache(): void
+    public function test_citizen_logout_returns_to_login_and_expires_private_page_cache(): void
     {
         $user = User::factory()->create([
             'role_id' => Role::firstOrCreate(['name' => 'citizen'])->id,
@@ -22,14 +22,14 @@ class LogoutSecurityTest extends TestCase
         $this->assertStringContainsString('no-store', $privatePage->headers->get('Cache-Control'));
 
         $this->actingAs($user)->post(route('citizen.logout'))
-            ->assertRedirect(route('citizen.register'));
+            ->assertRedirect(route('citizen.login'));
 
         $this->assertGuest();
     }
 
-    public function test_stale_citizen_logout_url_redirects_to_registration(): void
+    public function test_stale_citizen_logout_url_redirects_to_login(): void
     {
-        $this->get('/citizen/logout')->assertRedirect(route('citizen.register'));
+        $this->get('/citizen/logout')->assertRedirect(route('citizen.login'));
     }
 
     public function test_admin_logout_returns_to_admin_login_and_expires_private_page_cache(): void

@@ -102,14 +102,40 @@ class CitizenReportController extends Controller
         $request->session()->invalidate();
         $request->session()->regenerateToken();
 
-        return to_route('citizen.register');
+        return to_route('citizen.login');
     }
 
     public function create(): View
     {
+        return $this->renderScreen('home');
+    }
+
+    public function map(): View
+    {
+        return $this->renderScreen('map');
+    }
+
+    public function report(): View
+    {
+        return $this->renderScreen('report');
+    }
+
+    public function alerts(): View
+    {
+        return $this->renderScreen('alerts');
+    }
+
+    public function profile(): View
+    {
+        return $this->renderScreen('profile');
+    }
+
+    private function renderScreen(string $screen): View
+    {
         $user = request()->user()->load('barangay');
 
         return view('citizen.create', [
+            'screen' => $screen,
             'barangays' => Barangay::orderBy('name')->get(),
             'citizenReports' => $user->citizenReports()->with('barangay')->latest()->get(),
         ]);
@@ -154,7 +180,7 @@ class CitizenReportController extends Controller
             'waist' => 'waist_deep',
             'chest' => 'chest_deep',
             'roof' => 'roof_top',
-            'impassable' => 'roof_top',
+            'impassable' => 'impassable',
         ];
 
         CitizenReport::create([

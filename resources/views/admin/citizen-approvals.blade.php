@@ -37,4 +37,17 @@
             'status' => 'declined',
         ])
     </div>
+
+    <script>
+        document.querySelectorAll('.citizen-approval-form').forEach((form) => {
+            form.addEventListener('submit', () => {
+                const token = document.querySelector('meta[name="csrf-token"]')?.content;
+                const input = form.querySelector('input[name="_token"]');
+
+                if (token && input) {
+                    input.value = token;
+                }
+            });
+        });
+    </script>
 </x-layouts.app>

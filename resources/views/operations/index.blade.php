@@ -1,7 +1,7 @@
 <x-layouts.app title="Operations">
     <div class="mb-6 flex items-center justify-between">
         <p class="hidden text-sm text-slate-400 sm:block">Monitor automatically processed reports and emerging flood events.</p>
-        <button type="button" class="ml-auto rounded-xl border border-blue-700/60 bg-blue-600 px-4 py-2.5 text-xs font-bold text-white shadow-lg shadow-blue-950/20 transition hover:bg-blue-500">
+        <button type="button" data-weather-refresh class="ml-auto rounded-xl border border-blue-700/60 bg-blue-600 px-4 py-2.5 text-xs font-bold text-white shadow-lg shadow-blue-950/20 transition hover:bg-blue-500">
             ↻ &nbsp; Refresh
         </button>
     </div>
@@ -20,19 +20,24 @@
         @endforeach
     </section>
 
-    <section class="portal-card mt-5 rounded-2xl border border-blue-900/50 bg-[#071738]/80 p-5">
-        <div class="flex flex-col justify-between gap-4 md:flex-row md:items-center">
-            <div>
-                <p class="text-sm font-bold text-white">Weather Condition - Davao City</p>
-                <p class="mt-2 text-3xl font-black text-white">☁ <span class="ml-2 text-lg font-medium text-slate-300">28.5°C</span></p>
+    <section data-weather-card class="portal-card mt-5 rounded-2xl border border-blue-900/50 bg-[#071738]/80 p-5 md:p-6">
+        <div class="flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between">
+            <div class="min-w-[13rem]">
+                <p class="text-xs font-bold uppercase tracking-wider text-slate-400">Current conditions</p>
+                <h2 class="mt-1 text-base font-black text-white">Davao City</h2>
+                <div class="mt-3 flex items-center gap-3">
+                    <img data-weather-icon src="" alt="" class="h-12 w-12 object-contain" hidden>
+                    <div>
+                        <p data-weather-temperature class="text-3xl font-black text-white">Loading…</p>
+                        <p data-weather-condition class="mt-1 text-xs font-medium text-slate-400">Loading live weather…</p>
+                    </div>
+                </div>
+                <p data-weather-updated class="mt-3 text-[10px] text-slate-500">Waiting for WeatherAPI…</p>
             </div>
-            <div class="grid grid-cols-2 gap-8 text-center text-xs text-slate-400">
-                <span>Today's high / low<strong class="mt-1 block text-sm text-slate-200">32.5° / 26.2°</strong></span>
-                <span>Rain chance (Today)<strong class="mt-1 block text-sm text-slate-200">20%</strong></span>
-            </div>
-            <div class="text-left md:text-right">
-                <p class="text-xs text-slate-400">PAGASA Rainfall Signal</p>
-                <span class="mt-2 inline-block rounded-lg bg-emerald-500 px-3 py-1 text-xs font-bold text-emerald-950">No warning</span>
+            <div class="grid grid-cols-2 gap-x-10 gap-y-4 sm:grid-cols-3 lg:flex lg:items-center lg:gap-10">
+                <div><p class="text-xs text-slate-400">Today's high / low</p><strong data-weather-range class="mt-1 block text-base text-slate-200">—</strong></div>
+                <div><p class="text-xs text-slate-400">Rain chance</p><strong data-weather-rain class="mt-1 block text-base text-slate-200">—</strong></div>
+                <div class="sm:col-span-1"><p class="text-xs text-slate-400">Rainfall status</p><span data-weather-signal class="mt-2 inline-flex rounded-lg bg-emerald-500 px-3 py-1.5 text-xs font-bold text-emerald-950">Loading…</span></div>
             </div>
         </div>
     </section>
