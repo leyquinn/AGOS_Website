@@ -35,4 +35,12 @@ return [
         ],
     ],
 
+    'agos_scraper' => [
+        'python_bin' => env('AGOS_PYTHON_BIN', 'python'),
+        'script_path' => env('AGOS_SCRAPER_SCRIPT', base_path('intelligence/scraper/davao_flood_scraper.py')),
+        'profile_dir' => env('AGOS_SCRAPER_PROFILE_DIR', is_dir('c:/Users/narp/Desktop/Coding Projects/Thesis/fb_chrome_profile')
+            ? 'c:/Users/narp/Desktop/Coding Projects/Thesis/fb_chrome_profile'
+            : base_path('intelligence/scraper/fb_chrome_profile')),
+    ],
+
 ];

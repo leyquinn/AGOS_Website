@@ -3,6 +3,7 @@
 use App\Http\Controllers\Api\AdminManagementController;
 use App\Http\Controllers\Api\CitizenApprovalController;
 use App\Http\Controllers\CitizenReportController;
+use App\Http\Controllers\HarvestingController;
 use App\Http\Controllers\PortalAuthController;
 use App\Http\Controllers\ReportsController;
 use Illuminate\Support\Facades\Route;
@@ -55,9 +56,15 @@ Route::middleware(['auth', 'role:super_admin,barangay_admin', 'no-back'])->group
     Route::get('/reports', [ReportsController::class, 'index'])->name('reports');
     Route::get('/notifications', [ReportsController::class, 'notifications'])->name('notifications');
 
-    Route::get('/harvesting', function () {
-        return view('harvesting.index');
-    })->name('harvesting');
+    Route::get('/harvesting', [HarvestingController::class, 'index'])->name('harvesting');
+    Route::get('/harvesting/status', [HarvestingController::class, 'status'])->name('harvesting.status');
+    Route::post('/harvesting/run', [HarvestingController::class, 'runScraper'])->name('harvesting.run');
+    Route::post('/harvesting/stop', [HarvestingController::class, 'stopScraper'])->name('harvesting.stop');
+    Route::post('/harvesting/keywords', [HarvestingController::class, 'storeKeyword'])->name('harvesting.keywords.store');
+    Route::post('/harvesting/keywords/{keyword}/toggle', [HarvestingController::class, 'toggleKeyword'])->name('harvesting.keywords.toggle');
+    Route::delete('/harvesting/keywords/{keyword}', [HarvestingController::class, 'destroyKeyword'])->name('harvesting.keywords.destroy');
+    Route::post('/harvesting/sources', [HarvestingController::class, 'storeSource'])->name('harvesting.sources.store');
+    Route::delete('/harvesting/sources/{source}', [HarvestingController::class, 'destroySource'])->name('harvesting.sources.destroy');
 
     Route::get('/analytics', function () {
         return view('analytics.index');

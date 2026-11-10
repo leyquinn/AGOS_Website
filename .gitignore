@@ -19,6 +19,9 @@
 /storage/*.key
 /storage/pail
 /vendor
+/intelligence/**/fb_chrome_profile
+/intelligence/**/__pycache__
+/storage/app/harvest
 Homestead.json
 Homestead.yaml
 Thumbs.db
