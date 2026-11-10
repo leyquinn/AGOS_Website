@@ -1,7 +1,11 @@
 import './bootstrap';
+import Alpine from 'alpinejs';
 import './dashboard-charts';
 import './model-analytics';
 import './map';
+
+window.Alpine = Alpine;
+Alpine.start();
 
 document.querySelectorAll('[data-carousel]').forEach((carousel) => {
     const carouselId = carousel.id;
@@ -195,9 +199,9 @@ const renderNotifications = (notifications) => {
     if (!notificationsList) return;
     if (!notifications.length) return;
     notificationsList.innerHTML = notifications.map((notification) => `
-        <div class="rounded-xl border border-slate-200 bg-slate-50 p-3 dark:border-slate-700 dark:bg-slate-800">
-            <p class="text-[10px] font-bold text-slate-700 dark:text-slate-200">New report from ${escapeNotificationText(notification.barangay)}</p>
-            <p class="mt-1 truncate text-[10px] leading-relaxed text-slate-500 dark:text-slate-400">${escapeNotificationText(notification.message)}</p>
+        <div class="notification-item rounded-xl border border-slate-200 bg-slate-50 p-3 dark:border-slate-700 dark:bg-slate-800">
+            <p class="notification-item-title text-[10px] font-bold text-slate-700 dark:text-slate-200">New report from ${escapeNotificationText(notification.barangay)}</p>
+            <p class="notification-item-message mt-1 truncate text-[10px] leading-relaxed text-slate-500 dark:text-slate-400">${escapeNotificationText(notification.message)}</p>
         </div>
     `).join('');
 };

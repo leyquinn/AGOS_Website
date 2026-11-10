@@ -1604,6 +1604,73 @@ body.theme-light .notifications-menu {
     background: #ffffff !important;
 }
 
+html.theme-light body .barangay-admin-table,
+body.theme-light .barangay-admin-table {
+    color: #334155;
+}
+
+html.theme-light body .barangay-admin-table-card,
+html.theme-light body .barangay-admin-table-card:hover,
+body.theme-light .barangay-admin-table-card,
+body.theme-light .barangay-admin-table-card:hover {
+    border: 1px solid rgba(226, 232, 240, 0.9) !important;
+    box-shadow: 0 1px 3px rgba(15, 23, 42, 0.06) !important;
+}
+
+html.theme-light body .barangay-admin-table thead,
+body.theme-light .barangay-admin-table thead {
+    background-color: #f8fafc !important;
+    color: #64748b !important;
+}
+
+html.theme-light body .barangay-admin-table tbody,
+body.theme-light .barangay-admin-table tbody {
+    background-color: #ffffff !important;
+}
+
+html.theme-light body .barangay-admin-table tbody tr,
+body.theme-light .barangay-admin-table tbody tr {
+    border-color: #e2e8f0 !important;
+}
+
+html.theme-light body .barangay-admin-table tbody.divide-y > :not([hidden]) ~ :not([hidden]),
+body.theme-light .barangay-admin-table tbody.divide-y > :not([hidden]) ~ :not([hidden]) {
+    border-top-color: #f1f5f9 !important;
+}
+
+html.theme-light body .barangay-admin-more-button,
+body.theme-light .barangay-admin-more-button {
+    border: 1px solid #e2e8f0 !important;
+}
+
+html.theme-light body .barangay-admin-more-button:hover,
+body.theme-light .barangay-admin-more-button:hover {
+    border-color: #cbd5e1 !important;
+}
+
+html.theme-light body .barangay-admin-table .text-slate-100,
+html.theme-light body .barangay-admin-table .text-slate-200,
+body.theme-light .barangay-admin-table .text-slate-100,
+body.theme-light .barangay-admin-table .text-slate-200 {
+    color: #1e293b !important;
+}
+
+html.theme-light body .notifications-menu .notification-item,
+body.theme-light .notifications-menu .notification-item {
+    border-color: #e2e8f0 !important;
+    background-color: #f8fafc !important;
+}
+
+html.theme-light body .notifications-menu .notification-item-title,
+body.theme-light .notifications-menu .notification-item-title {
+    color: #334155 !important;
+}
+
+html.theme-light body .notifications-menu .notification-item-message,
+body.theme-light .notifications-menu .notification-item-message {
+    color: #64748b !important;
+}
+
 [data-carousel] {
     scroll-snap-type: x mandatory;
     touch-action: pan-x;

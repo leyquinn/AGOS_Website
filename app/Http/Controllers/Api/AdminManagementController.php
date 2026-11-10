@@ -32,6 +32,26 @@ class AdminManagementController extends Controller
             ->with('success', 'Barangay admin assigned successfully.');
     }
 
+    public function revokeBarangayAdmin(Request $request, User $user): RedirectResponse
+    {
+        abort_unless($request->user()?->isSuperAdmin(), 403, 'Unauthorized access for your role level.');
+        abort_unless($user->isBarangayAdmin(), 404);
+
+        $user->forceFill([
+            'status' => 'revoked',
+            'is_active' => false,
+        ])->save();
+        $user->tokens()->delete();
+
+        return to_route('admin.barangays')
+            ->with('success', "{$user->first_name} {$user->last_name}'s access was revoked.");
+    }
+
+    public function assignBarangayAdminAtBarangay(Request $request): RedirectResponse
+    {
+        return $this->assignBarangayAdminWeb($request);
+    }
+
     public function assignBarangayAdmin(Request $request): JsonResponse
     {
         abort_unless($request->user()?->isSuperAdmin(), 403, 'Unauthorized access for your role level.');
@@ -55,8 +75,23 @@ class AdminManagementController extends Controller
             'barangay_id' => ['required', 'exists:barangays,id'],
         ]);
 
+        User::query()
+            ->where('barangay_id', $validated['barangay_id'])
+            ->where('is_active', true)
+            ->where('status', 'approved')
+            ->whereRelation('role', 'name', 'barangay_admin')
+            ->get()
+            ->each(function (User $admin): void {
+                $admin->forceFill([
+                    'status' => 'revoked',
+                    'is_active' => false,
+                ])->save();
+                $admin->tokens()->delete();
+            });
+
         return User::create([
             ...$validated,
+            'is_active' => true,
             'status' => 'approved',
             'role_id' => Role::firstOrCreate(
                 ['name' => 'barangay_admin'],

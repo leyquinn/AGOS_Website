@@ -36,6 +36,10 @@ Route::middleware(['auth', 'role:citizen', 'no-back'])->group(function () {
 
 Route::middleware(['auth', 'role:super_admin', 'no-back'])->prefix('admin')->group(function () {
     Route::get('/barangays', [AdminManagementController::class, 'barangays'])->name('admin.barangays');
+    Route::post('/barangay/assign', [AdminManagementController::class, 'assignBarangayAdminAtBarangay'])
+        ->name('admin.barangay.assign');
+    Route::post('/barangay/revoke/{user}', [AdminManagementController::class, 'revokeBarangayAdmin'])
+        ->name('admin.barangay.revoke');
     Route::post('/assign-barangay-admin', [AdminManagementController::class, 'assignBarangayAdminWeb'])
         ->name('admin.assign-barangay-admin');
 });

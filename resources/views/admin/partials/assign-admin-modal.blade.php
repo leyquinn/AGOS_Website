@@ -4,7 +4,7 @@
             <div><h2 id="assign-admin-title" class="text-xl font-black">Assign Barangay Admin</h2><p class="mt-1 text-xs text-slate-400">The new account will be scoped to the selected barangay.</p></div>
             <button type="button" data-close-assign-admin class="rounded-lg px-2 py-1 text-xl text-slate-400 hover:bg-blue-900 hover:text-white" aria-label="Close">×</button>
         </div>
-        <form action="{{ route('admin.assign-barangay-admin') }}" method="POST" class="mt-6 space-y-4">
+        <form action="{{ route('admin.barangay.assign') }}" method="POST" class="mt-6 space-y-4">
             @csrf
             <div>
                 <label for="barangay_id" class="mb-2 block text-xs font-bold text-blue-100">Barangay</label>
@@ -33,7 +33,12 @@
         const modal = document.querySelector('[data-assign-admin-modal]');
         const open = () => { modal?.classList.remove('hidden'); modal?.classList.add('flex'); modal?.querySelector('select')?.focus(); };
         const close = () => { modal?.classList.add('hidden'); modal?.classList.remove('flex'); };
-        document.querySelector('[data-open-assign-admin]')?.addEventListener('click', open);
+        document.querySelectorAll('[data-open-assign-admin]').forEach((button) => button.addEventListener('click', () => {
+            const barangayId = button.dataset.barangayId;
+            const select = modal?.querySelector('select');
+            if (barangayId && select) select.value = barangayId;
+            open();
+        }));
         modal?.querySelectorAll('[data-close-assign-admin]').forEach((button) => button.addEventListener('click', close));
         modal?.addEventListener('click', (event) => { if (event.target === modal) close(); });
         modal?.querySelector('[data-generate-password]')?.addEventListener('click', () => {
