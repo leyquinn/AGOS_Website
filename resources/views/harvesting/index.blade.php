@@ -194,6 +194,64 @@
             @endif
         </section>
 
+        <section class="portal-card mt-5 rounded-2xl bg-[#b7c9e5] p-5 text-slate-700 shadow-lg shadow-blue-950/10">
+            <div class="flex flex-wrap items-center justify-between gap-3">
+                <div>
+                    <div class="flex flex-wrap items-center gap-2.5">
+                        <h2 class="text-lg font-black">Multi-Task XLM-RoBERTa + K-Means++ Intelligence</h2>
+                        @if ($checkpointReady ?? false)
+                            <span class="rounded-full border border-emerald-500/40 bg-emerald-500/15 px-2.5 py-0.5 text-[10px] font-bold text-emerald-400">
+                                ● Checkpoint Ready (best_model.pt)
+                            </span>
+                        @else
+                            <span class="rounded-full border border-amber-500/40 bg-amber-500/15 px-2.5 py-0.5 text-[10px] font-bold text-amber-300">
+                                ⚠ Checkpoint Missing in intelligence/model/checkpoints/
+                            </span>
+                        @endif
+                    </div>
+                    <p class="mt-0.5 text-[10px] font-semibold text-slate-500">
+                        Shared <code>xlm-roberta-base</code> encoder with Task Head A (Relevance Classification <em>P<sub>rel</sub></em>), Task Head B (Barangay IOB2 NER + Gazetteer), and K-Means++ Spatial Consensus (<em>CS = 0.35·P<sub>rel</sub> + 0.65·D<sub>clusters</sub></em>).
+                    </p>
+                </div>
+
+                <form method="POST" action="{{ route('harvesting.analyze') }}" class="flex flex-wrap items-center gap-2.5">
+                    @csrf
+                    <label class="flex items-center gap-1.5 text-[10px] font-bold text-slate-600">
+                        <span>Scope:</span>
+                        <select name="scope" class="rounded-lg border-0 bg-slate-100 px-2.5 py-1.5 text-[10px] font-bold text-slate-700 outline-none focus:ring-2 focus:ring-blue-500">
+                            <option value="all">All scraped posts ({{ $totalScrapedPosts }})</option>
+                            <option value="kept">Kept / Clean posts only ({{ $keptPostsCount }})</option>
+                        </select>
+                    </label>
+                    <label class="flex items-center gap-1.5 text-[10px] font-bold text-slate-600">
+                        <span>Threshold:</span>
+                        <select name="threshold" class="rounded-lg border-0 bg-slate-100 px-2 py-1.5 text-[10px] font-bold text-slate-700 outline-none focus:ring-2 focus:ring-blue-500">
+                            <option value="0.50">P_rel ≥ 0.50</option>
+                            <option value="0.60">P_rel ≥ 0.60</option>
+                            <option value="0.70">P_rel ≥ 0.70</option>
+                        </select>
+                    </label>
+                    <button type="submit" class="rounded-xl bg-blue-600 px-3.5 py-2 text-xs font-bold text-white shadow transition hover:bg-blue-500">
+                        🧠 Run XLM-RoBERTa Model Now
+                    </button>
+                </form>
+            </div>
+
+            <div class="mt-6 grid gap-5 text-center sm:grid-cols-2 xl:grid-cols-4">
+                @foreach ([
+                    ['label' => 'Posts Analyzed by XLM-R', 'value' => number_format($analyzedPostsCount ?? 0).' / '.number_format($totalScrapedPosts), 'class' => 'text-blue-700 dark:text-blue-400'],
+                    ['label' => 'Verified Actionable (Emergency)', 'value' => number_format($actionablePostsCount ?? 0).' actionable', 'class' => 'text-emerald-500'],
+                    ['label' => 'Flood Watch / HITL (No Urgency)', 'value' => number_format($earlyWarningPostsCount ?? 0).' watch', 'class' => 'text-amber-400'],
+                    ['label' => 'Avg. Confidence Score (CS)', 'value' => number_format($avgConfidenceScore ?? 0, 2), 'class' => 'text-cyan-300'],
+                ] as $metric)
+                    <div>
+                        <p class="text-sm font-medium text-slate-500">{{ $metric['label'] }}</p>
+                        <p class="mt-1 text-xl font-black {{ $metric['class'] }}">{{ $metric['value'] }}</p>
+                    </div>
+                @endforeach
+            </div>
+        </section>
+
         <div class="mt-5 grid gap-5 xl:grid-cols-2">
             <section class="portal-card rounded-2xl bg-[#b7c9e5] p-4 text-slate-700 shadow-lg shadow-blue-950/10 sm:p-5">
                 <form method="POST" action="{{ route('harvesting.keywords.store') }}">
@@ -317,11 +375,13 @@
                 </div>
 
                 <div class="flex flex-wrap items-center gap-3">
-                    <div class="flex rounded-xl border border-blue-900/60 bg-[#031027] p-1" role="tablist">
+                    <div class="flex flex-wrap rounded-xl border border-blue-900/60 bg-[#031027] p-1" role="tablist">
                         @foreach ([
-                            ['key' => 'kept', 'label' => '✓ Kept / Clean ('.$keptPostsCount.')'],
-                            ['key' => 'removed', 'label' => '✕ Removed Noise ('.$removedPostsCount.')'],
-                            ['key' => 'all', 'label' => 'All Scraped ('.$totalScrapedPosts.')'],
+                            ['key' => 'actionable', 'label' => '🚨 Verified Flood ('.number_format($actionablePostsCount ?? 0).')'],
+                            ['key' => 'watch', 'label' => '⚠ No Urgency / Official Tag ('.number_format($earlyWarningPostsCount ?? 0).')'],
+                            ['key' => 'kept', 'label' => '✓ Kept / Clean ('.number_format($keptPostsCount).')'],
+                            ['key' => 'removed', 'label' => '✕ Removed Noise ('.number_format($removedPostsCount).')'],
+                            ['key' => 'all', 'label' => 'All Scraped ('.number_format($totalScrapedPosts).')'],
                         ] as $tab)
                             <button
                                 type="button"

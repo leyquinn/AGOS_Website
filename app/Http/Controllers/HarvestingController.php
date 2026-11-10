@@ -26,12 +26,18 @@ class HarvestingController extends Controller
         }
 
         $filter = (string) $request->query('filter', 'kept');
-        if (! in_array($filter, ['kept', 'removed', 'all'], true)) {
+        if (! in_array($filter, ['actionable', 'watch', 'kept', 'removed', 'all'], true)) {
             $filter = 'kept';
         }
 
         $postsQuery = SocialPost::latest('scraped_at')->latest('id');
-        if ($filter === 'kept') {
+        if ($filter === 'actionable') {
+            $postsQuery->where('model_status', 'VERIFIED_ACTIONABLE')
+                ->orderByDesc('confidence_score');
+        } elseif ($filter === 'watch') {
+            $postsQuery->where('model_status', 'FLOOD_MENTION_NO_URGENCY')
+                ->orderByDesc('p_rel');
+        } elseif ($filter === 'kept') {
             $postsQuery->where('clean_status', 'kept');
         } elseif ($filter === 'removed') {
             $postsQuery->where('clean_status', 'removed');
@@ -52,12 +58,30 @@ class HarvestingController extends Controller
             ->pluck('total', 'category')
             ->all();
 
+        $analyzedPostsCount = SocialPost::whereNotNull('analyzed_at')->count();
+        $actionablePostsCount = SocialPost::where('model_status', 'VERIFIED_ACTIONABLE')->count();
+        $earlyWarningPostsCount = SocialPost::where('model_status', 'FLOOD_MENTION_NO_URGENCY')->count();
+        $unlocalizedPostsCount = SocialPost::where('model_status', 'DISCARDED_UNLOCALIZED')->count();
+        $avgConfidenceScore = (float) (
+            SocialPost::where('model_status', 'VERIFIED_ACTIONABLE')->avg('confidence_score')
+            ?? SocialPost::where('is_flood_related', true)->avg('confidence_score')
+            ?? 0.0
+        );
+
+        $ckptPath = config('services.agos_scraper.model_checkpoint_path');
+        $checkpointReady = ($ckptPath && is_file($ckptPath))
+            || is_file('c:/Users/narp/Desktop/Coding Projects/XLM- RoBERTa/checkpoints/best_model.pt');
+        $barangayList = array_keys(self::getBarangayCentroids());
+
         if ($request->ajax()) {
             return view('harvesting._posts', [
                 'socialPosts' => $socialPosts,
                 'totalScrapedPosts' => $totalScrapedPosts,
                 'keptPostsCount' => $keptPostsCount,
                 'removedPostsCount' => $removedPostsCount,
+                'actionablePostsCount' => $actionablePostsCount,
+                'earlyWarningPostsCount' => $earlyWarningPostsCount,
+                'barangayList' => $barangayList,
                 'perPage' => $perPage,
                 'filter' => $filter,
             ]);
@@ -72,9 +96,110 @@ class HarvestingController extends Controller
             'keptPostsCount' => $keptPostsCount,
             'removedPostsCount' => $removedPostsCount,
             'removalBreakdown' => $removalBreakdown,
+            'analyzedPostsCount' => $analyzedPostsCount,
+            'actionablePostsCount' => $actionablePostsCount,
+            'earlyWarningPostsCount' => $earlyWarningPostsCount,
+            'unlocalizedPostsCount' => $unlocalizedPostsCount,
+            'avgConfidenceScore' => $avgConfidenceScore,
+            'checkpointReady' => $checkpointReady,
+            'barangayList' => $barangayList,
             'perPage' => $perPage,
             'filter' => $filter,
         ]);
+    }
+
+    public static function getBarangayCentroids(): array
+    {
+        $path = storage_path('app/harvest/model/barangay_centroids.json');
+        if (is_file($path)) {
+            $decoded = json_decode((string) file_get_contents($path), true);
+            if (is_array($decoded) && ! empty($decoded)) {
+                return $decoded;
+            }
+        }
+
+        return [
+            'Talomo' => ['lat' => 7.0510, 'lng' => 125.5680, 'radius' => 0.003, 'river_basin' => 'Talomo River Basin'],
+            'Buhangin' => ['lat' => 7.1125, 'lng' => 125.6200, 'radius' => 0.003, 'river_basin' => 'Davao River Basin'],
+            'Tigatto' => ['lat' => 7.1292, 'lng' => 125.5950, 'radius' => 0.003, 'river_basin' => 'Davao River Basin'],
+            'Matina Crossing' => ['lat' => 7.0583, 'lng' => 125.5819, 'radius' => 0.003, 'river_basin' => 'Matina Pangi River Basin'],
+            'Matina Pangi' => ['lat' => 7.0714, 'lng' => 125.5661, 'radius' => 0.003, 'river_basin' => 'Matina Pangi River Basin'],
+            'Ma-a' => ['lat' => 7.0872, 'lng' => 125.5861, 'radius' => 0.003, 'river_basin' => 'Davao River Basin'],
+            'Poblacion' => ['lat' => 7.0660, 'lng' => 125.6055, 'radius' => 0.003, 'river_basin' => 'Davao River Basin'],
+        ];
+    }
+
+    public function verifyPost(Request $request, SocialPost $post): RedirectResponse
+    {
+        $validated = $request->validate([
+            'barangay' => ['required', 'string', 'max:120'],
+        ]);
+
+        $centroids = self::getBarangayCentroids();
+        $selectedBarangay = trim($validated['barangay']);
+
+        $meta = $centroids[$selectedBarangay] ?? null;
+        if (! $meta) {
+            foreach ($centroids as $name => $info) {
+                if (mb_strtolower($name) === mb_strtolower($selectedBarangay)) {
+                    $selectedBarangay = $name;
+                    $meta = $info;
+                    break;
+                }
+            }
+        }
+
+        $baseLat = (float) ($meta['lat'] ?? $post->latitude ?? 7.0660);
+        $baseLng = (float) ($meta['lng'] ?? $post->longitude ?? 125.6055);
+        $maxR = (float) ($meta['radius'] ?? 0.0015);
+        $basin = (string) ($meta['river_basin'] ?? $post->river_basin ?? 'Davao City Watershed');
+
+        $hash = md5((string) $post->post_id);
+        $angle = (hexdec(substr($hash, 0, 4)) / 65535.0) * 2.0 * M_PI;
+        $r = $maxR * 0.25 * (hexdec(substr($hash, 4, 4)) / 65535.0);
+        $lat = round($baseLat + $r * sin($angle), 7);
+        $lng = round($baseLng + $r * cos($angle), 7);
+
+        $pRel = max((float) $post->p_rel, 0.85);
+        $dClust = max((float) $post->d_clusters, 0.95);
+        $cs = round((0.35 * $pRel) + (0.65 * $dClust), 4);
+
+        $post->update([
+            'is_flood_related' => true,
+            'model_status' => 'VERIFIED_ACTIONABLE',
+            'urgency_level' => 'HIGH',
+            'primary_barangay' => $selectedBarangay,
+            'river_basin' => $basin,
+            'extracted_locations' => [$selectedBarangay],
+            'detected_locations' => [$selectedBarangay],
+            'latitude' => $lat,
+            'longitude' => $lng,
+            'p_rel' => $pRel,
+            'd_clusters' => $dClust,
+            'confidence_score' => $cs,
+            'discard_reason' => 'verified_by_official',
+            'analyzed_at' => now(),
+        ]);
+
+        return back()->with(
+            'status',
+            "Post #{$post->id} tagged as flood-related for Barangay {$selectedBarangay} (CS ".number_format($cs, 2).") and added to the Flood Heatmap."
+        );
+    }
+
+    public function dismissPost(SocialPost $post): RedirectResponse
+    {
+        $post->update([
+            'is_flood_related' => false,
+            'model_status' => 'DISCARDED_NOT_FLOOD',
+            'discard_reason' => 'dismissed_by_official',
+            'analyzed_at' => now(),
+        ]);
+
+        return back()->with(
+            'status',
+            "Post #{$post->id} dismissed by Barangay Official review."
+        );
     }
 
     public function runCleaner(Request $request): RedirectResponse
@@ -88,6 +213,38 @@ class HarvestingController extends Controller
         return to_route('harvesting')->with(
             'status',
             "Flood Cleaner finished: {$kept} genuine Davao flood posts kept, {$removed} noise/duplicate posts removed."
+        );
+    }
+
+    public function runModel(Request $request): RedirectResponse
+    {
+        $validated = $request->validate([
+            'scope' => ['nullable', 'in:kept,all'],
+            'threshold' => ['nullable', 'numeric', 'min:0.10', 'max:0.95'],
+        ]);
+
+        $scope = $validated['scope'] ?? 'all';
+        $threshold = (float) ($validated['threshold'] ?? 0.50);
+
+        $exitCode = Artisan::call('agos:analyze', [
+            '--scope' => $scope,
+            '--threshold' => $threshold,
+        ]);
+
+        if ($exitCode !== 0) {
+            return to_route('harvesting')->with(
+                'error',
+                'XLM-RoBERTa model pipeline encountered an error. Check that best_model.pt is present in intelligence/model/checkpoints/.'
+            );
+        }
+
+        $actionable = SocialPost::where('model_status', 'VERIFIED_ACTIONABLE')->count();
+        $earlyWatch = SocialPost::where('model_status', 'FLOOD_MENTION_NO_URGENCY')->count();
+        $avgCs = number_format((float) (SocialPost::where('model_status', 'VERIFIED_ACTIONABLE')->avg('confidence_score') ?? 0), 2);
+
+        return to_route('harvesting')->with(
+            'status',
+            "XLM-RoBERTa + K-Means++ finished: {$actionable} Verified Actionable alerts (Avg CS {$avgCs}), {$earlyWatch} Flood Watch (HITL) posts."
         );
     }
 

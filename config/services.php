@@ -39,6 +39,8 @@ return [
         'python_bin' => env('AGOS_PYTHON_BIN', 'python'),
         'script_path' => env('AGOS_SCRAPER_SCRIPT', base_path('intelligence/scraper/davao_flood_scraper.py')),
         'cleaner_script_path' => env('AGOS_CLEANER_SCRIPT', base_path('intelligence/cleaner/davao_flood_cleaner.py')),
+        'model_script_path' => env('AGOS_MODEL_SCRIPT', base_path('intelligence/model/agos_model_pipeline.py')),
+        'model_checkpoint_path' => env('AGOS_MODEL_CHECKPOINT', base_path('intelligence/model/checkpoints/best_model.pt')),
         'profile_dir' => env('AGOS_SCRAPER_PROFILE_DIR', is_dir('c:/Users/narp/Desktop/Coding Projects/Thesis/fb_chrome_profile')
             ? 'c:/Users/narp/Desktop/Coding Projects/Thesis/fb_chrome_profile'
             : base_path('intelligence/scraper/fb_chrome_profile')),

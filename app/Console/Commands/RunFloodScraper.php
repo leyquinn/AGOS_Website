@@ -156,6 +156,11 @@ class RunFloodScraper extends Command
                 'finished_at' => now(),
             ]);
 
+            if ($run->posts_collected > 0) {
+                $this->callSilent('agos:clean', ['--run-id' => $run->id]);
+                $this->callSilent('agos:analyze', ['--run-id' => $run->id, '--scope' => 'all']);
+            }
+
             // Update last_scraped_at on active keywords
             HarvestKeyword::whereIn('keyword', $queries)->update(['last_scraped_at' => now()]);
             $this->refreshKeywordCounts();
