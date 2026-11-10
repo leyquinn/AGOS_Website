@@ -9,28 +9,57 @@ use App\Models\VerifiedSource;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Artisan;
 use Illuminate\View\View;
 
 class HarvestingController extends Controller
 {
     public function index(Request $request): View
     {
+        if (SocialPost::where('clean_status', 'pending')->exists()) {
+            Artisan::call('agos:clean');
+        }
+
         $perPage = (int) $request->query('per_page', 5);
         if (! in_array($perPage, [5, 10, 15, 25, 50])) {
             $perPage = 5;
         }
 
+        $filter = (string) $request->query('filter', 'kept');
+        if (! in_array($filter, ['kept', 'removed', 'all'], true)) {
+            $filter = 'kept';
+        }
+
+        $postsQuery = SocialPost::latest('scraped_at')->latest('id');
+        if ($filter === 'kept') {
+            $postsQuery->where('clean_status', 'kept');
+        } elseif ($filter === 'removed') {
+            $postsQuery->where('clean_status', 'removed');
+        }
+
         $keywords = HarvestKeyword::orderByDesc('is_active')->orderBy('id')->get();
         $verifiedSources = VerifiedSource::orderByDesc('id')->get();
         $latestRun = HarvestRun::latest('id')->first();
-        $socialPosts = SocialPost::latest('scraped_at')->latest('id')->paginate($perPage)->withQueryString();
+        $socialPosts = $postsQuery->paginate($perPage)->withQueryString();
+
         $totalScrapedPosts = SocialPost::count();
+        $keptPostsCount = SocialPost::where('clean_status', 'kept')->count();
+        $removedPostsCount = SocialPost::where('clean_status', 'removed')->count();
+        $removalBreakdown = SocialPost::where('clean_status', 'removed')
+            ->selectRaw('COALESCE(removal_category, "Other noise") as category, count(*) as total')
+            ->groupBy('category')
+            ->orderByDesc('total')
+            ->pluck('total', 'category')
+            ->all();
 
         if ($request->ajax()) {
             return view('harvesting._posts', [
                 'socialPosts' => $socialPosts,
                 'totalScrapedPosts' => $totalScrapedPosts,
+                'keptPostsCount' => $keptPostsCount,
+                'removedPostsCount' => $removedPostsCount,
                 'perPage' => $perPage,
+                'filter' => $filter,
             ]);
         }
 
@@ -40,8 +69,26 @@ class HarvestingController extends Controller
             'latestRun' => $latestRun,
             'socialPosts' => $socialPosts,
             'totalScrapedPosts' => $totalScrapedPosts,
+            'keptPostsCount' => $keptPostsCount,
+            'removedPostsCount' => $removedPostsCount,
+            'removalBreakdown' => $removalBreakdown,
             'perPage' => $perPage,
+            'filter' => $filter,
         ]);
+    }
+
+    public function runCleaner(Request $request): RedirectResponse
+    {
+        $strict = $request->boolean('strict');
+        Artisan::call('agos:clean', $strict ? ['--strict' => true] : []);
+
+        $kept = SocialPost::where('clean_status', 'kept')->count();
+        $removed = SocialPost::where('clean_status', 'removed')->count();
+
+        return to_route('harvesting')->with(
+            'status',
+            "Flood Cleaner finished: {$kept} genuine Davao flood posts kept, {$removed} noise/duplicate posts removed."
+        );
     }
 
     public function storeKeyword(Request $request): RedirectResponse

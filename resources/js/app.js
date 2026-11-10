@@ -433,7 +433,7 @@ if (citizenApp) {
 
 document.addEventListener('click', (event) => {
     const button = event.target.closest('button');
-    if (!button || button.type === 'submit' || button.closest('form') || button.dataset.themeToggle !== undefined || button.dataset.sidebarOpen !== undefined || button.dataset.sidebarClose !== undefined) {
+    if (!button || button.type === 'submit' || button.closest('form') || button.closest('[data-harvesting-page]') || button.dataset.themeToggle !== undefined || button.dataset.sidebarOpen !== undefined || button.dataset.sidebarClose !== undefined) {
         return;
     }
 

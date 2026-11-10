@@ -1,6 +1,6 @@
 <div data-posts-container class="space-y-3">
     @forelse ($socialPosts as $post)
-        <article class="rounded-xl border border-blue-900/40 bg-[#0d2b5b] p-4 transition-opacity">
+        <article class="rounded-xl border {{ $post->clean_status === 'removed' ? 'border-rose-900/50 bg-[#0a1e42]/80 opacity-85' : 'border-blue-900/40 bg-[#0d2b5b]' }} p-4 transition-opacity">
             <div class="flex flex-wrap items-center justify-between gap-2">
                 <div class="flex flex-wrap items-center gap-2">
                     <span class="text-xs font-bold text-blue-200">{{ $post->author }}</span>
@@ -10,6 +10,15 @@
                     @if ($post->search_query)
                         <span class="rounded-full bg-blue-900/80 px-2.5 py-0.5 text-[9px] font-semibold text-cyan-200">
                             Query: {{ $post->search_query }}
+                        </span>
+                    @endif
+                    @if ($post->clean_status === 'kept')
+                        <span class="rounded-full border border-emerald-500/40 bg-emerald-500/15 px-2.5 py-0.5 text-[9px] font-bold text-emerald-300">
+                            ✓ Clean Flood Report
+                        </span>
+                    @elseif ($post->clean_status === 'removed')
+                        <span class="rounded-full border border-rose-500/40 bg-rose-500/20 px-2.5 py-0.5 text-[9px] font-bold text-rose-300">
+                            ✕ Noise: {{ $post->removal_reason ?: ($post->removal_category ?: 'Filtered') }}
                         </span>
                     @endif
                 </div>
@@ -23,7 +32,7 @@
                 </div>
             </div>
 
-            <p class="mt-2 whitespace-pre-line text-xs leading-relaxed text-slate-200">{{ Str::limit($post->full_text, 420) }}</p>
+            <p class="mt-2 whitespace-pre-line text-xs leading-relaxed text-slate-200">{{ Str::limit($post->cleaned_text ?: $post->full_text, 420) }}</p>
 
             <div class="mt-3 flex flex-wrap items-center justify-between gap-2 text-[10px] text-slate-400">
                 <div class="flex flex-wrap gap-1.5">
@@ -47,10 +56,17 @@
         </article>
     @empty
         <div class="rounded-xl border border-dashed border-blue-800/60 p-8 text-center">
-            <p class="text-xs font-bold text-slate-300">No scraped Facebook posts in the database yet.</p>
-            <p class="mt-1 text-[11px] text-slate-400">
-                Add a keyword listener above or type a query and click <strong>▶ Run Scraper Now</strong> to test scraping!
-            </p>
+            @if (($filter ?? 'kept') === 'kept' && ($removedPostsCount ?? 0) > 0)
+                <p class="text-xs font-bold text-slate-300">All {{ $removedPostsCount }} scraped posts were filtered out as noise by the Flood Cleaner.</p>
+                <p class="mt-1 text-[11px] text-slate-400">
+                    Click the <strong>✕ Removed Noise ({{ $removedPostsCount }})</strong> tab above to inspect why each post was removed, or scrape a Davao flood query (e.g. <code>baha davao</code>).
+                </p>
+            @else
+                <p class="text-xs font-bold text-slate-300">No posts in this view yet.</p>
+                <p class="mt-1 text-[11px] text-slate-400">
+                    Add a keyword listener above or type a query and click <strong>▶ Run Scraper Now</strong> to test scraping!
+                </p>
+            @endif
         </div>
     @endforelse
 </div>
@@ -86,4 +102,3 @@
         @endif
     </div>
 </div>
-

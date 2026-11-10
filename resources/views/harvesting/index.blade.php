@@ -142,20 +142,56 @@
         @endif
 
         <section class="portal-card mt-5 rounded-2xl bg-[#b7c9e5] p-5 text-slate-700 shadow-lg shadow-blue-950/10">
-            <h2 class="text-lg font-black">Pipeline Queue &amp; Health</h2>
+            <div class="flex flex-wrap items-center justify-between gap-3">
+                <div>
+                    <h2 class="text-lg font-black">Pipeline Queue &amp; Flood Cleaner</h2>
+                    <p class="mt-0.5 text-[10px] font-semibold text-slate-500">
+                        Multi-layer rule filter: strips Facebook UI artifacts, removes real-estate/business ads, non-Davao floods, negated phrases, and near-duplicates.
+                    </p>
+                </div>
+
+                <form method="POST" action="{{ route('harvesting.clean') }}" class="flex items-center gap-2.5">
+                    @csrf
+                    <label class="flex items-center gap-1.5 text-[10px] font-bold text-slate-600">
+                        <input type="checkbox" name="strict" value="1" class="h-3.5 w-3.5 rounded border-slate-400">
+                        <span>Strict filter</span>
+                    </label>
+                    <button type="submit" class="rounded-xl bg-emerald-600 px-3.5 py-2 text-xs font-bold text-white shadow transition hover:bg-emerald-500">
+                        🧹 Run Flood Cleaner Now
+                    </button>
+                </form>
+            </div>
+
+            @php
+                $retentionRate = $totalScrapedPosts > 0 ? round(($keptPostsCount / $totalScrapedPosts) * 100, 1) : 0;
+            @endphp
+
             <div class="mt-6 grid gap-5 text-center sm:grid-cols-2 xl:grid-cols-4">
                 @foreach ([
-                    ['label' => 'Harvest Interval', 'value' => '1 hour', 'class' => 'text-blue-700 dark:text-blue-400', 'key' => 'harvest'],
-                    ['label' => 'Active Listeners', 'value' => $activeKeywordsCount.' active', 'class' => 'text-blue-700 dark:text-blue-400'],
-                    ['label' => 'Scraped Posts Stored', 'value' => number_format($totalScrapedPosts).' posts', 'class' => 'text-emerald-600'],
-                    ['label' => 'Whitelisted Sources', 'value' => $verifiedSources->count().' verified', 'class' => 'text-orange-500'],
+                    ['label' => 'Total Scraped Input', 'value' => number_format($totalScrapedPosts).' posts', 'class' => 'text-blue-700 dark:text-blue-400'],
+                    ['label' => 'Kept (Clean Flood Posts)', 'value' => number_format($keptPostsCount).' kept', 'class' => 'text-emerald-500'],
+                    ['label' => 'Removed Noise / Ads / Dups', 'value' => number_format($removedPostsCount).' removed', 'class' => 'text-rose-400'],
+                    ['label' => 'Cleaner Retention Rate', 'value' => $retentionRate.'%', 'class' => 'text-cyan-300'],
                 ] as $metric)
                     <div>
                         <p class="text-sm font-medium text-slate-500">{{ $metric['label'] }}</p>
-                        <p class="mt-1 text-xl font-black {{ $metric['class'] }}" @isset($metric['key']) data-harvest-interval-display @endisset>{{ $metric['value'] }}</p>
+                        <p class="mt-1 text-xl font-black {{ $metric['class'] }}">{{ $metric['value'] }}</p>
                     </div>
                 @endforeach
             </div>
+
+            @if (! empty($removalBreakdown))
+                <div class="mt-5 border-t border-blue-900/30 pt-4">
+                    <p class="text-[10px] font-bold uppercase tracking-wider text-slate-400">Noise Removed by Cleaner Layer:</p>
+                    <div class="mt-2 flex flex-wrap gap-2">
+                        @foreach ($removalBreakdown as $category => $count)
+                            <span class="rounded-lg border border-rose-500/30 bg-rose-500/15 px-2.5 py-1 text-[10px] font-bold text-rose-300">
+                                {{ $category }}: -{{ $count }}
+                            </span>
+                        @endforeach
+                    </div>
+                </div>
+            @endif
         </section>
 
         <div class="mt-5 grid gap-5 xl:grid-cols-2">
@@ -272,27 +308,45 @@
         </div>
 
         <section id="scraped-posts" class="mt-5 rounded-2xl border border-blue-900/50 bg-[#071738]/80 p-5 shadow-lg shadow-blue-950/10">
-            <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <div class="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
                 <div>
                     <h2 class="text-sm font-bold text-white">Scraped Facebook Flood Posts</h2>
                     <p class="mt-1 text-[10px] text-slate-400">
-                        Live feed of posts harvested by the scraper using your configured search queries (<span data-posts-total-count>{{ number_format($totalScrapedPosts) }}</span> total)
+                        Filtered by <code>davao_flood_cleaner.py</code> — showing genuine Davao flood reports vs. removed noise
                     </p>
                 </div>
 
-                <div class="flex items-center gap-2">
-                    <label for="per-page-select" class="text-[10px] font-semibold text-slate-400">Show per page:</label>
-                    <select
-                        id="per-page-select"
-                        data-per-page-control
-                        class="rounded-lg border border-blue-900/60 bg-[#031027] px-2.5 py-1.5 text-[10px] font-bold text-slate-200 outline-none focus:border-cyan-400 focus:ring-1 focus:ring-cyan-400"
-                    >
-                        @foreach ([5, 10, 15, 25, 50] as $amount)
-                            <option value="{{ $amount }}" {{ $perPage === $amount ? 'selected' : '' }}>
-                                {{ $amount }} posts
-                            </option>
+                <div class="flex flex-wrap items-center gap-3">
+                    <div class="flex rounded-xl border border-blue-900/60 bg-[#031027] p-1" role="tablist">
+                        @foreach ([
+                            ['key' => 'kept', 'label' => '✓ Kept / Clean ('.$keptPostsCount.')'],
+                            ['key' => 'removed', 'label' => '✕ Removed Noise ('.$removedPostsCount.')'],
+                            ['key' => 'all', 'label' => 'All Scraped ('.$totalScrapedPosts.')'],
+                        ] as $tab)
+                            <button
+                                type="button"
+                                data-posts-filter="{{ $tab['key'] }}"
+                                class="rounded-lg px-3 py-1.5 text-[10px] font-bold transition {{ ($filter ?? 'kept') === $tab['key'] ? 'bg-blue-600 text-white' : 'text-slate-400 hover:text-white' }}"
+                            >
+                                {{ $tab['label'] }}
+                            </button>
                         @endforeach
-                    </select>
+                    </div>
+
+                    <div class="flex items-center gap-2">
+                        <label for="per-page-select" class="text-[10px] font-semibold text-slate-400">Show per page:</label>
+                        <select
+                            id="per-page-select"
+                            data-per-page-control
+                            class="rounded-lg border border-blue-900/60 bg-[#031027] px-2.5 py-1.5 text-[10px] font-bold text-slate-200 outline-none focus:border-cyan-400 focus:ring-1 focus:ring-cyan-400"
+                        >
+                            @foreach ([5, 10, 15, 25, 50] as $amount)
+                                <option value="{{ $amount }}" {{ $perPage === $amount ? 'selected' : '' }}>
+                                    {{ $amount }} posts
+                                </option>
+                            @endforeach
+                        </select>
+                    </div>
                 </div>
             </div>
 
@@ -359,9 +413,11 @@
                 window.setInterval(pollStatus, 2500);
             }
 
-            // ── AJAX Pagination & Per-Page Controls (Seamless without page reload) ──
+            // ── AJAX Pagination, Filter Tabs & Per-Page Controls (Seamless without page reload) ──
             const wrapper = document.getElementById('posts-dynamic-wrapper');
             const perPageSelect = document.querySelector('[data-per-page-control]');
+            const filterButtons = document.querySelectorAll('[data-posts-filter]');
+            let activeFilter = '{{ $filter ?? 'kept' }}';
 
             const fetchPosts = async (url) => {
                 if (!wrapper) return;
@@ -388,19 +444,37 @@
                 }
             };
 
-            document.addEventListener('click', (e) => {
-                const btn = e.target.closest('[data-posts-page-url]');
-                if (!btn) return;
-                e.preventDefault();
-                const targetUrl = btn.dataset.postsPageUrl;
-                if (targetUrl) {
-                    fetchPosts(targetUrl);
+            page.addEventListener('click', (e) => {
+                const pageBtn = e.target.closest('[data-posts-page-url]');
+                if (pageBtn) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    const targetUrl = pageBtn.dataset.postsPageUrl;
+                    if (targetUrl) {
+                        fetchPosts(targetUrl);
+                    }
+                    return;
+                }
+
+                const filterBtn = e.target.closest('[data-posts-filter]');
+                if (filterBtn) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    activeFilter = filterBtn.dataset.postsFilter || 'kept';
+                    filterButtons.forEach((btn) => {
+                        const isSelected = btn.dataset.postsFilter === activeFilter;
+                        btn.classList.toggle('bg-blue-600', isSelected);
+                        btn.classList.toggle('text-white', isSelected);
+                        btn.classList.toggle('text-slate-400', !isSelected);
+                    });
+                    const perPage = perPageSelect ? perPageSelect.value : 5;
+                    fetchPosts(`{{ route('harvesting') }}?filter=${encodeURIComponent(activeFilter)}&per_page=${encodeURIComponent(perPage)}`);
                 }
             });
 
             if (perPageSelect) {
                 perPageSelect.addEventListener('change', () => {
-                    const url = `{{ route('harvesting') }}?per_page=${perPageSelect.value}`;
+                    const url = `{{ route('harvesting') }}?filter=${encodeURIComponent(activeFilter)}&per_page=${encodeURIComponent(perPageSelect.value)}`;
                     fetchPosts(url);
                 });
             }

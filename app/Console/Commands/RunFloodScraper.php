@@ -129,6 +129,7 @@ class RunFloodScraper extends Command
 
             // Final sync of scraped JSON output
             $this->syncJsonToDatabase($run, $outputJsonPath);
+            $this->call('agos:clean', ['--run-id' => $run->id]);
 
             $freshRun = HarvestRun::find($run->id);
             if ($freshRun && $freshRun->status === 'stopped') {
@@ -250,6 +251,10 @@ class RunFloodScraper extends Command
             'posts_collected' => count($items),
             'new_posts_saved' => $run->new_posts_saved + $newSaved,
         ]);
+
+        if ($newSaved > 0) {
+            $this->callSilent('agos:clean', ['--run-id' => $run->id]);
+        }
 
         $this->refreshKeywordCounts();
     }

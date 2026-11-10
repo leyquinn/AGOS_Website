@@ -60,6 +60,7 @@ Route::middleware(['auth', 'role:super_admin,barangay_admin', 'no-back'])->group
     Route::get('/harvesting/status', [HarvestingController::class, 'status'])->name('harvesting.status');
     Route::post('/harvesting/run', [HarvestingController::class, 'runScraper'])->name('harvesting.run');
     Route::post('/harvesting/stop', [HarvestingController::class, 'stopScraper'])->name('harvesting.stop');
+    Route::post('/harvesting/clean', [HarvestingController::class, 'runCleaner'])->name('harvesting.clean');
     Route::post('/harvesting/keywords', [HarvestingController::class, 'storeKeyword'])->name('harvesting.keywords.store');
     Route::post('/harvesting/keywords/{keyword}/toggle', [HarvestingController::class, 'toggleKeyword'])->name('harvesting.keywords.toggle');
     Route::delete('/harvesting/keywords/{keyword}', [HarvestingController::class, 'destroyKeyword'])->name('harvesting.keywords.destroy');

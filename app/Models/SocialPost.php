@@ -17,11 +17,16 @@ class SocialPost extends Model
         'raw_timestamp',
         'posted_at',
         'full_text',
+        'cleaned_text',
+        'clean_status',
+        'removal_category',
+        'removal_reason',
         'detected_locations',
         'urgency_level',
         'media_urls',
         'is_whitelisted_source',
         'scraped_at',
+        'cleaned_at',
     ];
 
     protected function casts(): array
@@ -32,6 +37,7 @@ class SocialPost extends Model
             'is_whitelisted_source' => 'boolean',
             'posted_at' => 'datetime',
             'scraped_at' => 'datetime',
+            'cleaned_at' => 'datetime',
         ];
     }
 
