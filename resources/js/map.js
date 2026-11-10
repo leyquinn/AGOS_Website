@@ -24,10 +24,22 @@ const getFeatureName = (feature) => {
 };
 
 const pointInRing = (point, ring) => {
+    const isOnSegment = (start, end) => {
+        const crossProduct = ((point.lat - start[1]) * (end[0] - start[0]))
+            - ((point.lng - start[0]) * (end[1] - start[1]));
+        if (Math.abs(crossProduct) > 1e-10) return false;
+
+        return point.lng >= Math.min(start[0], end[0])
+            && point.lng <= Math.max(start[0], end[0])
+            && point.lat >= Math.min(start[1], end[1])
+            && point.lat <= Math.max(start[1], end[1]);
+    };
+
     let inside = false;
     for (let index = 0, previous = ring.length - 1; index < ring.length; previous = index++) {
         const [longitude, latitude] = ring[index];
         const [previousLongitude, previousLatitude] = ring[previous];
+        if (isOnSegment([longitude, latitude], [previousLongitude, previousLatitude])) return true;
         const intersects = ((latitude > point.lat) !== (previousLatitude > point.lat))
             && point.lng < ((previousLongitude - longitude) * (point.lat - latitude)) / (previousLatitude - latitude) + longitude;
         if (intersects) inside = !inside;
@@ -48,6 +60,10 @@ const pointInGeometry = (point, geometry) => {
 };
 
 const featureContainsPoint = (point, feature) => pointInGeometry(point, feature.geometry);
+const pointsInsideFeatures = (points, features) => points.filter(([latitude, longitude]) => {
+    const point = L.latLng(latitude, longitude);
+    return features.some((feature) => featureContainsPoint(point, feature));
+});
 
 const createHeatLayer = (map, points) => {
     const layer = L.Layer.extend({
@@ -72,10 +88,14 @@ const createHeatLayer = (map, points) => {
             this.activeFeatures = features;
             this._draw();
         },
+        setPoints(nextPoints) {
+            this.points = nextPoints;
+            this._draw();
+        },
         _reset() {
             const size = this._map.getSize();
-            const topLeft = this._map.containerPointToLayerPoint([0, 0]);
-            L.DomUtil.setPosition(this._canvas, topLeft);
+            this._topLeft = this._map.containerPointToLayerPoint([0, 0]);
+            L.DomUtil.setPosition(this._canvas, this._topLeft);
             this._canvas.width = size.x;
             this._canvas.height = size.y;
             this._draw();
@@ -86,7 +106,7 @@ const createHeatLayer = (map, points) => {
                 const polygons = geometry.type === 'Polygon' ? [geometry.coordinates] : geometry.coordinates;
                 polygons.forEach((polygon) => polygon.forEach((ring) => {
                     ring.forEach(([longitude, latitude], index) => {
-                        const point = this._map.latLngToLayerPoint([latitude, longitude]);
+                        const point = this._map.latLngToLayerPoint([latitude, longitude]).subtract(this._topLeft);
                         if (index === 0) context.moveTo(point.x, point.y);
                         else context.lineTo(point.x, point.y);
                     });
@@ -105,13 +125,8 @@ const createHeatLayer = (map, points) => {
                 context.clip('evenodd');
             }
 
-            const visiblePoints = this.points.filter(([latitude, longitude]) => {
-                if (!this.activeFeatures.length) return true;
-                const point = L.latLng(latitude, longitude);
-                return this.activeFeatures.some((feature) => featureContainsPoint(point, feature));
-            });
-            visiblePoints.forEach(([latitude, longitude, intensity]) => {
-                const point = this._map.latLngToLayerPoint([latitude, longitude]);
+            this.points.forEach(([latitude, longitude, intensity]) => {
+                const point = this._map.latLngToLayerPoint([latitude, longitude]).subtract(this._topLeft);
                 const radius = 46 + (intensity * 22);
                 const gradient = context.createRadialGradient(point.x, point.y, 0, point.x, point.y, radius);
                 gradient.addColorStop(0, `rgba(220, 38, 38, ${0.68 * intensity})`);
@@ -163,8 +178,7 @@ const initOperationsMap = async () => {
     const updateFallbackFilter = (event) => {
         const selectedName = event.target.value;
         const selectedPoints = selectedName ? heatPoints.filter((point) => point[3] === selectedName) : heatPoints;
-        heatLayer.points = selectedPoints;
-        heatLayer.setBoundary([]);
+        heatLayer.setPoints(selectedPoints);
         status.textContent = selectedName ? `Showing reports for ${selectedName}` : 'Showing all citizen report locations';
     };
 
@@ -174,6 +188,8 @@ const initOperationsMap = async () => {
         const geoJson = await response.json();
         features = geoJson.type === 'FeatureCollection' ? geoJson.features : [{ type: 'Feature', properties: {}, geometry: geoJson }];
         if (!features.length) throw new Error('Boundary GeoJSON contains no features.');
+        heatPoints = pointsInsideFeatures(heatPoints, features);
+        heatLayer.setPoints(heatPoints);
 
         boundaryLayer = L.geoJSON(geoJson, {
             interactive: false,
@@ -191,11 +207,15 @@ const initOperationsMap = async () => {
             const activeFeatures = selectedName
                 ? features.filter((feature) => getFeatureName(feature) === selectedName)
                 : features;
+            const activePoints = selectedName
+                ? pointsInsideFeatures(heatPoints, activeFeatures)
+                : heatPoints;
             boundaryLayer.setStyle((feature) => ({
                 color: getFeatureName(feature) === selectedName ? '#fbbf24' : '#38bdf8',
                 weight: getFeatureName(feature) === selectedName ? 2 : 1,
                 fillOpacity: getFeatureName(feature) === selectedName ? 0.14 : 0.04,
             }));
+            heatLayer.setPoints(activePoints);
             heatLayer.setBoundary(activeFeatures);
             if (selectedName && activeFeatures.length) {
                 map.fitBounds(L.geoJSON({ type: 'FeatureCollection', features: activeFeatures }).getBounds(), { padding: [30, 30] });
