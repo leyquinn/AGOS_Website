@@ -525,14 +525,14 @@ body.theme-light .system-notice-error {
 
 html.theme-light body .portal-sidebar .sidebar-nav-item:not(.bg-gradient-to-r),
 body.theme-light .portal-sidebar .sidebar-nav-item:not(.bg-gradient-to-r) {
-    background-color: rgba(6, 38, 83, 0.72) !important;
-    color: #dbeafe !important;
+    background-color: transparent !important;
+    color: #475569 !important;
 }
 
 html.theme-light body .portal-sidebar .sidebar-nav-icon,
 body.theme-light .portal-sidebar .sidebar-nav-icon {
-    background-color: #031b3c !important;
-    color: #bfdbfe !important;
+    background-color: transparent !important;
+    color: #64748b !important;
 }
 
 html.theme-light body,
