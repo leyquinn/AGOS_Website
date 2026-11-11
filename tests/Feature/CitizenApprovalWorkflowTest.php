@@ -63,14 +63,14 @@ class CitizenApprovalWorkflowTest extends TestCase
             ->assertOk();
 
         $this->assertDatabaseHas('users', ['id' => $citizen->id, 'status' => 'approved']);
-        Mail::assertQueued(CitizenAccountApprovedMail::class);
+        Mail::assertSent(CitizenAccountApprovedMail::class);
 
         $this->actingAs($admin, 'sanctum')
             ->postJson("/api/v1/admin/citizens/{$otherCitizen->id}/approve")
             ->assertForbidden();
     }
 
-    public function test_decline_stores_reason_and_queues_notification(): void
+    public function test_decline_stores_reason_and_sends_notification(): void
     {
         Mail::fake();
         $barangay = Barangay::create(['name' => 'Poblacion', 'district' => '1st District']);
@@ -92,7 +92,7 @@ class CitizenApprovalWorkflowTest extends TestCase
             'status' => 'declined',
             'rejection_reason' => 'Barangay assignment could not be verified.',
         ]);
-        Mail::assertQueued(CitizenAccountDeclinedMail::class);
+        Mail::assertSent(CitizenAccountDeclinedMail::class);
     }
 
     public function test_barangay_admin_has_a_web_page_for_pending_approvals(): void
@@ -129,7 +129,7 @@ class CitizenApprovalWorkflowTest extends TestCase
             ->assertRedirect(route('admin.citizen-approvals'));
 
         $this->assertDatabaseHas('users', ['id' => $citizen->id, 'status' => 'approved']);
-        Mail::assertQueued(CitizenAccountApprovedMail::class);
+        Mail::assertSent(CitizenAccountApprovedMail::class);
     }
 
     public function test_web_approval_form_contains_a_csrf_token(): void
@@ -184,8 +184,8 @@ class CitizenApprovalWorkflowTest extends TestCase
             'status' => 'approved',
             'rejection_reason' => null,
         ]);
-        Mail::assertQueued(CitizenAccountDeclinedMail::class);
-        Mail::assertQueued(CitizenAccountApprovedMail::class);
+        Mail::assertSent(CitizenAccountDeclinedMail::class);
+        Mail::assertSent(CitizenAccountApprovedMail::class);
     }
 
     private function createCitizen(Barangay $barangay, array $attributes = []): User

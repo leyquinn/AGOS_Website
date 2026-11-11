@@ -10,31 +10,16 @@
         </div>
 
         @if (session('success'))
-            <div class="mb-5 rounded-xl border border-emerald-400/30 bg-emerald-500/15 px-4 py-3 text-sm font-semibold text-emerald-200" role="status">{{ session('success') }}</div>
+            <div class="system-notice system-notice-success mb-5 rounded-xl border px-4 py-3 text-sm font-semibold" role="status">{{ session('success') }}</div>
         @endif
         @if ($errors->any())
-            <div class="mb-5 rounded-xl border border-rose-400/30 bg-rose-500/15 px-4 py-3 text-sm text-rose-100" role="alert">{{ $errors->first() }}</div>
+            <div class="system-notice system-notice-error mb-5 rounded-xl border px-4 py-3 text-sm" role="alert">{{ $errors->first() }}</div>
         @endif
 
         @include('admin.partials.citizen-status-table', [
-            'title' => 'Pending Review',
-            'description' => 'New registrations waiting for your decision.',
-            'citizens' => $citizens,
-            'status' => 'pending',
-        ])
-
-        @include('admin.partials.citizen-status-table', [
-            'title' => 'Approved Citizens',
-            'description' => 'Approved citizens who can access the Citizen App.',
-            'citizens' => $approvedCitizens,
-            'status' => 'approved',
-        ])
-
-        @include('admin.partials.citizen-status-table', [
-            'title' => 'Declined Citizens',
-            'description' => 'Declined registrations and their recorded reasons.',
-            'citizens' => $declinedCitizens,
-            'status' => 'declined',
+            'pendingCitizens' => $citizens,
+            'approvedCitizens' => $approvedCitizens,
+            'declinedCitizens' => $declinedCitizens,
         ])
     </div>
 

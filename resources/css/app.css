@@ -409,6 +409,37 @@ body.theme-light [data-landing-hero-overlay] {
     outline: 2px solid #60a5fa;
 }
 
+.system-notice {
+    border-width: 1px;
+    line-height: 1.5;
+}
+
+.system-notice-success {
+    border-color: rgba(52, 211, 153, 0.45) !important;
+    background-color: rgba(16, 185, 129, 0.16) !important;
+    color: #a7f3d0 !important;
+}
+
+.system-notice-error {
+    border-color: rgba(251, 113, 133, 0.5) !important;
+    background-color: rgba(244, 63, 94, 0.16) !important;
+    color: #fecdd3 !important;
+}
+
+html.theme-light body .system-notice-success,
+body.theme-light .system-notice-success {
+    border-color: #86efac !important;
+    background-color: #ecfdf5 !important;
+    color: #047857 !important;
+}
+
+html.theme-light body .system-notice-error,
+body.theme-light .system-notice-error {
+    border-color: #fda4af !important;
+    background-color: #fff1f2 !important;
+    color: #be123c !important;
+}
+
 .portal-main table tbody tr {
     transition: background-color 160ms ease;
 }
@@ -587,6 +618,49 @@ body.theme-light .portal-header {
 html.theme-light body .portal-main,
 body.theme-light .portal-main {
     background-color: #eef4ff !important;
+}
+
+html.theme-light body .citizen-status-table,
+body.theme-light .citizen-status-table {
+    border-color: #d5e2f5 !important;
+    background-color: #ffffff !important;
+    color: #334155 !important;
+    box-shadow: 0 12px 30px rgba(30, 64, 175, 0.08) !important;
+}
+
+html.theme-light body .citizen-status-table [class*="dark:bg-slate-900"],
+html.theme-light body .citizen-status-table [class*="dark:bg-slate-950"],
+body.theme-light .citizen-status-table [class*="dark:bg-slate-900"],
+body.theme-light .citizen-status-table [class*="dark:bg-slate-950"] {
+    background-color: #ffffff !important;
+}
+
+html.theme-light body .citizen-status-table [class*="dark:border-slate-800"],
+body.theme-light .citizen-status-table [class*="dark:border-slate-800"] {
+    border-color: #e2e8f0 !important;
+}
+
+html.theme-light body .citizen-status-table [class*="dark:text-slate-100"],
+html.theme-light body .citizen-status-table [class*="dark:text-slate-200"],
+html.theme-light body .citizen-status-table [class*="dark:text-slate-300"],
+html.theme-light body .citizen-status-table [class*="dark:text-slate-400"],
+body.theme-light .citizen-status-table [class*="dark:text-slate-100"],
+body.theme-light .citizen-status-table [class*="dark:text-slate-200"],
+body.theme-light .citizen-status-table [class*="dark:text-slate-300"],
+body.theme-light .citizen-status-table [class*="dark:text-slate-400"] {
+    color: #64748b !important;
+}
+
+html.theme-light body .citizen-status-table [class*="dark:text-white"],
+body.theme-light .citizen-status-table [class*="dark:text-white"] {
+    color: #0f172a !important;
+}
+
+html.theme-light body .citizen-status-table input[class*="dark:bg-slate-800"],
+body.theme-light .citizen-status-table input[class*="dark:bg-slate-800"] {
+    border-color: #cbd5e1 !important;
+    background-color: #ffffff !important;
+    color: #0f172a !important;
 }
 
 html.theme-light body .portal-main [class*="bg-[#b7c9e5"],

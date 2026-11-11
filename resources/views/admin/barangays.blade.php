@@ -11,11 +11,11 @@
         </div>
 
         @if (session('success'))
-            <div class="mb-5 rounded-xl border border-emerald-400/30 bg-emerald-500/15 px-4 py-3 text-sm font-semibold text-emerald-200" role="status">{{ session('success') }}</div>
+            <div class="system-notice system-notice-success mb-5 rounded-xl border px-4 py-3 text-sm font-semibold" role="status">{{ session('success') }}</div>
         @endif
 
         @if ($errors->any())
-            <div class="mb-5 rounded-xl border border-rose-400/30 bg-rose-500/15 px-4 py-3 text-sm text-rose-100" role="alert">
+            <div class="system-notice system-notice-error mb-5 rounded-xl border px-4 py-3 text-sm">
                 <p class="font-bold">Unable to assign the barangay admin.</p>
                 <ul class="mt-2 list-inside list-disc text-xs">
                     @foreach ($errors->all() as $error)<li>{{ $error }}</li>@endforeach

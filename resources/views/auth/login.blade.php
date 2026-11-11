@@ -30,7 +30,7 @@
                 </div>
 
                 @if ($errors->any())
-                    <div class="mb-6 rounded-xl border border-rose-400/30 bg-rose-500/15 px-4 py-3 text-sm text-rose-100" role="alert">{{ $errors->first() }}</div>
+                    <div class="system-notice system-notice-error mb-6 rounded-xl border px-4 py-3 text-sm" role="alert">{{ $errors->first() }}</div>
                 @endif
 
                 <form action="{{ route('login.store') }}" method="POST" class="space-y-6">

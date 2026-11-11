@@ -100,9 +100,9 @@ class CitizenApprovalController extends Controller
         ])->save();
 
         if ($status === 'approved') {
-            Mail::to($user)->queue(new CitizenAccountApprovedMail($user));
+            Mail::to($user)->send(new CitizenAccountApprovedMail($user));
         } else {
-            Mail::to($user)->queue(new CitizenAccountDeclinedMail($user));
+            Mail::to($user)->send(new CitizenAccountDeclinedMail($user));
         }
     }
 }
