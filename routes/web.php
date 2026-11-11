@@ -4,6 +4,7 @@ use App\Http\Controllers\Api\AdminManagementController;
 use App\Http\Controllers\Api\CitizenApprovalController;
 use App\Http\Controllers\CitizenReportController;
 use App\Http\Controllers\CitizenMapController;
+use App\Http\Controllers\HarvestingController;
 use App\Http\Controllers\PortalAuthController;
 use App\Http\Controllers\ReportsController;
 use App\Http\Controllers\WeatherController;
@@ -64,16 +65,97 @@ Route::middleware(['auth', 'role:super_admin,barangay_admin', 'no-back'])->group
         return view('dashboard');
     })->name('dashboard');
 
-    Route::get('/operations', function () {
-        return view('operations.index');
+    Route::get('/operations', function (\Illuminate\Http\Request $request) {
+        $verifiedAll = \App\Models\SocialPost::where('model_status', 'VERIFIED_ACTIONABLE')
+            ->whereNotNull('latitude')
+            ->whereNotNull('longitude')
+            ->select(['id', 'latitude', 'longitude', 'confidence_score', 'primary_barangay', 'discard_reason'])
+            ->get();
+
+        $byBarangay = $verifiedAll->groupBy(fn (\App\Models\SocialPost $p): string => $p->primary_barangay ?: 'Poblacion');
+        $barangayReportCounts = $byBarangay->map(fn ($group): int => $group->count())->sortDesc()->all();
+
+        $mapPoints = collect();
+        foreach ($byBarangay as $brgy => $group) {
+            $count = $group->count();
+            $avgCs = (float) $group->avg('confidence_score');
+            $maxPts = $count >= 25 ? 4 : ($count >= 5 ? 3 : ($count >= 2 ? 2 : 1));
+            $volumeBoost = min(0.28, log10($count + 1) * 0.12);
+            $intensity = min(0.98, max(0.45, ($avgCs * 0.72) + $volumeBoost));
+
+            $officialTagged = $group->where('discard_reason', 'verified_by_official');
+            $selected = $officialTagged->merge($group)->unique(fn ($p) => $p->latitude.','.$p->longitude)->take($maxPts);
+            if ($selected->isEmpty()) {
+                $selected = $group->take(1);
+            }
+
+            foreach ($selected as $pt) {
+                $mapPoints->push([
+                    'latitude' => (float) $pt->latitude,
+                    'longitude' => (float) $pt->longitude,
+                    'intensity' => round($intensity, 3),
+                    'barangay' => $brgy,
+                    'count' => $count,
+                ]);
+            }
+        }
+
+        $actionablePosts = \App\Models\SocialPost::where('model_status', 'VERIFIED_ACTIONABLE')
+            ->orderByRaw("CASE WHEN discard_reason = 'verified_by_official' THEN 0 ELSE 1 END")
+            ->orderByDesc('confidence_score')
+            ->latest('scraped_at')
+            ->limit(12)
+            ->get();
+
+        $reviewBarangay = trim((string) $request->query('review_barangay', ''));
+        $noUrgencyQuery = \App\Models\SocialPost::where('model_status', 'FLOOD_MENTION_NO_URGENCY')
+            ->orderByDesc('p_rel')
+            ->latest('scraped_at');
+
+        if ($reviewBarangay !== '') {
+            $noUrgencyQuery->where('primary_barangay', $reviewBarangay);
+        }
+
+        $noUrgencyPosts = $noUrgencyQuery->paginate(6, ['*'], 'review_page')->withQueryString();
+
+        $totalActiveReports = \App\Models\SocialPost::whereIn('model_status', ['VERIFIED_ACTIONABLE', 'FLOOD_MENTION_NO_URGENCY'])->count();
+        $validatedEventsCount = $verifiedAll->count();
+        $barangaysAffectedCount = $byBarangay->count();
+        $avgCsOverall = (float) ($verifiedAll->avg('confidence_score') ?: 0.81);
+        $noUrgencyTotalCount = \App\Models\SocialPost::where('model_status', 'FLOOD_MENTION_NO_URGENCY')->count();
+        $barangayList = array_keys(\App\Http\Controllers\HarvestingController::getBarangayCentroids());
+
+        return view('operations.index', [
+            'actionablePosts' => $actionablePosts,
+            'mapPoints' => $mapPoints->values(),
+            'barangayReportCounts' => $barangayReportCounts,
+            'noUrgencyPosts' => $noUrgencyPosts,
+            'noUrgencyTotalCount' => $noUrgencyTotalCount,
+            'reviewBarangay' => $reviewBarangay,
+            'barangayList' => $barangayList,
+            'totalActiveReports' => $totalActiveReports,
+            'validatedEventsCount' => $validatedEventsCount,
+            'barangaysAffectedCount' => $barangaysAffectedCount,
+            'avgCsOverall' => $avgCsOverall,
+        ]);
     })->name('operations');
 
     Route::get('/reports', [ReportsController::class, 'index'])->name('reports');
     Route::get('/notifications', [ReportsController::class, 'notifications'])->name('notifications');
 
-    Route::get('/harvesting', function () {
-        return view('harvesting.index');
-    })->name('harvesting');
+    Route::get('/harvesting', [HarvestingController::class, 'index'])->name('harvesting');
+    Route::get('/harvesting/status', [HarvestingController::class, 'status'])->name('harvesting.status');
+    Route::post('/harvesting/run', [HarvestingController::class, 'runScraper'])->name('harvesting.run');
+    Route::post('/harvesting/stop', [HarvestingController::class, 'stopScraper'])->name('harvesting.stop');
+    Route::post('/harvesting/clean', [HarvestingController::class, 'runCleaner'])->name('harvesting.clean');
+    Route::post('/harvesting/analyze', [HarvestingController::class, 'runModel'])->name('harvesting.analyze');
+    Route::post('/harvesting/posts/{post}/verify', [HarvestingController::class, 'verifyPost'])->name('harvesting.posts.verify');
+    Route::post('/harvesting/posts/{post}/dismiss', [HarvestingController::class, 'dismissPost'])->name('harvesting.posts.dismiss');
+    Route::post('/harvesting/keywords', [HarvestingController::class, 'storeKeyword'])->name('harvesting.keywords.store');
+    Route::post('/harvesting/keywords/{keyword}/toggle', [HarvestingController::class, 'toggleKeyword'])->name('harvesting.keywords.toggle');
+    Route::delete('/harvesting/keywords/{keyword}', [HarvestingController::class, 'destroyKeyword'])->name('harvesting.keywords.destroy');
+    Route::post('/harvesting/sources', [HarvestingController::class, 'storeSource'])->name('harvesting.sources.store');
+    Route::delete('/harvesting/sources/{source}', [HarvestingController::class, 'destroySource'])->name('harvesting.sources.destroy');
 
     Route::get('/analytics', function () {
         return view('analytics.index');

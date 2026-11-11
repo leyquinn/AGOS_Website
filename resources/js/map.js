@@ -161,8 +161,10 @@ const initOperationsMap = async () => {
     let boundaryLayer;
     let features = [];
     let heatPoints = defaultHeatPoints;
+    let barangayCounts = {};
     try {
         heatPoints = JSON.parse(mapElement.dataset.heatPoints || 'null') || defaultHeatPoints;
+        barangayCounts = JSON.parse(mapElement.dataset.barangayCounts || '{}') || {};
     } catch (error) {
         console.error('Unable to parse report heatmap points.', error);
     }
@@ -174,14 +176,18 @@ const initOperationsMap = async () => {
     const populateSelector = (names) => {
         if (!selector) return;
         selector.innerHTML = '<option value="">All barangays</option>';
-        names.forEach((name) => selector.add(new Option(name, name)));
+        names.forEach((name) => {
+            const count = barangayCounts[name] || 0;
+            const label = count > 0 ? `${name} (${count} verified)` : name;
+            selector.add(new Option(label, name));
+        });
         selector.disabled = false;
     };
     const updateFallbackFilter = (event) => {
         const selectedName = event.target.value;
         const selectedPoints = selectedName ? heatPoints.filter((point) => point[3] === selectedName) : heatPoints;
         heatLayer.setPoints(selectedPoints);
-        status.textContent = selectedName ? `Showing reports for ${selectedName}` : 'Showing all citizen report locations';
+        status.textContent = selectedName ? `Showing reports for ${selectedName}` : 'Showing all verified flood report locations';
     };
 
     try {
@@ -201,22 +207,37 @@ const initOperationsMap = async () => {
 
         selector.innerHTML = '<option value="">All barangays</option>';
         features
-            .map((feature) => getFeatureName(feature))
-            .sort((first, second) => first.localeCompare(second))
-            .forEach((name) => selector.add(new Option(name, name)));
+            .map((feature) => getFeatureName(feature).replace(/\ufffd/g, 'ñ'))
+            .sort((first, second) => {
+                const c1 = barangayCounts[first] || 0;
+                const c2 = barangayCounts[second] || 0;
+                if ((c1 > 0) !== (c2 > 0)) return c2 - c1;
+                if (c1 !== c2) return c2 - c1;
+                return first.localeCompare(second);
+            })
+            .forEach((name) => {
+                const count = barangayCounts[name] || 0;
+                const label = count > 0 ? `🚨 ${name} (${count} verified)` : name;
+                selector.add(new Option(label, name));
+            });
 
         const updateBoundary = (selectedName = '') => {
             const activeFeatures = selectedName
-                ? features.filter((feature) => getFeatureName(feature) === selectedName)
+                ? features.filter((feature) => getFeatureName(feature).replace(/\ufffd/g, 'ñ') === selectedName)
                 : features;
             const activePoints = selectedName
-                ? pointsInsideFeatures(heatPoints, activeFeatures)
+                ? heatPoints.filter((pt) => pt[3] === selectedName || pointsInsideFeatures([pt], activeFeatures).length > 0)
                 : heatPoints;
-            boundaryLayer.setStyle((feature) => ({
-                color: getFeatureName(feature) === selectedName ? '#fbbf24' : '#38bdf8',
-                weight: getFeatureName(feature) === selectedName ? 2 : 1,
-                fillOpacity: getFeatureName(feature) === selectedName ? 0.14 : 0.04,
-            }));
+            boundaryLayer.setStyle((feature) => {
+                const fname = getFeatureName(feature).replace(/\ufffd/g, 'ñ');
+                const isSelected = fname === selectedName;
+                const hasReports = (barangayCounts[fname] || 0) > 0;
+                return {
+                    color: isSelected ? '#fbbf24' : (hasReports ? '#22d3ee' : '#38bdf8'),
+                    weight: isSelected ? 2.5 : (hasReports ? 1.4 : 0.8),
+                    fillOpacity: isSelected ? 0.14 : (hasReports ? 0.07 : 0.02),
+                };
+            });
             heatLayer.setPoints(activePoints);
             heatLayer.setBoundary(activeFeatures);
             if (selectedName && activeFeatures.length) {
@@ -224,7 +245,10 @@ const initOperationsMap = async () => {
             } else {
                 map.fitBounds(boundaryLayer.getBounds(), { padding: [18, 18] });
             }
-            status.textContent = selectedName ? `Showing clipped intensity for ${selectedName}` : 'Showing clipped intensity across Davao City barangays';
+            const selCount = selectedName ? (barangayCounts[selectedName] || activePoints.length) : Object.values(barangayCounts).reduce((a, b) => a + b, 0);
+            status.textContent = selectedName
+                ? `Showing ${selCount} verified flood report(s) clipped to Brgy. ${selectedName}`
+                : `Showing ${selCount.toLocaleString()} verified flood reports across ${Object.keys(barangayCounts).length} Davao City barangays`;
         };
 
         selector.addEventListener('change', (event) => updateBoundary(event.target.value));
