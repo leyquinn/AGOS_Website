@@ -191,9 +191,13 @@ const initOperationsMap = async () => {
     };
 
     try {
-        const response = await fetch(boundaryUrl, { headers: { Accept: 'application/geo+json, application/json' } });
-        if (!response.ok) throw new Error(`Boundary request failed with status ${response.status}`);
-        const geoJson = await response.json();
+        let geoJson = window._davaoGeoJsonCache;
+        if (!geoJson) {
+            const response = await fetch(boundaryUrl, { headers: { Accept: 'application/geo+json, application/json' } });
+            if (!response.ok) throw new Error(`Boundary request failed with status ${response.status}`);
+            geoJson = await response.json();
+            window._davaoGeoJsonCache = geoJson;
+        }
         features = geoJson.type === 'FeatureCollection' ? geoJson.features : [{ type: 'Feature', properties: {}, geometry: geoJson }];
         if (!features.length) throw new Error('Boundary GeoJSON contains no features.');
         heatPoints = pointsInsideFeatures(heatPoints, features);

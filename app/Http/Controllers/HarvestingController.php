@@ -16,10 +16,6 @@ class HarvestingController extends Controller
 {
     public function index(Request $request): View
     {
-        if (SocialPost::where('clean_status', 'pending')->exists()) {
-            Artisan::call('agos:clean');
-        }
-
         $perPage = (int) $request->query('per_page', 5);
         if (! in_array($perPage, [5, 10, 15, 25, 50])) {
             $perPage = 5;
@@ -181,6 +177,8 @@ class HarvestingController extends Controller
             'analyzed_at' => now(),
         ]);
 
+        \Illuminate\Support\Facades\Cache::forget('operations_heatmap_bundle');
+
         return back()->with(
             'status',
             "Post #{$post->id} tagged as flood-related for Barangay {$selectedBarangay} (CS ".number_format($cs, 2).") and added to the Flood Heatmap."
@@ -195,6 +193,8 @@ class HarvestingController extends Controller
             'discard_reason' => 'dismissed_by_official',
             'analyzed_at' => now(),
         ]);
+
+        \Illuminate\Support\Facades\Cache::forget('operations_heatmap_bundle');
 
         return back()->with(
             'status',

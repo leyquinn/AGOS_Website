@@ -6,6 +6,7 @@ use App\Models\HarvestKeyword;
 use App\Models\HarvestRun;
 use App\Models\SocialPost;
 use Illuminate\Console\Command;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\File;
 use Symfony\Component\Process\Process;
 
@@ -83,27 +84,29 @@ class RunFloodCleaner extends Command
         $keptCount = 0;
         $removedCount = 0;
 
-        foreach ($results['audit_records'] ?? [] as $record) {
-            $postId = $record['post_id'] ?? null;
-            if (! $postId) {
-                continue;
-            }
+        DB::transaction(function () use ($results, $now, &$keptCount, &$removedCount) {
+            foreach ($results['audit_records'] ?? [] as $record) {
+                $postId = $record['post_id'] ?? null;
+                if (! $postId) {
+                    continue;
+                }
 
-            $status = $record['clean_status'] ?? 'kept';
-            if ($status === 'kept') {
-                $keptCount++;
-            } else {
-                $removedCount++;
-            }
+                $status = $record['clean_status'] ?? 'kept';
+                if ($status === 'kept') {
+                    $keptCount++;
+                } else {
+                    $removedCount++;
+                }
 
-            SocialPost::where('post_id', $postId)->update([
-                'cleaned_text' => $record['cleaned_text'] ?? null,
-                'clean_status' => $status,
-                'removal_category' => $record['removal_category'] ?? null,
-                'removal_reason' => $record['removal_reason'] ?? null,
-                'cleaned_at' => $now,
-            ]);
-        }
+                SocialPost::where('post_id', $postId)->update([
+                    'cleaned_text' => $record['cleaned_text'] ?? null,
+                    'clean_status' => $status,
+                    'removal_category' => $record['removal_category'] ?? null,
+                    'removal_reason' => $record['removal_reason'] ?? null,
+                    'cleaned_at' => $now,
+                ]);
+            }
+        });
 
         $summaryData = [
             'total_input' => $results['total_input'] ?? count($posts),

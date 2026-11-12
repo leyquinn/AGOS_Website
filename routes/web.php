@@ -66,39 +66,53 @@ Route::middleware(['auth', 'role:super_admin,barangay_admin', 'no-back'])->group
     })->name('dashboard');
 
     Route::get('/operations', function (\Illuminate\Http\Request $request) {
-        $verifiedAll = \App\Models\SocialPost::where('model_status', 'VERIFIED_ACTIONABLE')
-            ->whereNotNull('latitude')
-            ->whereNotNull('longitude')
-            ->select(['id', 'latitude', 'longitude', 'confidence_score', 'primary_barangay', 'discard_reason'])
-            ->get();
+        $heatmapBundle = \Illuminate\Support\Facades\Cache::remember(
+            'operations_heatmap_bundle',
+            300,
+            function () {
+                $verifiedAll = \App\Models\SocialPost::where('model_status', 'VERIFIED_ACTIONABLE')
+                    ->whereNotNull('latitude')
+                    ->whereNotNull('longitude')
+                    ->select(['id', 'latitude', 'longitude', 'confidence_score', 'primary_barangay', 'discard_reason'])
+                    ->get();
 
-        $byBarangay = $verifiedAll->groupBy(fn (\App\Models\SocialPost $p): string => $p->primary_barangay ?: 'Poblacion');
-        $barangayReportCounts = $byBarangay->map(fn ($group): int => $group->count())->sortDesc()->all();
+                $byBarangay = $verifiedAll->groupBy(fn (\App\Models\SocialPost $p): string => $p->primary_barangay ?: 'Poblacion');
+                $barangayReportCounts = $byBarangay->map(fn ($group): int => $group->count())->sortDesc()->all();
 
-        $mapPoints = collect();
-        foreach ($byBarangay as $brgy => $group) {
-            $count = $group->count();
-            $avgCs = (float) $group->avg('confidence_score');
-            $maxPts = $count >= 25 ? 4 : ($count >= 5 ? 3 : ($count >= 2 ? 2 : 1));
-            $volumeBoost = min(0.28, log10($count + 1) * 0.12);
-            $intensity = min(0.98, max(0.45, ($avgCs * 0.72) + $volumeBoost));
+                $mapPoints = collect();
+                foreach ($byBarangay as $brgy => $group) {
+                    $count = $group->count();
+                    $avgCs = (float) $group->avg('confidence_score');
+                    $maxPts = $count >= 25 ? 4 : ($count >= 5 ? 3 : ($count >= 2 ? 2 : 1));
+                    $volumeBoost = min(0.28, log10($count + 1) * 0.12);
+                    $intensity = min(0.98, max(0.45, ($avgCs * 0.72) + $volumeBoost));
 
-            $officialTagged = $group->where('discard_reason', 'verified_by_official');
-            $selected = $officialTagged->merge($group)->unique(fn ($p) => $p->latitude.','.$p->longitude)->take($maxPts);
-            if ($selected->isEmpty()) {
-                $selected = $group->take(1);
+                    $officialTagged = $group->where('discard_reason', 'verified_by_official');
+                    $selected = $officialTagged->merge($group)->unique(fn ($p) => $p->latitude.','.$p->longitude)->take($maxPts);
+                    if ($selected->isEmpty()) {
+                        $selected = $group->take(1);
+                    }
+
+                    foreach ($selected as $pt) {
+                        $mapPoints->push([
+                            'latitude' => (float) $pt->latitude,
+                            'longitude' => (float) $pt->longitude,
+                            'intensity' => round($intensity, 3),
+                            'barangay' => $brgy,
+                            'count' => $count,
+                        ]);
+                    }
+                }
+
+                return [
+                    'mapPoints' => $mapPoints->values()->all(),
+                    'barangayReportCounts' => $barangayReportCounts,
+                    'validatedEventsCount' => $verifiedAll->count(),
+                    'barangaysAffectedCount' => $byBarangay->count(),
+                    'avgCsOverall' => (float) ($verifiedAll->avg('confidence_score') ?: 0.81),
+                ];
             }
-
-            foreach ($selected as $pt) {
-                $mapPoints->push([
-                    'latitude' => (float) $pt->latitude,
-                    'longitude' => (float) $pt->longitude,
-                    'intensity' => round($intensity, 3),
-                    'barangay' => $brgy,
-                    'count' => $count,
-                ]);
-            }
-        }
+        );
 
         $actionablePosts = \App\Models\SocialPost::where('model_status', 'VERIFIED_ACTIONABLE')
             ->orderByRaw("CASE WHEN discard_reason = 'verified_by_official' THEN 0 ELSE 1 END")
@@ -119,16 +133,16 @@ Route::middleware(['auth', 'role:super_admin,barangay_admin', 'no-back'])->group
         $noUrgencyPosts = $noUrgencyQuery->paginate(6, ['*'], 'review_page')->withQueryString();
 
         $totalActiveReports = \App\Models\SocialPost::whereIn('model_status', ['VERIFIED_ACTIONABLE', 'FLOOD_MENTION_NO_URGENCY'])->count();
-        $validatedEventsCount = $verifiedAll->count();
-        $barangaysAffectedCount = $byBarangay->count();
-        $avgCsOverall = (float) ($verifiedAll->avg('confidence_score') ?: 0.81);
+        $validatedEventsCount = $heatmapBundle['validatedEventsCount'];
+        $barangaysAffectedCount = $heatmapBundle['barangaysAffectedCount'];
+        $avgCsOverall = $heatmapBundle['avgCsOverall'];
         $noUrgencyTotalCount = \App\Models\SocialPost::where('model_status', 'FLOOD_MENTION_NO_URGENCY')->count();
         $barangayList = array_keys(\App\Http\Controllers\HarvestingController::getBarangayCentroids());
 
         return view('operations.index', [
             'actionablePosts' => $actionablePosts,
-            'mapPoints' => $mapPoints->values(),
-            'barangayReportCounts' => $barangayReportCounts,
+            'mapPoints' => $heatmapBundle['mapPoints'],
+            'barangayReportCounts' => $heatmapBundle['barangayReportCounts'],
             'noUrgencyPosts' => $noUrgencyPosts,
             'noUrgencyTotalCount' => $noUrgencyTotalCount,
             'reviewBarangay' => $reviewBarangay,
