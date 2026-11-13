@@ -26,10 +26,11 @@ class RunFloodModel extends Command
 
         $query = SocialPost::orderBy('id');
         if ($scope === 'pending' || $scope === 'unanalyzed') {
-            $query->where(function ($q) {
-                $q->whereNull('analyzed_at')
-                  ->orWhere('model_status', 'pending');
-            });
+            $query->where('clean_status', 'kept')
+                  ->where(function ($q) {
+                      $q->whereNull('analyzed_at')
+                        ->orWhere('model_status', 'pending');
+                  });
         } elseif ($scope === 'kept') {
             $query->where('clean_status', 'kept');
         }

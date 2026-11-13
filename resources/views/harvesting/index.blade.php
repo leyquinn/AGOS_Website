@@ -20,7 +20,7 @@
             </div>
         @endif
 
-        @if ($errors->any())
+        @if (!empty($errors) && $errors->any())
             <div class="mb-5 rounded-xl border border-rose-500/40 bg-rose-500/15 px-4 py-3 text-xs font-bold text-rose-300">
                 {{ $errors->first() }}
             </div>
@@ -141,6 +141,37 @@
             </section>
         @endif
 
+        {{-- ── Sequential Pipeline Stage Stepper ── --}}
+        <div class="mt-5 rounded-2xl border border-blue-900/40 bg-[#071738]/90 p-3.5 shadow-lg">
+            <div class="flex flex-wrap items-center justify-between gap-3 text-xs font-bold text-slate-300">
+                <div class="flex items-center gap-2">
+                    <span class="text-xs uppercase tracking-wider text-blue-400">Sequential Pipeline:</span>
+                    <span class="rounded-full px-2.5 py-0.5 text-[10px] font-black {{ ($pendingCleanCount ?? 0) > 0 ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/40' : (($pendingModelCount ?? 0) > 0 ? 'bg-blue-500/20 text-blue-300 border border-blue-500/40' : 'bg-slate-700/40 text-slate-300 border border-slate-600/40') }}">
+                        @if (($pendingCleanCount ?? 0) > 0)
+                            Stage 2 Active: {{ $pendingCleanCount }} Scraped Posts Awaiting Flood Cleaner
+                        @elseif (($pendingModelCount ?? 0) > 0)
+                            Stage 3 Active: {{ $pendingModelCount }} Clean Posts Awaiting XLM-RoBERTa Model
+                        @else
+                            All Posts Up to Date (Run Step 1 Scraper to harvest new flood posts)
+                        @endif
+                    </span>
+                </div>
+                <div class="flex items-center gap-2 text-[10px]">
+                    <span class="flex items-center gap-1 rounded-lg px-2.5 py-1 {{ $isRunning ? 'bg-blue-600/40 text-blue-200 border border-blue-500/50 animate-pulse' : 'bg-slate-800 text-slate-300' }}">
+                        <span>Step 1: Scrape</span>
+                    </span>
+                    <span class="text-slate-500">➔</span>
+                    <span class="flex items-center gap-1 rounded-lg px-2.5 py-1 {{ ($canRunCleaner ?? false) ? 'bg-emerald-600/40 text-emerald-200 border border-emerald-500/50 font-black' : 'bg-slate-800/60 text-slate-500' }}">
+                        <span>Step 2: Clean {{ ($pendingCleanCount ?? 0) > 0 ? '('.$pendingCleanCount.')' : '' }}</span>
+                    </span>
+                    <span class="text-slate-500">➔</span>
+                    <span class="flex items-center gap-1 rounded-lg px-2.5 py-1 {{ ($canRunModel ?? false) ? 'bg-blue-600/40 text-blue-200 border border-blue-500/50 font-black' : 'bg-slate-800/60 text-slate-500' }}">
+                        <span>Step 3: Model {{ ($pendingModelCount ?? 0) > 0 ? '('.$pendingModelCount.')' : '' }}</span>
+                    </span>
+                </div>
+            </div>
+        </div>
+
         <section class="portal-card mt-5 rounded-2xl bg-[#b7c9e5] p-5 text-slate-700 shadow-lg shadow-blue-950/10">
             <div class="flex flex-wrap items-center justify-between gap-3">
                 <div>
@@ -153,12 +184,19 @@
                 <form method="POST" action="{{ route('harvesting.clean') }}" class="flex items-center gap-2.5">
                     @csrf
                     <label class="flex items-center gap-1.5 text-[10px] font-bold text-slate-600">
-                        <input type="checkbox" name="strict" value="1" class="h-3.5 w-3.5 rounded border-slate-400">
+                        <input type="checkbox" name="strict" value="1" class="h-3.5 w-3.5 rounded border-slate-400" {{ !($canRunCleaner ?? false) ? 'disabled' : '' }}>
                         <span>Strict filter</span>
                     </label>
-                    <button type="submit" class="rounded-xl bg-emerald-600 px-3.5 py-2 text-xs font-bold text-white shadow transition hover:bg-emerald-500">
-                        🧹 Run Flood Cleaner Now
-                    </button>
+                    @if ($canRunCleaner ?? false)
+                        <button type="submit" class="flex items-center gap-1.5 rounded-xl bg-emerald-600 px-3.5 py-2 text-xs font-bold text-white shadow transition hover:bg-emerald-500">
+                            <span>🧹 Run Flood Cleaner Now</span>
+                            <span class="rounded-full bg-emerald-800/80 px-2 py-0.5 text-[10px] font-black text-emerald-200">{{ $pendingCleanCount }} new</span>
+                        </button>
+                    @else
+                        <button type="button" disabled class="cursor-not-allowed rounded-xl bg-slate-400/80 px-3.5 py-2 text-xs font-bold text-slate-200 opacity-60 shadow" title="Cleaner locked. Run the Facebook Scraper first to collect new posts.">
+                            🔒 Cleaner Locked (No new posts)
+                        </button>
+                    @endif
                 </form>
             </div>
 
@@ -218,23 +256,30 @@
                     @csrf
                     <label class="flex items-center gap-1.5 text-[10px] font-bold text-slate-600">
                         <span>Scope:</span>
-                        <select name="scope" class="rounded-lg border-0 bg-slate-100 px-2.5 py-1.5 text-[10px] font-bold text-slate-700 outline-none focus:ring-2 focus:ring-blue-500">
-                            <option value="pending" {{ ($pendingPostsCount ?? 0) > 0 ? 'selected' : '' }}>Pending / Unanalyzed only ({{ $pendingPostsCount ?? 0 }})</option>
-                            <option value="kept">Kept / Clean posts only ({{ $keptPostsCount }})</option>
-                            <option value="all" {{ ($pendingPostsCount ?? 0) === 0 ? 'selected' : '' }}>All scraped posts ({{ $totalScrapedPosts }})</option>
+                        <select name="scope" class="rounded-lg border-0 bg-slate-100 px-2.5 py-1.5 text-[10px] font-bold text-slate-700 outline-none focus:ring-2 focus:ring-blue-500" {{ !($canRunModel ?? false) ? 'disabled' : '' }}>
+                            <option value="pending" selected>Pending Clean Posts ({{ $pendingModelCount ?? 0 }})</option>
+                            <option value="kept">All Kept / Clean posts ({{ $keptPostsCount }})</option>
+                            <option value="all">All scraped posts ({{ $totalScrapedPosts }})</option>
                         </select>
                     </label>
                     <label class="flex items-center gap-1.5 text-[10px] font-bold text-slate-600">
                         <span>Threshold:</span>
-                        <select name="threshold" class="rounded-lg border-0 bg-slate-100 px-2 py-1.5 text-[10px] font-bold text-slate-700 outline-none focus:ring-2 focus:ring-blue-500">
+                        <select name="threshold" class="rounded-lg border-0 bg-slate-100 px-2 py-1.5 text-[10px] font-bold text-slate-700 outline-none focus:ring-2 focus:ring-blue-500" {{ !($canRunModel ?? false) ? 'disabled' : '' }}>
                             <option value="0.50">P_rel ≥ 0.50</option>
                             <option value="0.60">P_rel ≥ 0.60</option>
                             <option value="0.70">P_rel ≥ 0.70</option>
                         </select>
                     </label>
-                    <button type="submit" class="rounded-xl bg-blue-600 px-3.5 py-2 text-xs font-bold text-white shadow transition hover:bg-blue-500">
-                        🧠 Run XLM-RoBERTa Model Now
-                    </button>
+                    @if ($canRunModel ?? false)
+                        <button type="submit" class="flex items-center gap-1.5 rounded-xl bg-blue-600 px-3.5 py-2 text-xs font-bold text-white shadow transition hover:bg-blue-500">
+                            <span>🧠 Run XLM-RoBERTa Model Now</span>
+                            <span class="rounded-full bg-blue-800/80 px-2 py-0.5 text-[10px] font-black text-blue-200">{{ $pendingModelCount }} clean</span>
+                        </button>
+                    @else
+                        <button type="button" disabled class="cursor-not-allowed rounded-xl bg-slate-400/80 px-3.5 py-2 text-xs font-bold text-slate-200 opacity-60 shadow" title="{{ ($pendingCleanCount ?? 0) > 0 ? 'Model locked. Run Flood Cleaner first.' : 'Model locked. All posts analyzed.' }}">
+                            🔒 Model Locked ({{ ($pendingCleanCount ?? 0) > 0 ? 'Clean '.$pendingCleanCount.' pending posts first' : 'All posts analyzed' }})
+                        </button>
+                    @endif
                 </form>
             </div>
 

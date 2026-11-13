@@ -55,10 +55,23 @@ class HarvestingController extends Controller
             ->all();
 
         $analyzedPostsCount = SocialPost::whereNotNull('analyzed_at')->count();
-        $pendingPostsCount = SocialPost::where(function ($q) {
-            $q->whereNull('analyzed_at')
-              ->orWhere('model_status', 'pending');
-        })->count();
+        $pendingCleanCount = SocialPost::where('clean_status', 'pending')->count();
+        $pendingModelCount = SocialPost::where('clean_status', 'kept')
+            ->where(function ($q) {
+                $q->whereNull('analyzed_at')
+                  ->orWhere('model_status', 'pending');
+            })->count();
+
+        $canRunCleaner = $pendingCleanCount > 0;
+        $canRunModel = ($pendingCleanCount === 0) && ($pendingModelCount > 0);
+
+        $currentPipelineStage = 1;
+        if ($pendingCleanCount > 0) {
+            $currentPipelineStage = 2;
+        } elseif ($pendingModelCount > 0) {
+            $currentPipelineStage = 3;
+        }
+
         $actionablePostsCount = SocialPost::where('model_status', 'VERIFIED_ACTIONABLE')->count();
         $earlyWarningPostsCount = SocialPost::where('model_status', 'FLOOD_MENTION_NO_URGENCY')->count();
         $unlocalizedPostsCount = SocialPost::where('model_status', 'DISCARDED_UNLOCALIZED')->count();
@@ -79,7 +92,11 @@ class HarvestingController extends Controller
                 'totalScrapedPosts' => $totalScrapedPosts,
                 'keptPostsCount' => $keptPostsCount,
                 'removedPostsCount' => $removedPostsCount,
-                'pendingPostsCount' => $pendingPostsCount,
+                'pendingCleanCount' => $pendingCleanCount,
+                'pendingModelCount' => $pendingModelCount,
+                'canRunCleaner' => $canRunCleaner,
+                'canRunModel' => $canRunModel,
+                'currentPipelineStage' => $currentPipelineStage,
                 'actionablePostsCount' => $actionablePostsCount,
                 'earlyWarningPostsCount' => $earlyWarningPostsCount,
                 'barangayList' => $barangayList,
@@ -98,7 +115,11 @@ class HarvestingController extends Controller
             'removedPostsCount' => $removedPostsCount,
             'removalBreakdown' => $removalBreakdown,
             'analyzedPostsCount' => $analyzedPostsCount,
-            'pendingPostsCount' => $pendingPostsCount,
+            'pendingCleanCount' => $pendingCleanCount,
+            'pendingModelCount' => $pendingModelCount,
+            'canRunCleaner' => $canRunCleaner,
+            'canRunModel' => $canRunModel,
+            'currentPipelineStage' => $currentPipelineStage,
             'actionablePostsCount' => $actionablePostsCount,
             'earlyWarningPostsCount' => $earlyWarningPostsCount,
             'unlocalizedPostsCount' => $unlocalizedPostsCount,
@@ -211,6 +232,15 @@ class HarvestingController extends Controller
     public function runCleaner(Request $request): RedirectResponse
     {
         @set_time_limit(0);
+
+        $pendingCleanCount = SocialPost::where('clean_status', 'pending')->count();
+        if ($pendingCleanCount === 0) {
+            return to_route('harvesting')->with(
+                'error',
+                'No new uncleaned posts found. Please run the Facebook Scraper first (Step 1).'
+            );
+        }
+
         $strict = $request->boolean('strict');
         Artisan::call('agos:clean', $strict ? ['--strict' => true] : []);
 
@@ -219,13 +249,35 @@ class HarvestingController extends Controller
 
         return to_route('harvesting')->with(
             'status',
-            "Flood Cleaner finished: {$kept} genuine Davao flood posts kept, {$removed} noise/duplicate posts removed."
+            "Step 2 Complete! Flood Cleaner finished: {$kept} genuine Davao flood posts kept, {$removed} noise/duplicate posts removed. Step 3 (XLM-RoBERTa Model) is now ready to run."
         );
     }
 
     public function runModel(Request $request): RedirectResponse
     {
         @set_time_limit(0);
+
+        $pendingCleanCount = SocialPost::where('clean_status', 'pending')->count();
+        if ($pendingCleanCount > 0) {
+            return to_route('harvesting')->with(
+                'error',
+                "Please run Step 2 (Flood Cleaner) first: there are {$pendingCleanCount} uncleaned scraped posts awaiting cleaning."
+            );
+        }
+
+        $pendingModelCount = SocialPost::where('clean_status', 'kept')
+            ->where(function ($q) {
+                $q->whereNull('analyzed_at')
+                  ->orWhere('model_status', 'pending');
+            })->count();
+
+        if ($pendingModelCount === 0) {
+            return to_route('harvesting')->with(
+                'error',
+                'No pending clean posts to analyze. Please run Step 1 (Facebook Scraper) to collect new posts.'
+            );
+        }
+
         $validated = $request->validate([
             'scope' => ['nullable', 'in:pending,unanalyzed,kept,all'],
             'threshold' => ['nullable', 'numeric', 'min:0.10', 'max:0.95'],
@@ -252,7 +304,7 @@ class HarvestingController extends Controller
 
         return to_route('harvesting')->with(
             'status',
-            "XLM-RoBERTa + K-Means++ finished: {$actionable} Verified Actionable alerts (Avg CS {$avgCs}), {$earlyWatch} Flood Watch (HITL) posts."
+            "Step 3 Complete! XLM-RoBERTa + K-Means++ finished: {$actionable} Verified Actionable alerts (Avg CS {$avgCs}), {$earlyWatch} Flood Watch (HITL) posts. Operations Heatmap updated!"
         );
     }
 
