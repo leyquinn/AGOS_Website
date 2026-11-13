@@ -52,6 +52,10 @@ class RunFloodCleaner extends Command
         File::put($inputJsonPath, json_encode($payload, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE));
 
         $pythonBin = config('services.agos_scraper.python_bin', 'python');
+        if (($pythonBin === 'python' || ! is_file($pythonBin)) && is_file('C:\\Program Files\\Python313\\python.exe')) {
+            $pythonBin = 'C:\\Program Files\\Python313\\python.exe';
+        }
+
         $cleanerScript = config('services.agos_scraper.cleaner_script_path', base_path('intelligence/cleaner/davao_flood_cleaner.py'));
 
         $command = [
@@ -65,12 +69,19 @@ class RunFloodCleaner extends Command
             $command[] = '--strict';
         }
 
-        $process = new Process($command, base_path(), [
+        $env = array_merge($_SERVER, [
             'PYTHONIOENCODING' => 'utf-8',
             'PYTHONUTF8' => '1',
             'SYSTEMROOT' => getenv('SYSTEMROOT') ?: 'C:\\Windows',
             'PATH' => getenv('PATH') ?: '',
-        ], null, 120);
+            'USERPROFILE' => getenv('USERPROFILE') ?: 'C:\\Users\\narp',
+            'LOCALAPPDATA' => getenv('LOCALAPPDATA') ?: 'C:\\Users\\narp\\AppData\\Local',
+            'APPDATA' => getenv('APPDATA') ?: 'C:\\Users\\narp\\AppData\\Roaming',
+            'TEMP' => getenv('TEMP') ?: sys_get_temp_dir(),
+            'TMP' => getenv('TMP') ?: sys_get_temp_dir(),
+        ]);
+
+        $process = new Process($command, base_path(), $env, null, 120);
 
         $process->run();
 
@@ -101,17 +112,27 @@ class RunFloodCleaner extends Command
                 $status = $record['clean_status'] ?? 'kept';
                 if ($status === 'kept') {
                     $keptCount++;
+                    SocialPost::where('post_id', $postId)->update([
+                        'cleaned_text' => $record['cleaned_text'] ?? null,
+                        'clean_status' => 'kept',
+                        'removal_category' => null,
+                        'removal_reason' => null,
+                        'cleaned_at' => $now,
+                    ]);
                 } else {
                     $removedCount++;
+                    SocialPost::where('post_id', $postId)->update([
+                        'cleaned_text' => $record['cleaned_text'] ?? null,
+                        'clean_status' => 'removed',
+                        'removal_category' => $record['removal_category'] ?? null,
+                        'removal_reason' => $record['removal_reason'] ?? null,
+                        'cleaned_at' => $now,
+                        'model_status' => 'DISCARDED_NOT_FLOOD',
+                        'discard_reason' => $record['removal_category'] ?? 'removed_by_cleaner',
+                        'is_flood_related' => false,
+                        'analyzed_at' => $now,
+                    ]);
                 }
-
-                SocialPost::where('post_id', $postId)->update([
-                    'cleaned_text' => $record['cleaned_text'] ?? null,
-                    'clean_status' => $status,
-                    'removal_category' => $record['removal_category'] ?? null,
-                    'removal_reason' => $record['removal_reason'] ?? null,
-                    'cleaned_at' => $now,
-                ]);
             }
         });
 

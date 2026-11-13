@@ -292,9 +292,12 @@ class HarvestingController extends Controller
         ]);
 
         if ($exitCode !== 0) {
+            $output = trim(Artisan::output());
+            \Illuminate\Support\Facades\Log::error('XLM-RoBERTa model pipeline failed', ['output' => $output]);
+
             return to_route('harvesting')->with(
                 'error',
-                'XLM-RoBERTa model pipeline encountered an error. Check that best_model.pt is present in intelligence/model/checkpoints/.'
+                $output ?: 'XLM-RoBERTa model pipeline encountered an error. Check storage/logs/laravel.log for details.'
             );
         }
 

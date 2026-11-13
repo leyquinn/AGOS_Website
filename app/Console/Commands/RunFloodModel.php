@@ -65,8 +65,12 @@ class RunFloodModel extends Command
         File::put($inputJsonPath, json_encode($payload, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE));
 
         $pythonBin = config('services.agos_scraper.python_bin', 'python');
+        if (($pythonBin === 'python' || ! is_file($pythonBin)) && is_file('C:\\Program Files\\Python313\\python.exe')) {
+            $pythonBin = 'C:\\Program Files\\Python313\\python.exe';
+        }
+
         $modelScript = config('services.agos_scraper.model_script_path', base_path('intelligence/model/agos_model_pipeline.py'));
-        $checkpointPath = config('services.agos_scraper.model_checkpoint_path');
+        $checkpointPath = config('services.agos_scraper.model_checkpoint_path', base_path('intelligence/model/checkpoints/best_model.pt'));
         $geojsonPath = public_path('data/davao-barangays.geojson');
 
         $command = [
@@ -87,18 +91,29 @@ class RunFloodModel extends Command
             $command[] = $geojsonPath;
         }
 
-        $process = new Process($command, base_path(), [
+        $env = array_merge($_SERVER, [
             'PYTHONIOENCODING' => 'utf-8',
             'PYTHONUTF8' => '1',
             'SYSTEMROOT' => getenv('SYSTEMROOT') ?: 'C:\\Windows',
             'PATH' => getenv('PATH') ?: '',
             'USERPROFILE' => getenv('USERPROFILE') ?: 'C:\\Users\\narp',
-        ], null, 600);
+            'LOCALAPPDATA' => getenv('LOCALAPPDATA') ?: 'C:\\Users\\narp\\AppData\\Local',
+            'APPDATA' => getenv('APPDATA') ?: 'C:\\Users\\narp\\AppData\\Roaming',
+            'TEMP' => getenv('TEMP') ?: sys_get_temp_dir(),
+            'TMP' => getenv('TMP') ?: sys_get_temp_dir(),
+        ]);
+
+        $process = new Process($command, base_path(), $env, null, 600);
 
         $process->run();
 
         if (! is_file($resultsPath) || ! $process->isSuccessful()) {
             $err = trim($process->getErrorOutput().' '.$process->getOutput());
+            \Illuminate\Support\Facades\Log::error('XLM-RoBERTa pipeline execution failed', [
+                'error' => $err,
+                'exit_code' => $process->getExitCode(),
+                'command' => $command,
+            ]);
             $this->error('XLM-RoBERTa pipeline failed: '.($err ?: 'Unknown error. Check python logs.'));
             return self::FAILURE;
         }
