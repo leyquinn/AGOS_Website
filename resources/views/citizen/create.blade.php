@@ -11,14 +11,16 @@
         <div class="citizen-device-notch" aria-hidden="true"></div>
         <div class="citizen-viewport">
         <header class="citizen-header">
-            <button type="button" class="citizen-header-button" data-citizen-menu aria-label="Open menu">
-                <span class="sr-only">Menu</span>
-                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg>
-            </button>
+            <div class="citizen-header-slot citizen-header-slot-left">
+                <button type="button" class="citizen-header-button" data-citizen-menu aria-label="Open menu">
+                    <span class="sr-only">Menu</span>
+                    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg>
+                </button>
+            </div>
             <a href="{{ route('citizen.home') }}" class="citizen-brand" data-citizen-nav="home">
                 <img src="{{ asset('images/agos-logo.png') }}" alt="AGOS">
             </a>
-            <div class="citizen-header-actions">
+            <div class="citizen-header-actions citizen-header-slot citizen-header-slot-right">
                 <button type="button" class="citizen-header-button" data-theme-toggle aria-label="Switch to light mode">
                     <svg data-theme-icon="moon" viewBox="0 0 24 24" aria-hidden="true"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79Z"/></svg>
                     <svg data-theme-icon="sun" class="hidden" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v2m0 16v2M4.93 4.93l1.41 1.41m11.32 11.32 1.41 1.41M2 12h2m16 0h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"/></svg>
@@ -117,7 +119,7 @@
             </section>
 
             <section class="citizen-screen {{ ($screen ?? 'home') === 'map' ? 'is-active' : '' }}" data-citizen-screen="map">
-                <div class="citizen-screen-title"><button type="button" data-citizen-nav="home">←</button><h1>LIVE FLOOD MAP</h1><button type="button" data-citizen-profile>◎</button></div>
+                <div class="citizen-screen-title"><button type="button" class="citizen-subheader-button" data-citizen-nav="home">←</button><h1>LIVE FLOOD MAP</h1><button type="button" class="citizen-subheader-button" data-citizen-profile>◎</button></div>
                 <div class="citizen-map-large">
                     <div class="citizen-map-leaflet" data-citizen-map data-reports-url="{{ route('citizen.map.reports') }}" data-search-url="{{ route('citizen.map.search') }}"></div>
                     <label class="map-search">⌕ <input type="search" data-map-search placeholder="Search location or area..." aria-label="Search location or area"><b data-map-location>♟</b></label>
@@ -132,7 +134,7 @@
             </section>
 
             <section class="citizen-screen {{ ($screen ?? 'home') === 'report' ? 'is-active' : '' }}" data-citizen-screen="report">
-                <div class="citizen-screen-title report-title"><button type="button" data-citizen-nav="home">←</button><h1>REPORT FLOODING</h1><span></span></div>
+                <div class="citizen-screen-title report-title"><button type="button" class="citizen-subheader-button" data-citizen-nav="home">←</button><h1>REPORT FLOODING</h1><span class="citizen-subheader-spacer"></span></div>
                 <div class="citizen-report-intro">Help your community stay safe.<span>◷ &nbsp; Takes 2 mins</span></div>
                 <div class="validation-card"><strong>♣ &nbsp; Collaborative Validation</strong><p>Your report will be combined with other nearby to verify flood levels accurately.</p></div>
                 <form action="{{ route('citizen.reports.store') }}" method="POST" class="citizen-form">
@@ -167,7 +169,7 @@
             </section>
 
             <section class="citizen-screen citizen-alerts-screen {{ ($screen ?? 'home') === 'alerts' ? 'is-active' : '' }}" data-citizen-screen="alerts">
-                <div class="citizen-screen-title"><button type="button" data-citizen-nav="home">←</button><h1>ALERT / NOTIFICATION</h1><span></span></div>
+                <div class="citizen-screen-title"><button type="button" class="citizen-subheader-button" data-citizen-nav="home">←</button><h1>ALERT / NOTIFICATION</h1><span class="citizen-subheader-spacer"></span></div>
                 <div class="barangay-title">MONITORED REGIONS</div>
                 <div class="barangay-tags">
                     @if (auth()->user()->barangay)
@@ -224,7 +226,7 @@
             </section>
 
             <section class="citizen-screen {{ ($screen ?? 'home') === 'profile' ? 'is-active' : '' }}" data-citizen-screen="profile">
-                <div class="citizen-screen-title"><button type="button" data-citizen-nav="home">←</button><h1>PROFILE</h1><span></span></div>
+                <div class="citizen-screen-title"><button type="button" class="citizen-subheader-button" data-citizen-nav="home">←</button><h1>PROFILE</h1><span class="citizen-subheader-spacer"></span></div>
                 @php
                     $profileName = trim((auth()->user()->first_name ?? '') . ' ' . (auth()->user()->last_name ?? ''));
                     $profileName = $profileName !== '' ? $profileName : (auth()->user()->name ?? 'Citizen Reporter');
