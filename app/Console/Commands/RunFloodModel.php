@@ -5,6 +5,7 @@ namespace App\Console\Commands;
 use App\Models\HarvestRun;
 use App\Models\SocialPost;
 use Illuminate\Console\Command;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\File;
 use Symfony\Component\Process\Process;
 
@@ -12,18 +13,24 @@ class RunFloodModel extends Command
 {
     protected $signature = 'agos:analyze
                             {--run-id= : Optional HarvestRun ID to attach model summary metrics to}
-                            {--scope=all : Which posts to analyze: kept (cleaned only) or all (all scraped posts)}
+                            {--scope=pending : Which posts to analyze: pending (unanalyzed only), kept (cleaned only), or all (all scraped posts)}
                             {--threshold=0.50 : Relevance probability threshold P_rel for flood classification}';
 
     protected $description = 'Run Multi-Task XLM-RoBERTa + K-Means++ inference pipeline on scraped flood posts';
 
     public function handle(): int
     {
-        $scope = strtolower((string) $this->option('scope'));
+        @set_time_limit(0);
+        $scope = strtolower((string) ($this->option('scope') ?: 'pending'));
         $threshold = max(0.10, min(0.95, (float) $this->option('threshold')));
 
         $query = SocialPost::orderBy('id');
-        if ($scope === 'kept') {
+        if ($scope === 'pending' || $scope === 'unanalyzed') {
+            $query->where(function ($q) {
+                $q->whereNull('analyzed_at')
+                  ->orWhere('model_status', 'pending');
+            });
+        } elseif ($scope === 'kept') {
             $query->where('clean_status', 'kept');
         }
 
@@ -35,6 +42,11 @@ class RunFloodModel extends Command
 
         $modelDir = storage_path('app/harvest/model');
         File::ensureDirectoryExists($modelDir);
+
+        $resultsPath = "{$modelDir}/model_results.json";
+        if (is_file($resultsPath)) {
+            @unlink($resultsPath);
+        }
 
         $inputJsonPath = "{$modelDir}/input_posts.json";
         $payload = $posts->map(fn (SocialPost $p): array => [
@@ -80,13 +92,13 @@ class RunFloodModel extends Command
             'SYSTEMROOT' => getenv('SYSTEMROOT') ?: 'C:\\Windows',
             'PATH' => getenv('PATH') ?: '',
             'USERPROFILE' => getenv('USERPROFILE') ?: 'C:\\Users\\narp',
-        ], null, 300);
+        ], null, 600);
 
         $process->run();
 
-        $resultsPath = "{$modelDir}/model_results.json";
-        if (! is_file($resultsPath)) {
-            $this->error('XLM-RoBERTa pipeline failed: '.$process->getErrorOutput().' '.$process->getOutput());
+        if (! is_file($resultsPath) || ! $process->isSuccessful()) {
+            $err = trim($process->getErrorOutput().' '.$process->getOutput());
+            $this->error('XLM-RoBERTa pipeline failed: '.($err ?: 'Unknown error. Check python logs.'));
             return self::FAILURE;
         }
 
@@ -100,50 +112,55 @@ class RunFloodModel extends Command
         $results = $output['results'] ?? [];
         $summary = $output['summary'] ?? [];
 
-        foreach ($results as $rec) {
-            $postId = $rec['post_id'] ?? null;
-            if (! $postId) {
-                continue;
-            }
+        DB::transaction(function () use ($results, $now, $scope) {
+            foreach ($results as $rec) {
+                $postId = $rec['post_id'] ?? null;
+                if (! $postId) {
+                    continue;
+                }
 
-            $extractedLocs = $rec['extracted_locations'] ?? [];
-            $updateData = [
-                'is_flood_related' => (bool) ($rec['is_flood_related'] ?? false),
-                'p_rel' => $rec['p_rel'] ?? 0.0,
-                'd_clusters' => $rec['d_clusters'] ?? 0.0,
-                'confidence_score' => $rec['confidence_score'] ?? 0.0,
-                'extracted_locations' => $extractedLocs,
-                'primary_barangay' => $rec['primary_barangay'] ?? null,
-                'river_basin' => $rec['river_basin'] ?? null,
-                'latitude' => $rec['latitude'] ?? null,
-                'longitude' => $rec['longitude'] ?? null,
-                'cluster_id' => $rec['cluster_id'] ?? null,
-                'cluster_size' => $rec['cluster_size'] ?? 0,
-                'model_status' => $rec['verification_status'] ?? 'DISCARDED_NOT_FLOOD',
-                'discard_reason' => $rec['discard_reason'] ?? null,
-                'analyzed_at' => $now,
-            ];
-
-            if (! empty($extractedLocs)) {
-                $updateData['detected_locations'] = $extractedLocs;
-            }
-
-            SocialPost::where('post_id', $postId)->update($updateData);
-        }
-
-        if ($scope === 'kept') {
-            SocialPost::where('clean_status', 'removed')
-                ->where('model_status', 'pending')
-                ->update([
-                    'is_flood_related' => false,
-                    'p_rel' => 0.0,
-                    'd_clusters' => 0.0,
-                    'confidence_score' => 0.0,
-                    'model_status' => 'DISCARDED_NOT_FLOOD',
-                    'discard_reason' => 'filtered_by_cleaner',
+                $extractedLocs = $rec['extracted_locations'] ?? [];
+                $updateData = [
+                    'is_flood_related' => (bool) ($rec['is_flood_related'] ?? false),
+                    'p_rel' => $rec['p_rel'] ?? 0.0,
+                    'd_clusters' => $rec['d_clusters'] ?? 0.0,
+                    'confidence_score' => $rec['confidence_score'] ?? 0.0,
+                    'extracted_locations' => $extractedLocs,
+                    'primary_barangay' => $rec['primary_barangay'] ?? null,
+                    'river_basin' => $rec['river_basin'] ?? null,
+                    'latitude' => $rec['latitude'] ?? null,
+                    'longitude' => $rec['longitude'] ?? null,
+                    'cluster_id' => $rec['cluster_id'] ?? null,
+                    'cluster_size' => $rec['cluster_size'] ?? 0,
+                    'model_status' => $rec['verification_status'] ?? 'DISCARDED_NOT_FLOOD',
+                    'discard_reason' => $rec['discard_reason'] ?? null,
                     'analyzed_at' => $now,
-                ]);
-        }
+                ];
+
+                if (! empty($extractedLocs)) {
+                    $updateData['detected_locations'] = $extractedLocs;
+                }
+
+                SocialPost::where('post_id', $postId)->update($updateData);
+            }
+
+            if ($scope === 'kept') {
+                SocialPost::where('clean_status', 'removed')
+                    ->where(function ($q) {
+                        $q->whereNull('analyzed_at')
+                          ->orWhere('model_status', 'pending');
+                    })
+                    ->update([
+                        'is_flood_related' => false,
+                        'p_rel' => 0.0,
+                        'd_clusters' => 0.0,
+                        'confidence_score' => 0.0,
+                        'model_status' => 'DISCARDED_NOT_FLOOD',
+                        'discard_reason' => 'filtered_by_cleaner',
+                        'analyzed_at' => $now,
+                    ]);
+            }
+        });
 
         $summary['scope'] = $scope;
         $summary['analyzed_at'] = $now->toIso8601String();

@@ -8,6 +8,7 @@ use App\Models\SocialPost;
 use App\Models\VerifiedSource;
 use Carbon\Carbon;
 use Illuminate\Console\Command;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\File;
 use Symfony\Component\Process\Process;
 use Throwable;
@@ -129,7 +130,6 @@ class RunFloodScraper extends Command
 
             // Final sync of scraped JSON output
             $this->syncJsonToDatabase($run, $outputJsonPath);
-            $this->call('agos:clean', ['--run-id' => $run->id]);
 
             $freshRun = HarvestRun::find($run->id);
             if ($freshRun && $freshRun->status === 'stopped') {
@@ -157,8 +157,8 @@ class RunFloodScraper extends Command
             ]);
 
             if ($run->posts_collected > 0) {
-                $this->callSilent('agos:clean', ['--run-id' => $run->id]);
-                $this->callSilent('agos:analyze', ['--run-id' => $run->id, '--scope' => 'all']);
+                $this->call('agos:clean', ['--run-id' => $run->id]);
+                $this->call('agos:analyze', ['--run-id' => $run->id, '--scope' => 'pending']);
             }
 
             // Update last_scraped_at on active keywords
@@ -200,68 +200,64 @@ class RunFloodScraper extends Command
 
         $newSaved = 0;
 
-        foreach ($items as $item) {
-            $postId = $item['post_id'] ?? null;
-            $fullText = trim((string) ($item['full_text'] ?? ''));
-            if (! $postId || $fullText === '') {
-                continue;
-            }
+        DB::transaction(function () use ($items, $whitelistedNames, $run, &$newSaved) {
+            foreach ($items as $item) {
+                $postId = $item['post_id'] ?? null;
+                $fullText = trim((string) ($item['full_text'] ?? ''));
+                if (! $postId || $fullText === '') {
+                    continue;
+                }
 
-            $author = trim((string) ($item['author'] ?? 'Unknown'));
-            $isWhitelisted = in_array(mb_strtolower($author), $whitelistedNames, true);
+                $author = trim((string) ($item['author'] ?? 'Unknown'));
+                $isWhitelisted = in_array(mb_strtolower($author), $whitelistedNames, true);
 
-            $postedAt = null;
-            if (! empty($item['iso_timestamp'])) {
-                try {
-                    $postedAt = Carbon::parse($item['iso_timestamp']);
-                } catch (Throwable) {
-                    $postedAt = null;
+                $postedAt = null;
+                if (! empty($item['iso_timestamp'])) {
+                    try {
+                        $postedAt = Carbon::parse($item['iso_timestamp']);
+                    } catch (Throwable) {
+                        $postedAt = null;
+                    }
+                }
+
+                $scrapedAt = null;
+                if (! empty($item['scraped_at'])) {
+                    try {
+                        $scrapedAt = Carbon::parse($item['scraped_at']);
+                    } catch (Throwable) {
+                        $scrapedAt = now();
+                    }
+                }
+
+                $post = SocialPost::updateOrCreate(
+                    ['post_id' => $postId],
+                    [
+                        'harvest_run_id' => $run->id,
+                        'search_query' => $item['search_query'] ?? null,
+                        'platform' => 'Facebook',
+                        'author' => $author ?: 'Unknown',
+                        'post_url' => $item['post_url'] ?? null,
+                        'raw_timestamp' => $item['timestamp'] ?: ($item['raw_timestamp'] ?? null),
+                        'posted_at' => $postedAt,
+                        'full_text' => $fullText,
+                        'detected_locations' => $item['detected_locations'] ?? [],
+                        'urgency_level' => $item['urgency_level'] ?? 'NORMAL',
+                        'media_urls' => $item['media_urls'] ?? [],
+                        'is_whitelisted_source' => $isWhitelisted,
+                        'scraped_at' => $scrapedAt ?? now(),
+                    ]
+                );
+
+                if ($post->wasRecentlyCreated) {
+                    $newSaved++;
                 }
             }
 
-            $scrapedAt = null;
-            if (! empty($item['scraped_at'])) {
-                try {
-                    $scrapedAt = Carbon::parse($item['scraped_at']);
-                } catch (Throwable) {
-                    $scrapedAt = now();
-                }
-            }
-
-            $post = SocialPost::updateOrCreate(
-                ['post_id' => $postId],
-                [
-                    'harvest_run_id' => $run->id,
-                    'search_query' => $item['search_query'] ?? null,
-                    'platform' => 'Facebook',
-                    'author' => $author ?: 'Unknown',
-                    'post_url' => $item['post_url'] ?? null,
-                    'raw_timestamp' => $item['timestamp'] ?: ($item['raw_timestamp'] ?? null),
-                    'posted_at' => $postedAt,
-                    'full_text' => $fullText,
-                    'detected_locations' => $item['detected_locations'] ?? [],
-                    'urgency_level' => $item['urgency_level'] ?? 'NORMAL',
-                    'media_urls' => $item['media_urls'] ?? [],
-                    'is_whitelisted_source' => $isWhitelisted,
-                    'scraped_at' => $scrapedAt ?? now(),
-                ]
-            );
-
-            if ($post->wasRecentlyCreated) {
-                $newSaved++;
-            }
-        }
-
-        $run->update([
-            'posts_collected' => count($items),
-            'new_posts_saved' => $run->new_posts_saved + $newSaved,
-        ]);
-
-        if ($newSaved > 0) {
-            $this->callSilent('agos:clean', ['--run-id' => $run->id]);
-        }
-
-        $this->refreshKeywordCounts();
+            $run->update([
+                'posts_collected' => count($items),
+                'new_posts_saved' => $run->new_posts_saved + $newSaved,
+            ]);
+        });
     }
 
     private function refreshKeywordCounts(): void

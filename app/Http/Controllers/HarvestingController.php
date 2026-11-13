@@ -55,6 +55,10 @@ class HarvestingController extends Controller
             ->all();
 
         $analyzedPostsCount = SocialPost::whereNotNull('analyzed_at')->count();
+        $pendingPostsCount = SocialPost::where(function ($q) {
+            $q->whereNull('analyzed_at')
+              ->orWhere('model_status', 'pending');
+        })->count();
         $actionablePostsCount = SocialPost::where('model_status', 'VERIFIED_ACTIONABLE')->count();
         $earlyWarningPostsCount = SocialPost::where('model_status', 'FLOOD_MENTION_NO_URGENCY')->count();
         $unlocalizedPostsCount = SocialPost::where('model_status', 'DISCARDED_UNLOCALIZED')->count();
@@ -75,6 +79,7 @@ class HarvestingController extends Controller
                 'totalScrapedPosts' => $totalScrapedPosts,
                 'keptPostsCount' => $keptPostsCount,
                 'removedPostsCount' => $removedPostsCount,
+                'pendingPostsCount' => $pendingPostsCount,
                 'actionablePostsCount' => $actionablePostsCount,
                 'earlyWarningPostsCount' => $earlyWarningPostsCount,
                 'barangayList' => $barangayList,
@@ -93,6 +98,7 @@ class HarvestingController extends Controller
             'removedPostsCount' => $removedPostsCount,
             'removalBreakdown' => $removalBreakdown,
             'analyzedPostsCount' => $analyzedPostsCount,
+            'pendingPostsCount' => $pendingPostsCount,
             'actionablePostsCount' => $actionablePostsCount,
             'earlyWarningPostsCount' => $earlyWarningPostsCount,
             'unlocalizedPostsCount' => $unlocalizedPostsCount,
@@ -204,6 +210,7 @@ class HarvestingController extends Controller
 
     public function runCleaner(Request $request): RedirectResponse
     {
+        @set_time_limit(0);
         $strict = $request->boolean('strict');
         Artisan::call('agos:clean', $strict ? ['--strict' => true] : []);
 
@@ -218,12 +225,13 @@ class HarvestingController extends Controller
 
     public function runModel(Request $request): RedirectResponse
     {
+        @set_time_limit(0);
         $validated = $request->validate([
-            'scope' => ['nullable', 'in:kept,all'],
+            'scope' => ['nullable', 'in:pending,unanalyzed,kept,all'],
             'threshold' => ['nullable', 'numeric', 'min:0.10', 'max:0.95'],
         ]);
 
-        $scope = $validated['scope'] ?? 'all';
+        $scope = $validated['scope'] ?? 'pending';
         $threshold = (float) ($validated['threshold'] ?? 0.50);
 
         $exitCode = Artisan::call('agos:analyze', [

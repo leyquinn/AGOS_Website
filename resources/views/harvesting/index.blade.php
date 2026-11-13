@@ -219,8 +219,9 @@
                     <label class="flex items-center gap-1.5 text-[10px] font-bold text-slate-600">
                         <span>Scope:</span>
                         <select name="scope" class="rounded-lg border-0 bg-slate-100 px-2.5 py-1.5 text-[10px] font-bold text-slate-700 outline-none focus:ring-2 focus:ring-blue-500">
-                            <option value="all">All scraped posts ({{ $totalScrapedPosts }})</option>
+                            <option value="pending" {{ ($pendingPostsCount ?? 0) > 0 ? 'selected' : '' }}>Pending / Unanalyzed only ({{ $pendingPostsCount ?? 0 }})</option>
                             <option value="kept">Kept / Clean posts only ({{ $keptPostsCount }})</option>
+                            <option value="all" {{ ($pendingPostsCount ?? 0) === 0 ? 'selected' : '' }}>All scraped posts ({{ $totalScrapedPosts }})</option>
                         </select>
                     </label>
                     <label class="flex items-center gap-1.5 text-[10px] font-bold text-slate-600">

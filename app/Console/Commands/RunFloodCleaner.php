@@ -20,6 +20,7 @@ class RunFloodCleaner extends Command
 
     public function handle(): int
     {
+        @set_time_limit(0);
         $posts = SocialPost::orderBy('id')->get();
         if ($posts->isEmpty()) {
             $this->info('No scraped social posts in database to clean.');
@@ -28,6 +29,11 @@ class RunFloodCleaner extends Command
 
         $cleanerDir = storage_path('app/harvest/cleaner');
         File::ensureDirectoryExists($cleanerDir);
+
+        $resultsPath = "{$cleanerDir}/cleaning_results.json";
+        if (is_file($resultsPath)) {
+            @unlink($resultsPath);
+        }
 
         $inputJsonPath = "{$cleanerDir}/input_posts.json";
         $payload = $posts->map(fn (SocialPost $p): array => [
@@ -69,8 +75,9 @@ class RunFloodCleaner extends Command
         $process->run();
 
         $resultsPath = "{$cleanerDir}/cleaning_results.json";
-        if (! is_file($resultsPath)) {
-            $this->error('Cleaner failed to generate cleaning_results.json: '.$process->getErrorOutput());
+        if (! is_file($resultsPath) || ! $process->isSuccessful()) {
+            $err = trim($process->getErrorOutput().' '.$process->getOutput());
+            $this->error('Cleaner failed to generate cleaning_results.json: '.($err ?: 'Unknown error. Check python logs.'));
             return self::FAILURE;
         }
 
