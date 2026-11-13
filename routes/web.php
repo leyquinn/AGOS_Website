@@ -79,24 +79,39 @@ Route::middleware(['auth', 'role:super_admin,barangay_admin', 'no-back'])->group
                     ->select(['id', 'latitude', 'longitude', 'confidence_score', 'primary_barangay', 'discard_reason'])
                     ->get();
 
-                $byBarangay = $verifiedAll->groupBy(fn (\App\Models\SocialPost $p): string => $p->primary_barangay ?: 'Poblacion');
-                $barangayReportCounts = $byBarangay->map(fn ($group): int => $group->count())->sortDesc()->all();
+                $verifiedCitizen = \App\Models\CitizenReport::with('barangay')
+                    ->where('verification_status', 'verified')
+                    ->whereNotNull('latitude')
+                    ->whereNotNull('longitude')
+                    ->get(['id', 'barangay_id', 'latitude', 'longitude', 'confidence_score']);
 
+                $byBarangay = $verifiedAll->groupBy(fn (\App\Models\SocialPost $p): string => $p->primary_barangay ?: 'Poblacion');
+                $citizenByBarangay = $verifiedCitizen->groupBy(fn (\App\Models\CitizenReport $r): string => $r->barangay?->name ?: 'Poblacion');
+
+                $allBarangays = $byBarangay->keys()->merge($citizenByBarangay->keys())->unique();
+
+                $barangayReportCounts = [];
                 $mapPoints = collect();
-                foreach ($byBarangay as $brgy => $group) {
-                    $count = $group->count();
-                    $avgCs = (float) $group->avg('confidence_score');
+
+                foreach ($allBarangays as $brgy) {
+                    $socialGroup = $byBarangay->get($brgy, collect());
+                    $citizenGroup = $citizenByBarangay->get($brgy, collect());
+                    $count = $socialGroup->count() + $citizenGroup->count();
+                    $barangayReportCounts[$brgy] = $count;
+
+                    $avgCs = $socialGroup->isNotEmpty()
+                        ? (float) $socialGroup->avg('confidence_score')
+                        : 1.0;
                     $maxPts = $count >= 25 ? 4 : ($count >= 5 ? 3 : ($count >= 2 ? 2 : 1));
                     $volumeBoost = min(0.28, log10($count + 1) * 0.12);
                     $intensity = min(0.98, max(0.45, ($avgCs * 0.72) + $volumeBoost));
 
-                    $officialTagged = $group->where('discard_reason', 'verified_by_official');
-                    $selected = $officialTagged->merge($group)->unique(fn ($p) => $p->latitude.','.$p->longitude)->take($maxPts);
-                    if ($selected->isEmpty()) {
-                        $selected = $group->take(1);
-                    }
+                    $officialTagged = $socialGroup->where('discard_reason', 'verified_by_official');
+                    $selectedSocial = $officialTagged->merge($socialGroup)
+                        ->unique(fn ($p) => $p->latitude.','.$p->longitude)
+                        ->take($maxPts);
 
-                    foreach ($selected as $pt) {
+                    foreach ($selectedSocial as $pt) {
                         $mapPoints->push([
                             'latitude' => (float) $pt->latitude,
                             'longitude' => (float) $pt->longitude,
@@ -105,13 +120,25 @@ Route::middleware(['auth', 'role:super_admin,barangay_admin', 'no-back'])->group
                             'count' => $count,
                         ]);
                     }
+
+                    foreach ($citizenGroup as $cr) {
+                        $mapPoints->push([
+                            'latitude' => (float) $cr->latitude,
+                            'longitude' => (float) $cr->longitude,
+                            'intensity' => round(max($intensity, 0.85), 3),
+                            'barangay' => $brgy,
+                            'count' => $count,
+                        ]);
+                    }
                 }
+
+                arsort($barangayReportCounts);
 
                 return [
                     'mapPoints' => $mapPoints->values()->all(),
                     'barangayReportCounts' => $barangayReportCounts,
-                    'validatedEventsCount' => $verifiedAll->count(),
-                    'barangaysAffectedCount' => $byBarangay->count(),
+                    'validatedEventsCount' => $verifiedAll->count() + $verifiedCitizen->count(),
+                    'barangaysAffectedCount' => $allBarangays->count(),
                     'avgCsOverall' => (float) ($verifiedAll->avg('confidence_score') ?: 0.81),
                 ];
             }

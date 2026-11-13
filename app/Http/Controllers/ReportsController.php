@@ -6,6 +6,7 @@ use App\Models\CitizenReport;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\View\View;
 
 class ReportsController extends Controller
@@ -40,9 +41,15 @@ class ReportsController extends Controller
         }
 
         $reports = $query->get();
+        $pendingReports = $reports->where('verification_status', 'pending')->values();
 
         return view('reports.index', [
             'reports' => $reports,
+            'pendingReports' => $pendingReports,
+            'totalCount' => $reports->count(),
+            'pendingCount' => $pendingReports->count(),
+            'verifiedCount' => $reports->where('verification_status', 'verified')->count(),
+            'rejectedCount' => $reports->where('verification_status', 'rejected')->count(),
             'mapPoints' => $reports
                 ->filter(fn (CitizenReport $report): bool => $report->verification_status !== 'rejected' && $report->latitude !== null && $report->longitude !== null)
                 ->map(fn (CitizenReport $report): array => [
@@ -72,6 +79,8 @@ class ReportsController extends Controller
             'verification_status' => $isFlood ? 'verified' : 'rejected',
             'confidence_score' => $isFlood ? 1.0000 : 0.0000,
         ]);
+
+        Cache::forget('operations_heatmap_bundle');
 
         return back()->with(
             'status',

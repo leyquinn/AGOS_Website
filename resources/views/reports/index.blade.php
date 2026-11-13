@@ -2,9 +2,9 @@
     <div class="reports-page w-full">
         <div class="mb-6 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
             <div>
-                <p class="text-xs font-semibold text-slate-400">Citizen-submitted flood reports • {{ $reports->count() }} total</p>
+                <p class="text-xs font-semibold text-slate-400">Citizen-submitted flood reports • {{ $totalCount }} total ({{ $pendingCount }} pending)</p>
                 <h2 class="mt-2 text-2xl font-black tracking-tight text-white sm:text-3xl">Community reports</h2>
-                <p class="mt-2 text-xs text-slate-400">Only authenticated Citizen App submissions are shown here. Officials manually tag each submission as a flood report or not flood.</p>
+                <p class="mt-2 text-xs text-slate-400">New Citizen App submissions appear below for manual review. Tagged reports are removed from the feed while keeping the Submission policy totals updated.</p>
             </div>
             <span class="rounded-full border border-emerald-500/40 bg-emerald-500/10 px-3 py-2 text-[10px] font-bold text-emerald-300">Citizen App source only</span>
         </div>
@@ -36,21 +36,14 @@
 
         <section class="grid gap-6 xl:grid-cols-[minmax(0,1fr)_18rem]">
             <div class="space-y-4">
-                @forelse ($reports as $report)
-                    @php
-                        $statusBadge = match ($report->verification_status) {
-                            'verified' => ['label' => 'Yes · Flood Report', 'class' => 'bg-emerald-500 text-emerald-950'],
-                            'rejected' => ['label' => 'No · Not Flood', 'class' => 'bg-rose-500 text-white'],
-                            default => ['label' => 'Pending Review', 'class' => 'bg-amber-400 text-amber-950'],
-                        };
-                    @endphp
+                @forelse ($pendingReports as $report)
                     <article class="report-card p-5">
                         <div class="flex flex-wrap items-start justify-between gap-3">
                             <div>
                                 <p class="text-[10px] font-semibold uppercase tracking-wide text-blue-300">{{ $report->barangay?->name ?? 'Location pending' }} • {{ $report->created_at->format('M d, Y • H:i') }}</p>
                                 <h3 class="mt-1 text-sm font-bold text-white">{{ $report->report_text }}</h3>
                             </div>
-                            <span class="rounded-full px-2.5 py-1 text-[9px] font-bold uppercase {{ $statusBadge['class'] }}">{{ $statusBadge['label'] }}</span>
+                            <span class="rounded-full bg-amber-400 px-2.5 py-1 text-[9px] font-bold uppercase text-amber-950">Pending Review</span>
                         </div>
 
                         <div class="mt-4 flex flex-wrap items-center justify-between gap-4 border-t border-blue-900/40 pt-4">
@@ -66,7 +59,7 @@
                                     type="submit"
                                     name="tag"
                                     value="yes"
-                                    class="rounded-lg px-3 py-1.5 text-[10px] font-bold transition {{ $report->verification_status === 'verified' ? 'bg-emerald-500 text-emerald-950 ring-2 ring-emerald-300' : 'border border-emerald-500/40 bg-emerald-500/15 text-emerald-300 hover:bg-emerald-500/25' }}"
+                                    class="rounded-lg border border-emerald-500/40 bg-emerald-500/15 px-3 py-1.5 text-[10px] font-bold text-emerald-300 transition hover:bg-emerald-500/25"
                                 >
                                     Yes (Flood Report)
                                 </button>
@@ -74,7 +67,7 @@
                                     type="submit"
                                     name="tag"
                                     value="no"
-                                    class="rounded-lg px-3 py-1.5 text-[10px] font-bold transition {{ $report->verification_status === 'rejected' ? 'bg-rose-500 text-white ring-2 ring-rose-300' : 'border border-rose-500/40 bg-rose-500/15 text-rose-300 hover:bg-rose-500/25' }}"
+                                    class="rounded-lg border border-rose-500/40 bg-rose-500/15 px-3 py-1.5 text-[10px] font-bold text-rose-300 transition hover:bg-rose-500/25"
                                 >
                                     No (Not Flood)
                                 </button>
@@ -83,8 +76,8 @@
                     </article>
                 @empty
                     <div class="report-card border-dashed p-10 text-center">
-                        <p class="text-sm font-bold text-white">No Citizen App reports yet</p>
-                        <p class="mt-2 text-xs text-slate-400">Reports submitted by authenticated citizen accounts will appear here.</p>
+                        <p class="text-sm font-bold text-white">No new reports awaiting tagging</p>
+                        <p class="mt-2 text-xs text-slate-400">All current submissions have been reviewed. New reports submitted from the Citizen App will appear here.</p>
                     </div>
                 @endforelse
             </div>
@@ -94,10 +87,10 @@
                     <h2 class="text-sm font-bold text-white">Submission policy</h2>
                     <p class="mt-3 text-xs leading-relaxed text-slate-400">The admin reports feed accepts data only from users authenticated through the AGOS Citizen App. Every submission undergoes manual review by an administrator or barangay official.</p>
                     <div class="mt-5 space-y-3 text-[10px]">
-                        <div class="flex justify-between border-b border-blue-900/40 pb-3"><span class="text-slate-400">Total submissions</span><strong class="text-white">{{ $reports->count() }}</strong></div>
-                        <div class="flex justify-between border-b border-blue-900/40 pb-3"><span class="text-slate-400">Pending review</span><strong class="text-amber-300">{{ $reports->where('verification_status', 'pending')->count() }}</strong></div>
-                        <div class="flex justify-between border-b border-blue-900/40 pb-3"><span class="text-slate-400">Yes (Flood report)</span><strong class="text-emerald-300">{{ $reports->where('verification_status', 'verified')->count() }}</strong></div>
-                        <div class="flex justify-between"><span class="text-slate-400">No (Not flood)</span><strong class="text-rose-300">{{ $reports->where('verification_status', 'rejected')->count() }}</strong></div>
+                        <div class="flex justify-between border-b border-blue-900/40 pb-3"><span class="text-slate-400">Total submissions</span><strong class="text-white">{{ $totalCount }}</strong></div>
+                        <div class="flex justify-between border-b border-blue-900/40 pb-3"><span class="text-slate-400">Pending review</span><strong class="text-amber-300">{{ $pendingCount }}</strong></div>
+                        <div class="flex justify-between border-b border-blue-900/40 pb-3"><span class="text-slate-400">Yes (Flood report)</span><strong class="text-emerald-300">{{ $verifiedCount }}</strong></div>
+                        <div class="flex justify-between"><span class="text-slate-400">No (Not flood)</span><strong class="text-rose-300">{{ $rejectedCount }}</strong></div>
                     </div>
                 </section>
             </aside>
