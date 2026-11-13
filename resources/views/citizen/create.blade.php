@@ -70,7 +70,7 @@
                         $scopeText = $latestBroadcast->barangay ? 'Brgy. ' . $latestBroadcast->barangay->name : 'Davao City (Citywide)';
                     @endphp
                     <div
-                        class="citizen-broadcast-banner {{ $isCrit ? 'is-critical' : 'is-warning' }}"
+                        class="citizen-broadcast-banner citizen-alert-summary {{ $isCrit ? 'is-critical' : 'is-warning' }}"
                         data-citizen-broadcast-banner
                         data-detail-label="{{ $latestBroadcast->severity }} BROADCAST"
                         data-detail-title="{{ $latestBroadcast->title }}"
@@ -78,16 +78,17 @@
                         data-detail-meta="Broadcast by DRRMO · {{ $latestBroadcast->created_at->diffForHumans() }}"
                     >
                         <div class="citizen-broadcast-badge-row">
-                            <span class="citizen-pill {{ $isCrit ? 'pill-red' : 'pill-orange' }}">
-                                {{ $isCrit ? '🚨 CRITICAL FLOOD BROADCAST' : '⚠️ FLOOD ADVISORY' }}
+                            <span class="citizen-alert-severity {{ $isCrit ? 'is-critical' : 'is-warning' }}">
+                                <svg aria-hidden="true" viewBox="0 0 24 24"><path d="M12 3 2.8 19h18.4L12 3Z"/><path d="M12 9v4m0 3h.01"/></svg>
+                                <span>{{ $isCrit ? 'CRITICAL FLOOD BROADCAST' : 'FLOOD ADVISORY' }}</span>
                             </span>
-                            <small>{{ $latestBroadcast->created_at->diffForHumans() }}</small>
+                            <small class="tabular-nums">{{ $latestBroadcast->created_at->diffForHumans() }}</small>
                         </div>
                         <strong>{{ $latestBroadcast->title }}</strong>
                         <p>{{ $latestBroadcast->message }}</p>
                         <div class="citizen-broadcast-footer">
-                            <span>📍 {{ $scopeText }}</span>
-                            <a href="{{ route('citizen.alerts') }}" data-citizen-nav="alerts">View all alerts →</a>
+                            <span class="inline-flex items-center gap-1.5"><svg aria-hidden="true" viewBox="0 0 24 24"><path d="M20 10c0 5-8 11-8 11S4 15 4 10a8 8 0 1 1 16 0Z"/><circle cx="12" cy="10" r="2.5"/></svg>{{ $scopeText }}</span>
+                            <a href="{{ route('citizen.alerts') }}" data-citizen-nav="alerts">View all alerts <svg aria-hidden="true" viewBox="0 0 20 20"><path d="M4 10h11m-5-5 5 5-5 5"/></svg></a>
                         </div>
                     </div>
                 @endif
@@ -165,7 +166,7 @@
                 </form>
             </section>
 
-            <section class="citizen-screen {{ ($screen ?? 'home') === 'alerts' ? 'is-active' : '' }}" data-citizen-screen="alerts">
+            <section class="citizen-screen citizen-alerts-screen {{ ($screen ?? 'home') === 'alerts' ? 'is-active' : '' }}" data-citizen-screen="alerts">
                 <div class="citizen-screen-title"><button type="button" data-citizen-nav="home">←</button><h1>ALERT / NOTIFICATION</h1><span></span></div>
                 <div class="barangay-title">MONITORED REGIONS</div>
                 <div class="barangay-tags">
@@ -184,10 +185,10 @@
                                 default => 'badge-green',
                             };
                             $badgeSymbol = match($alert->severity) {
-                                'CRITICAL' => '● CRITICAL BROADCAST',
-                                'WARNING' => '▲ WARNING',
-                                'ADVISORY' => '⚑ ADVISORY',
-                                default => '● NOTICE',
+                                'CRITICAL' => 'CRITICAL BROADCAST',
+                                'WARNING' => 'WARNING',
+                                'ADVISORY' => 'ADVISORY',
+                                default => 'NOTICE',
                             };
                             $scopeName = $alert->barangay ? 'Brgy. ' . $alert->barangay->name : 'Davao City (Citywide)';
                         @endphp
@@ -199,19 +200,22 @@
                             class="broadcast-alert-card {{ $alert->severity === 'CRITICAL' ? 'border-critical' : '' }}"
                         >
                             <div>
-                                <span class="alert-badge {{ $badgeClass }}">{{ $badgeSymbol }}</span>
-                                <small>{{ $alert->created_at->diffForHumans() }}</small>
+                                <span class="alert-badge citizen-alert-severity {{ $badgeClass }}">
+                                    <svg aria-hidden="true" viewBox="0 0 24 24"><path d="M12 3 2.8 19h18.4L12 3Z"/><path d="M12 9v4m0 3h.01"/></svg>
+                                    <span>{{ $badgeSymbol }}</span>
+                                </span>
+                                <small class="tabular-nums">{{ $alert->created_at->diffForHumans() }}</small>
                             </div>
                             <strong>{{ $alert->title }}</strong>
                             <p>{{ $alert->message }}</p>
                             <div class="alert-meta-row">
-                                <span>📍 {{ $scopeName }}</span>
-                                <span class="alert-official-tag">DRRMO Official Broadcast</span>
+                                <span class="inline-flex items-center gap-1.5"><svg aria-hidden="true" viewBox="0 0 24 24"><path d="M20 10c0 5-8 11-8 11S4 15 4 10a8 8 0 1 1 16 0Z"/><circle cx="12" cy="10" r="2.5"/></svg>{{ $scopeName }}</span>
+                                <span class="alert-official-tag"><svg aria-hidden="true" viewBox="0 0 24 24"><path d="M12 3 20 6v5c0 5-3.4 8.5-8 10-4.6-1.5-8-5-8-10V6l8-3Z"/><path d="m9 12 2 2 4-4"/></svg>DRRMO Official Broadcast</span>
                             </div>
                         </article>
                     @empty
                         <div class="empty-alerts-placeholder">
-                            <span class="empty-icon">🔔</span>
+                            <svg class="empty-icon" aria-hidden="true" viewBox="0 0 24 24"><path d="M18 9a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9M10 21h4"/></svg>
                             <strong>No Broadcast Alerts</strong>
                             <p>There are currently no active emergency broadcasts for {{ auth()->user()->barangay?->name ?? 'Davao City' }}.</p>
                         </div>

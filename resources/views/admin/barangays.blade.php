@@ -23,10 +23,10 @@
             </div>
         @endif
 
-        <section class="barangay-admin-table-card overflow-hidden rounded-2xl border border-slate-200/80 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900">
+        <section class="barangay-admin-table-card overflow-hidden rounded-2xl border border-slate-200/80 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900 dark:shadow-2xl dark:shadow-slate-950/20">
             <div class="overflow-x-auto">
                 <table class="barangay-admin-table w-full min-w-[860px] text-left text-sm">
-                    <thead class="bg-slate-50 text-xs font-semibold uppercase tracking-wider text-slate-500 dark:bg-slate-950/60 dark:text-slate-400">
+                    <thead class="border-b border-slate-200 bg-slate-50 text-xs font-semibold uppercase tracking-wider text-slate-500 dark:border-slate-800 dark:bg-slate-950/60 dark:text-slate-400">
                         <tr>
                             <th class="px-6 py-4">Barangay</th>
                             <th class="px-6 py-4">District</th>
@@ -51,20 +51,20 @@
                                             <span class="flex h-9 w-9 items-center justify-center rounded-full bg-blue-100 text-xs font-bold text-blue-700 dark:bg-blue-500/15 dark:text-blue-300">{{ strtoupper(substr($displayAdmin->first_name, 0, 1).substr($displayAdmin->last_name, 0, 1)) }}</span>
                                             <div>
                                                 <div class="font-bold text-slate-800 dark:text-slate-100">{{ $displayAdmin->first_name }} {{ $displayAdmin->last_name }}</div>
-                                                <div class="mt-0.5 text-xs text-slate-500">{{ $displayAdmin->email }}</div>
+                                                <div class="mt-0.5 text-xs text-slate-500 dark:text-slate-400">{{ $displayAdmin->email }}</div>
                                             </div>
                                         </div>
                                     @else
-                                        <span class="font-normal italic text-slate-400">Unassigned</span>
+                                        <span class="font-normal italic text-slate-400 dark:text-slate-500">Unassigned</span>
                                     @endif
                                 </td>
                                 <td class="px-6 py-5 text-center">
                                     @if ($admin)
-                                        <span class="inline-flex rounded-full border border-emerald-500/20 bg-emerald-500/10 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider text-emerald-600 dark:text-emerald-400">Active</span>
+                                        <span class="inline-flex rounded-full border border-emerald-500/20 bg-emerald-500/10 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider text-emerald-600 dark:border-emerald-400/25 dark:bg-emerald-500/15 dark:text-emerald-300">Active</span>
                                     @elseif ($revokedAdmin)
-                                        <span class="inline-flex rounded-full border border-rose-500/20 bg-rose-500/10 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider text-rose-600 dark:text-rose-400">Revoked</span>
+                                        <span class="inline-flex rounded-full border border-rose-500/20 bg-rose-500/10 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider text-rose-600 dark:border-rose-400/25 dark:bg-rose-500/15 dark:text-rose-300">Revoked</span>
                                     @else
-                                        <span class="inline-flex rounded-full border border-slate-500/20 bg-slate-500/10 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">Unassigned</span>
+                                        <span class="inline-flex rounded-full border border-slate-500/20 bg-slate-500/10 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider text-slate-500 dark:border-slate-600 dark:bg-slate-800/80 dark:text-slate-300">Unassigned</span>
                                     @endif
                                 </td>
                                 <td class="px-6 py-5 text-right">

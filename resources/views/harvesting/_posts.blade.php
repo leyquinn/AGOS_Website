@@ -1,11 +1,11 @@
 <div data-posts-container class="space-y-3">
     @forelse ($socialPosts as $post)
-        <article class="rounded-xl border {{ $post->clean_status === 'removed' ? 'border-rose-900/50 bg-[#0a1e42]/80 opacity-85' : 'border-blue-900/40 bg-[#0d2b5b]' }} p-4 transition-opacity">
+        <article class="harvest-post-row rounded-xl border {{ $post->clean_status === 'removed' ? 'border-rose-200 bg-rose-50/60 dark:border-rose-500/25 dark:bg-rose-500/5' : 'border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-900/60' }} p-4 transition-opacity">
             <div class="flex flex-wrap items-center justify-between gap-2">
                 <div class="flex flex-wrap items-center gap-2">
-                    <span class="text-xs font-bold text-blue-200">{{ $post->author }}</span>
+                    <span class="text-sm font-bold text-slate-800 dark:text-slate-100">{{ $post->author }}</span>
                     @if ($post->is_whitelisted_source)
-                        <span class="rounded-full bg-emerald-500 px-2 py-0.5 text-[9px] font-bold text-emerald-950">Verified Source (CS 1.0)</span>
+                        <span class="rounded-full bg-emerald-100 px-2.5 py-1 text-[10px] font-bold text-emerald-700 dark:bg-emerald-500/15 dark:text-emerald-300">Verified Source (CS 1.0)</span>
                     @endif
                     @if ($post->search_query)
                         <span class="rounded-full bg-blue-900/80 px-2.5 py-0.5 text-[9px] font-semibold text-cyan-200">
@@ -14,29 +14,29 @@
                     @endif
                     @if ($post->clean_status === 'kept')
                         <span class="rounded-full border border-emerald-500/40 bg-emerald-500/15 px-2.5 py-0.5 text-[9px] font-bold text-emerald-300">
-                            ✓ Cleaner: Kept
+                            Cleaner: Kept
                         </span>
                     @elseif ($post->clean_status === 'removed')
                         <span class="rounded-full border border-rose-500/40 bg-rose-500/20 px-2.5 py-0.5 text-[9px] font-bold text-rose-300">
-                            ✕ Cleaner: {{ $post->removal_reason ?: ($post->removal_category ?: 'Filtered') }}
+                            Cleaner: {{ $post->removal_reason ?: ($post->removal_category ?: 'Filtered') }}
                         </span>
                     @endif
                     @if ($post->analyzed_at)
                         @if ($post->model_status === 'VERIFIED_ACTIONABLE')
                             <span class="rounded-full bg-emerald-500 px-2.5 py-0.5 text-[9px] font-bold text-emerald-950">
-                                🚨 VERIFIED ACTIONABLE{{ $post->discard_reason === 'verified_by_official' ? ' (OFFICIAL TAGGED)' : '' }}
+                                VERIFIED ACTIONABLE{{ $post->discard_reason === 'verified_by_official' ? ' (OFFICIAL TAGGED)' : '' }}
                             </span>
                         @elseif ($post->model_status === 'FLOOD_MENTION_NO_URGENCY')
                             <span class="rounded-full bg-amber-400 px-2.5 py-0.5 text-[9px] font-bold text-amber-950">
-                                ⚠ NO URGENCY MENTIONED (AWAITING OFFICIAL TAG)
+                                NO URGENCY MENTIONED (AWAITING OFFICIAL TAG)
                             </span>
                         @elseif ($post->model_status === 'DISCARDED_UNLOCALIZED')
                             <span class="rounded-full border border-cyan-500/40 bg-cyan-500/15 px-2.5 py-0.5 text-[9px] font-bold text-cyan-300">
-                                📍 Unlocalized Flood
+                                Unlocalized Flood
                             </span>
                         @else
                             <span class="rounded-full border border-slate-600 bg-slate-800/90 px-2.5 py-0.5 text-[9px] font-bold text-slate-300">
-                                🧠 XLM-R Non-Flood{{ $post->discard_reason ? ': '.str_replace('_', ' ', $post->discard_reason) : '' }}
+                                XLM-R Non-Flood{{ $post->discard_reason ? ': '.str_replace('_', ' ', $post->discard_reason) : '' }}
                             </span>
                         @endif
                     @endif
@@ -62,7 +62,7 @@
                 </div>
             </div>
 
-            <p class="mt-2 whitespace-pre-line text-xs leading-relaxed text-slate-200">{{ Str::limit($post->cleaned_text ?: $post->full_text, 420) }}</p>
+            <p class="mt-2 whitespace-pre-line text-sm leading-relaxed text-slate-700 dark:text-slate-200">{{ Str::limit($post->cleaned_text ?: $post->full_text, 420) }}</p>
 
             <div class="mt-3 flex flex-wrap items-center justify-between gap-2 text-[10px] text-slate-400">
                 <div class="flex flex-wrap items-center gap-1.5">
@@ -71,8 +71,8 @@
                     @endphp
                     @if (! empty($locs))
                         @foreach ($locs as $loc)
-                            <span class="rounded bg-orange-500/20 px-2 py-0.5 text-[9px] font-bold text-orange-300">
-                                📍 {{ $loc }}
+                            <span class="rounded bg-orange-100 px-2 py-1 text-[10px] font-bold text-orange-700 dark:bg-orange-500/15 dark:text-orange-300">
+                                {{ $loc }}
                             </span>
                         @endforeach
                     @else
@@ -80,12 +80,12 @@
                     @endif
                     @if ($post->river_basin)
                         <span class="rounded bg-cyan-500/15 px-2 py-0.5 text-[9px] font-semibold text-cyan-300">
-                            🌊 {{ $post->river_basin }}
+                            {{ $post->river_basin }}
                         </span>
                     @endif
                     @if ($post->cluster_id !== null && $post->cluster_size > 0)
                         <span class="rounded bg-indigo-500/20 px-2 py-0.5 text-[9px] font-semibold text-indigo-300">
-                            ⊕ Cluster #{{ $post->cluster_id }} (n={{ $post->cluster_size }})
+                            Cluster #{{ $post->cluster_id }} (n={{ $post->cluster_size }})
                         </span>
                     @endif
                 </div>
@@ -119,7 +119,7 @@
                             type="submit"
                             class="rounded-lg bg-emerald-500 px-3 py-1.5 text-[10px] font-bold text-emerald-950 shadow transition hover:bg-emerald-400"
                         >
-                            ✓ Tag as Flood Related (Add to Heatmap)
+                            Tag as Flood Related (Add to Heatmap)
                         </button>
                     </form>
 
@@ -129,7 +129,7 @@
                             type="submit"
                             class="rounded-lg border border-rose-500/40 bg-rose-500/15 px-2.5 py-1.5 text-[10px] font-bold text-rose-300 transition hover:bg-rose-500/30"
                         >
-                            ✕ Dismiss
+                            Dismiss
                         </button>
                     </form>
                 </div>
@@ -138,23 +138,23 @@
     @empty
         <div class="rounded-xl border border-dashed border-blue-800/60 p-8 text-center">
             @if (($filter ?? 'kept') === 'kept' && ($removedPostsCount ?? 0) > 0)
-                <p class="text-xs font-bold text-slate-300">All {{ $removedPostsCount }} scraped posts were filtered out as noise by the Flood Cleaner.</p>
-                <p class="mt-1 text-[11px] text-slate-400">
-                    Click the <strong>✕ Removed Noise ({{ $removedPostsCount }})</strong> tab above to inspect why each post was removed, or scrape a Davao flood query (e.g. <code>baha davao</code>).
+                <p class="text-sm font-bold text-slate-700 dark:text-slate-200">All {{ $removedPostsCount }} scraped posts were filtered out as noise by the Flood Cleaner.</p>
+                <p class="mt-1 text-xs text-slate-500 dark:text-slate-400">
+                    Click the <strong>Removed Noise ({{ $removedPostsCount }})</strong> tab above to inspect why each post was removed, or scrape a Davao flood query (e.g. <code>baha davao</code>).
                 </p>
             @else
-                <p class="text-xs font-bold text-slate-300">No posts in this view yet.</p>
-                <p class="mt-1 text-[11px] text-slate-400">
-                    Add a keyword listener above or type a query and click <strong>▶ Run Scraper Now</strong> to test scraping!
+                <p class="text-sm font-bold text-slate-700 dark:text-slate-200">No posts in this view yet.</p>
+                <p class="mt-1 text-xs text-slate-500 dark:text-slate-400">
+                    Add a keyword listener above or type a query and click <strong>Run Scraper Now</strong> to test scraping.
                 </p>
             @endif
         </div>
     @endforelse
 </div>
 
-<div class="mt-4 flex flex-wrap items-center justify-between gap-3 border-t border-blue-900/50 pt-3 text-xs text-slate-400">
+<div class="harvest-pagination mt-4 flex flex-wrap items-center justify-between gap-3 border-t pt-4 text-xs text-slate-500 dark:text-slate-400">
     <div>
-        Showing <span class="font-bold text-slate-200">{{ $socialPosts->firstItem() ?? 0 }}</span> to <span class="font-bold text-slate-200">{{ $socialPosts->lastItem() ?? 0 }}</span> of <span class="font-bold text-slate-200">{{ $socialPosts->total() }}</span> posts
+        Showing <span class="font-bold text-slate-800 dark:text-slate-100">{{ $socialPosts->firstItem() ?? 0 }}</span> to <span class="font-bold text-slate-800 dark:text-slate-100">{{ $socialPosts->lastItem() ?? 0 }}</span> of <span class="font-bold text-slate-800 dark:text-slate-100">{{ $socialPosts->total() }}</span> posts
     </div>
 
     <div class="flex items-center gap-1.5">
