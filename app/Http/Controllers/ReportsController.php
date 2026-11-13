@@ -3,9 +3,10 @@
 namespace App\Http\Controllers;
 
 use App\Models\CitizenReport;
+use Illuminate\Http\JsonResponse;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
-use Illuminate\Http\JsonResponse;
 
 class ReportsController extends Controller
 {
@@ -43,17 +44,40 @@ class ReportsController extends Controller
         return view('reports.index', [
             'reports' => $reports,
             'mapPoints' => $reports
-                ->filter(fn (CitizenReport $report): bool => $report->latitude !== null && $report->longitude !== null)
+                ->filter(fn (CitizenReport $report): bool => $report->verification_status !== 'rejected' && $report->latitude !== null && $report->longitude !== null)
                 ->map(fn (CitizenReport $report): array => [
                     'latitude' => (float) $report->latitude,
                     'longitude' => (float) $report->longitude,
-                    'intensity' => max((float) $report->confidence_score, 0.35),
+                    'intensity' => $report->verification_status === 'verified' ? 1.0 : 0.65,
                     'barangay' => $report->barangay?->name,
                 ])
                 ->values(),
-            'clusterReports' => $reports
-                ->filter(fn (CitizenReport $report): bool => $report->report_text !== null)
-                ->take(6),
         ]);
+    }
+
+    public function tag(Request $request, CitizenReport $report): RedirectResponse
+    {
+        $user = $request->user();
+        if ($user->isBarangayAdmin()) {
+            abort_unless($report->barangay_id === $user->barangay_id, 403);
+        }
+
+        $validated = $request->validate([
+            'tag' => ['required', 'in:yes,no'],
+        ]);
+
+        $isFlood = $validated['tag'] === 'yes';
+
+        $report->update([
+            'verification_status' => $isFlood ? 'verified' : 'rejected',
+            'confidence_score' => $isFlood ? 1.0000 : 0.0000,
+        ]);
+
+        return back()->with(
+            'status',
+            $isFlood
+                ? 'Report tagged as Yes (Flood Report).'
+                : 'Report tagged as No (Not Flood).'
+        );
     }
 }

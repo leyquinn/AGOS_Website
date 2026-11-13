@@ -160,6 +160,7 @@ Route::middleware(['auth', 'role:super_admin,barangay_admin', 'no-back'])->group
     Route::post('/operations/broadcast', [BroadcastAlertController::class, 'store'])->name('operations.broadcast');
 
     Route::get('/reports', [ReportsController::class, 'index'])->name('reports');
+    Route::post('/reports/{report}/tag', [ReportsController::class, 'tag'])->name('reports.tag');
     Route::get('/notifications', [ReportsController::class, 'notifications'])->name('notifications');
 
     Route::get('/harvesting', [HarvestingController::class, 'index'])->name('harvesting');
