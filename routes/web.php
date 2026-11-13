@@ -5,7 +5,9 @@ use App\Http\Controllers\Api\CitizenApprovalController;
 use App\Http\Controllers\BroadcastAlertController;
 use App\Http\Controllers\CitizenReportController;
 use App\Http\Controllers\CitizenMapController;
+use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\HarvestingController;
+use App\Http\Controllers\ModelAnalyticsController;
 use App\Http\Controllers\PortalAuthController;
 use App\Http\Controllers\ReportsController;
 use App\Http\Controllers\WeatherController;
@@ -63,9 +65,8 @@ Route::middleware(['auth', 'role:super_admin,barangay_admin', 'no-back'])->group
     Route::get('/weather', [WeatherController::class, 'show'])->name('weather');
     Route::post('/logout', [PortalAuthController::class, 'destroy'])->name('logout');
 
-    Route::get('/dashboard', function () {
-        return view('dashboard');
-    })->name('dashboard');
+    Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
+    Route::get('/dashboard/activity', [DashboardController::class, 'activity'])->name('dashboard.activity');
 
     Route::get('/operations', function (\Illuminate\Http\Request $request) {
         $heatmapBundle = \Illuminate\Support\Facades\Cache::remember(
@@ -175,9 +176,8 @@ Route::middleware(['auth', 'role:super_admin,barangay_admin', 'no-back'])->group
     Route::post('/harvesting/sources', [HarvestingController::class, 'storeSource'])->name('harvesting.sources.store');
     Route::delete('/harvesting/sources/{source}', [HarvestingController::class, 'destroySource'])->name('harvesting.sources.destroy');
 
-    Route::get('/analytics', function () {
-        return view('analytics.index');
-    })->name('analytics');
+    Route::get('/analytics', [ModelAnalyticsController::class, 'index'])->name('analytics');
+    Route::get('/analytics/data', [ModelAnalyticsController::class, 'data'])->name('analytics.data');
 
     Route::get('/settings', function () {
         return view('settings.index');

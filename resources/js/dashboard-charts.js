@@ -64,7 +64,7 @@ const floodActivityMockData = {
     },
 };
 
-const filterLabels = { '7d': 'Last 7 Days', '4w': 'Last 4 Weeks', '12m': '12 Months', ytd: 'Year-to-Date' };
+const filterLabels = { '7d': 'Last 7 Days', '4w': 'Last 4 Weeks', '12m': 'Last 12 Months', ytd: 'All Years (Archive)' };
 const chartInstances = new Map();
 const colors = {
     cyan: '#0284c7',
@@ -75,7 +75,23 @@ const colors = {
     text: '#94a3b8',
 };
 
-const getFloodActivityData = (period) => floodActivityMockData[period] ?? null;
+let activeDatasets = null;
+
+const getLiveDatasets = () => {
+    if (activeDatasets) return activeDatasets;
+    const dashboard = document.querySelector('[data-flood-dashboard]');
+    if (dashboard?.dataset.chartDatasets) {
+        try {
+            activeDatasets = JSON.parse(dashboard.dataset.chartDatasets);
+            return activeDatasets;
+        } catch {
+            // fallback
+        }
+    }
+    return floodActivityMockData;
+};
+
+const getFloodActivityData = (period) => getLiveDatasets()[period] ?? null;
 
 const chartOptions = (stacked = false) => ({
     responsive: true,
@@ -142,7 +158,7 @@ const initDashboardCharts = () => {
     if (!dashboard) return;
 
     const setPeriod = (period) => {
-        if (!floodActivityMockData[period]) return;
+        if (!getLiveDatasets()[period]) return;
         dashboard.querySelectorAll('[data-period-label]').forEach((label) => { label.textContent = filterLabels[period]; });
         dashboard.querySelectorAll('[data-chart-filter]').forEach((button) => {
             const isActive = button.dataset.chartFilter === period;

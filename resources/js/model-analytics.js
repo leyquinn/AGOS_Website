@@ -3,6 +3,7 @@ import {
     BarElement,
     CategoryScale,
     Chart,
+    Filler,
     Legend,
     LineController,
     LineElement,
@@ -15,6 +16,7 @@ Chart.register(
     BarController,
     BarElement,
     CategoryScale,
+    Filler,
     Legend,
     LineController,
     LineElement,
@@ -23,107 +25,223 @@ Chart.register(
     Tooltip,
 );
 
-const modelAnalyticsMockData = {
-    'v1.0': {
-        metrics: { accuracy: 0.82, precision: 0.78, recall: 0.75, f1: 0.77 },
-        comparison: [0.82, 0.78, 0.75, 0.77],
-        confusion: [[350, 100], [95, 456]],
-        performance: [[0.82, 0.78, 0.80], [0.76, 0.72, 0.74], [0.84, 0.80, 0.82], [0.70, 0.67, 0.68]],
-    },
-    'v1.1': {
-        metrics: { accuracy: 0.90, precision: 0.87, recall: 0.85, f1: 0.86 },
-        comparison: [0.90, 0.87, 0.85, 0.86],
-        confusion: [[398, 52], [44, 536]],
-        performance: [[0.90, 0.86, 0.88], [0.84, 0.80, 0.82], [0.92, 0.89, 0.90], [0.76, 0.72, 0.74]],
-    },
-    'v1.2': {
-        metrics: { accuracy: 0.94, precision: 0.91, recall: 0.89, f1: 0.90 },
-        comparison: [0.94, 0.91, 0.89, 0.90],
-        confusion: [[412, 38], [29, 551]],
-        performance: [[0.94, 0.91, 0.92], [0.87, 0.83, 0.85], [0.96, 0.95, 0.95], [0.79, 0.74, 0.76]],
-    },
-};
-
-const versions = ['v1.0', 'v1.1', 'v1.2'];
 const chartInstances = new Map();
 const chartColors = {
-    baseline: '#9bb5e1',
-    integrated: '#2563eb',
+    cyan: '#0284c7',
+    blue: '#2563eb',
+    emerald: '#059669',
+    amber: '#d97706',
+    rose: '#e11d48',
+    slate: '#64748b',
     grid: 'rgba(71, 107, 159, 0.25)',
-    text: '#64748b',
+    text: '#94a3b8',
 };
 
-const chartOptions = (scales = {}) => ({
+const formatInt = (num) => Number(num ?? 0).toLocaleString();
+const formatDec = (num, digits = 2) => Number(num ?? 0).toFixed(digits);
+const escapeHtml = (value) => String(value ?? '')
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;');
+
+const baseOptions = (extra = {}) => ({
     responsive: true,
     maintainAspectRatio: false,
-    animation: { duration: 450, easing: 'easeOutQuart' },
+    animation: { duration: 400, easing: 'easeOutQuart' },
     plugins: {
-        legend: { labels: { color: chartColors.text, boxWidth: 10, font: { size: 9 } } },
-        tooltip: { callbacks: { label: (context) => `${context.dataset.label}: ${context.parsed.y.toFixed(2)}` } },
+        legend: { labels: { color: chartColors.text, boxWidth: 10, font: { size: 10 } } },
+        tooltip: { padding: 10, backgroundColor: '#071738', titleColor: '#fff', bodyColor: '#cbd5e1' },
     },
     scales: {
-        x: { grid: { display: false }, ticks: { color: chartColors.text, font: { size: 9 } } },
-        y: { beginAtZero: true, max: 1, grid: { color: chartColors.grid }, ticks: { color: chartColors.text, font: { size: 9 }, callback: (value) => value.toFixed(1) } },
-        ...scales,
+        x: { grid: { display: false }, ticks: { color: chartColors.text, font: { size: 10 } } },
+        y: { beginAtZero: true, grid: { color: chartColors.grid }, ticks: { color: chartColors.text, font: { size: 10 } } },
     },
+    ...extra,
 });
 
-const renderModelCharts = (analytics) => {
-    const comparisonCanvas = analytics.querySelector('[data-model-chart="comparison"]');
-    const f1Canvas = analytics.querySelector('[data-model-chart="f1"]');
-    const current = modelAnalyticsMockData[analytics.querySelector('[data-model-version]').value];
-    if (!comparisonCanvas || !f1Canvas || !current) return;
-
-    [comparisonCanvas, f1Canvas].forEach((canvas) => chartInstances.get(canvas)?.destroy());
-    chartInstances.set(comparisonCanvas, new Chart(comparisonCanvas, {
-        type: 'bar',
-        data: {
-            labels: ['Accuracy', 'Precision', 'Recall', 'F1-score'],
-            datasets: [
-                { label: 'Baseline (classification only)', data: modelAnalyticsMockData['v1.0'].comparison, backgroundColor: chartColors.baseline, borderRadius: 4 },
-                { label: 'Integrated (MTL + K-Means++)', data: current.comparison, backgroundColor: chartColors.integrated, borderRadius: 4 },
-            ],
-        },
-        options: chartOptions(),
-    }));
-    chartInstances.set(f1Canvas, new Chart(f1Canvas, {
-        type: 'line',
-        data: {
-            labels: versions.map((version) => version === 'v1.2' ? 'v1.2 (current)' : `${version}`),
-            datasets: [{ label: 'F1 score', data: versions.map((version) => modelAnalyticsMockData[version].metrics.f1), borderColor: chartColors.integrated, backgroundColor: 'rgba(37,99,235,.12)', pointBackgroundColor: chartColors.integrated, pointRadius: 4, tension: 0.3, fill: true }],
-        },
-        options: chartOptions(),
-    }));
+const createChart = (canvas, config) => {
+    if (!canvas) return;
+    chartInstances.get(canvas)?.destroy();
+    chartInstances.set(canvas, new Chart(canvas, config));
 };
 
-const updatePerformanceTable = (analytics, performance) => {
-    analytics.querySelectorAll('[data-performance-row]').forEach((row, rowIndex) => {
-        ['precision', 'recall', 'f1'].forEach((metric, metricIndex) => {
-            const cell = row.querySelector(`[data-performance="${metric}"]`);
-            if (cell) cell.textContent = performance[rowIndex][metricIndex].toFixed(2);
-        });
+const renderCharts = (analytics, payload) => {
+    const charts = payload.charts;
+    if (!charts) return;
+
+    const scoringCanvas = analytics.querySelector('[data-model-chart="scoring"]');
+    const distCanvas = analytics.querySelector('[data-model-chart="distribution"]');
+    const yieldCanvas = analytics.querySelector('[data-model-chart="yield"]');
+    const basinsCanvas = analytics.querySelector('[data-model-chart="basins"]');
+
+    createChart(scoringCanvas, {
+        type: 'bar',
+        data: {
+            labels: charts.scoringByStatus.labels,
+            datasets: [
+                { label: 'Avg Relevance (P_rel)', data: charts.scoringByStatus.pRel, backgroundColor: chartColors.cyan, borderRadius: 4 },
+                { label: 'Avg Spatial (D_clusters)', data: charts.scoringByStatus.dClusters, backgroundColor: chartColors.amber, borderRadius: 4 },
+                { label: 'Avg Confidence (CS)', data: charts.scoringByStatus.confidence, backgroundColor: chartColors.emerald, borderRadius: 4 },
+            ],
+        },
+        options: baseOptions({
+            scales: {
+                x: { grid: { display: false }, ticks: { color: chartColors.text, font: { size: 10 } } },
+                y: { beginAtZero: true, max: 1, grid: { color: chartColors.grid }, ticks: { color: chartColors.text, font: { size: 10 } } },
+            },
+        }),
     });
+
+    createChart(distCanvas, {
+        type: 'bar',
+        data: {
+            labels: charts.scoreDistribution.labels,
+            datasets: [
+                { label: 'Neural Relevance (P_rel)', data: charts.scoreDistribution.pRelCounts, backgroundColor: chartColors.cyan, borderRadius: 4 },
+                { label: 'Final Confidence (CS)', data: charts.scoreDistribution.csCounts, backgroundColor: chartColors.emerald, borderRadius: 4 },
+            ],
+        },
+        options: baseOptions(),
+    });
+
+    createChart(yieldCanvas, {
+        type: 'bar',
+        data: {
+            labels: charts.yieldTrend.labels,
+            datasets: [
+                { label: 'Verified Actionable', data: charts.yieldTrend.actionable, backgroundColor: chartColors.emerald, borderRadius: 3 },
+                { label: 'Flood Watch', data: charts.yieldTrend.watch, backgroundColor: chartColors.amber, borderRadius: 3 },
+                { label: 'Discarded', data: charts.yieldTrend.discarded, backgroundColor: chartColors.rose, borderRadius: 3 },
+            ],
+        },
+        options: baseOptions({
+            scales: {
+                x: { stacked: true, grid: { display: false }, ticks: { color: chartColors.text, font: { size: 10 } } },
+                y: { stacked: true, beginAtZero: true, grid: { color: chartColors.grid }, ticks: { color: chartColors.text, font: { size: 10 } } },
+            },
+        }),
+    });
+
+    createChart(basinsCanvas, {
+        type: 'bar',
+        data: {
+            labels: charts.riverBasins.labels,
+            datasets: [
+                { label: 'Analyzed Posts', data: charts.riverBasins.values, backgroundColor: chartColors.blue, borderRadius: 5, barThickness: 16 },
+            ],
+        },
+        options: baseOptions({
+            indexAxis: 'y',
+            scales: {
+                x: { beginAtZero: true, grid: { color: chartColors.grid }, ticks: { color: chartColors.text, font: { size: 10 } } },
+                y: { grid: { display: false }, ticks: { color: chartColors.text, font: { size: 10 } } },
+            },
+        }),
+    });
+};
+
+const updateDom = (analytics, payload) => {
+    const s = payload.summary;
+    const setKpi = (name, val) => {
+        const el = analytics.querySelector(`[data-analytics-kpi="${name}"]`);
+        if (el) el.textContent = val;
+    };
+    const setSub = (name, val) => {
+        const el = analytics.querySelector(`[data-analytics-sub="${name}"]`);
+        if (el) el.textContent = val;
+    };
+
+    setKpi('analyzedCount', formatInt(s.analyzedCount));
+    setSub('analyzedDetail', `${s.analyzedPct}% of ${formatInt(s.totalInWindow)} posts (${formatInt(s.pendingCount)} pending)`);
+
+    setKpi('actionableCount', formatInt(s.actionableCount));
+    setSub('actionableDetail', `${s.actionableRate}% yield • Avg CS ${formatDec(s.avgActionableCs)}`);
+
+    setKpi('watchCount', formatInt(s.watchCount));
+    setSub('watchDetail', `${s.watchRate}% of analyzed • ${formatInt(s.discardedTotal)} discarded`);
+
+    setKpi('meanDClusters', formatDec(s.meanDClusters));
+    setSub('consensusDetail', `${formatInt(s.uniqueClusters)} K-Means++ clusters • Flood Avg P_rel ${formatDec(s.meanFloodPRel)}`);
+
+    Object.entries(payload.hitlAudit ?? {}).forEach(([field, value]) => {
+        const el = analytics.querySelector(`[data-hitl-field="${field}"]`);
+        if (el) el.textContent = typeof value === 'number' ? formatInt(value) : String(value);
+    });
+
+    const outcomeBody = analytics.querySelector('[data-outcome-matrix]');
+    if (outcomeBody && Array.isArray(payload.outcomeMatrix)) {
+        const dotMap = { emerald: 'bg-emerald-400', amber: 'bg-amber-400', rose: 'bg-rose-400', slate: 'bg-slate-400' };
+        outcomeBody.innerHTML = payload.outcomeMatrix.map((row) => `
+            <tr>
+                <td class="py-2.5 font-semibold"><span class="mr-2 inline-block h-2 w-2 rounded-full ${dotMap[row.tone] || 'bg-slate-400'}"></span>${escapeHtml(row.label)}</td>
+                <td class="py-2.5 text-right font-bold">${formatInt(row.count)}</td>
+                <td class="py-2.5 text-right text-slate-400">${formatDec(row.sharePct, 1)}%</td>
+                <td class="py-2.5 text-right font-mono">${formatDec(row.avgPRel)}</td>
+                <td class="py-2.5 text-right font-mono">${formatDec(row.avgDClusters)}</td>
+                <td class="py-2.5 text-right font-mono font-bold text-blue-300">${formatDec(row.avgCs)}</td>
+            </tr>
+        `).join('');
+    }
+
+    const filterList = analytics.querySelector('[data-filter-reasons]');
+    if (filterList && Array.isArray(payload.filterReasons)) {
+        filterList.innerHTML = payload.filterReasons.length
+            ? payload.filterReasons.map((reason) => `
+                <div class="flex items-center justify-between gap-3 rounded-xl bg-[#0d2b5b] px-3.5 py-2.5">
+                    <div class="min-w-0">
+                        <p class="truncate text-xs font-bold text-slate-200">${escapeHtml(reason.label)}</p>
+                        <p class="mt-0.5 text-[9px] font-semibold uppercase tracking-wider text-blue-300">${escapeHtml(reason.gate)}</p>
+                    </div>
+                    <div class="shrink-0 text-right">
+                        <p class="text-xs font-black text-white">${formatInt(reason.count)}</p>
+                        <p class="text-[9px] text-slate-400">${formatDec(reason.sharePct, 1)}%</p>
+                    </div>
+                </div>
+            `).join('')
+            : '<div class="rounded-xl bg-[#0d2b5b] p-4 text-center text-xs text-slate-400">No gate or discard attributions recorded in this window.</div>';
+    }
+
+    const barangayBody = analytics.querySelector('[data-barangay-table]');
+    if (barangayBody && Array.isArray(payload.barangays)) {
+        barangayBody.innerHTML = payload.barangays.length
+            ? payload.barangays.map((row) => `
+                <tr>
+                    <td class="py-2 font-bold text-blue-300">${escapeHtml(row.barangay)}</td>
+                    <td class="py-2 text-right font-bold">${formatInt(row.total)}</td>
+                    <td class="py-2 text-right font-semibold text-emerald-400">${formatInt(row.actionable)}</td>
+                    <td class="py-2 text-right text-amber-300">${formatInt(row.watch)}</td>
+                    <td class="py-2 text-right text-slate-400">${formatDec(row.actionableRate, 1)}%</td>
+                    <td class="py-2 text-right font-mono">${formatDec(row.avgPRel)}</td>
+                    <td class="py-2 text-right font-mono">${formatDec(row.avgDClusters)}</td>
+                    <td class="py-2 text-right font-mono font-bold text-white">${formatDec(row.avgCs)}</td>
+                </tr>
+            `).join('')
+            : '<tr><td colspan="8" class="py-6 text-center text-xs text-slate-400">No localized barangay signals in this window.</td></tr>';
+    }
 };
 
 const initModelAnalytics = () => {
     const analytics = document.querySelector('[data-model-analytics]');
     if (!analytics) return;
 
-    const versionSelect = analytics.querySelector('[data-model-version]');
+    let windowsData = {};
+    try {
+        windowsData = JSON.parse(analytics.dataset.analyticsWindows || '{}');
+    } catch {
+        windowsData = {};
+    }
+
+    const windowSelect = analytics.querySelector('[data-model-window]');
     const update = () => {
-        const data = modelAnalyticsMockData[versionSelect.value];
-        Object.entries(data.metrics).forEach(([key, value]) => {
-            const metric = analytics.querySelector(`[data-model-metric="${key}"]`);
-            if (metric) metric.textContent = value.toFixed(2);
-        });
-        const confusionValues = data.confusion.flat();
-        analytics.querySelectorAll('[data-confusion]').forEach((cell) => {
-            cell.textContent = confusionValues[Number(cell.dataset.confusion)];
-        });
-        updatePerformanceTable(analytics, data.performance);
-        renderModelCharts(analytics);
+        const key = windowSelect?.value || 'all';
+        const payload = windowsData[key] || windowsData.all;
+        if (!payload) return;
+        updateDom(analytics, payload);
+        renderCharts(analytics, payload);
     };
-    versionSelect.addEventListener('change', update);
+
+    windowSelect?.addEventListener('change', update);
     update();
 };
 
