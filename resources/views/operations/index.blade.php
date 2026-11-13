@@ -84,7 +84,12 @@
         <div class="rounded-2xl border border-blue-900/50 bg-[#071738]/80 p-5">
             <div class="mb-4 flex items-center justify-between">
                 <h2 class="text-sm font-bold text-white">Verified Flood Report Feed</h2>
-                <span class="text-[10px] text-slate-400">Sort: Confidence ▼</span>
+                <div class="flex items-center gap-2">
+                    <button type="button" data-broadcast-alert class="rounded-lg bg-red-600 px-2.5 py-1 text-[10px] font-bold text-white shadow shadow-red-950/30 transition hover:bg-red-500">
+                        📢 New Broadcast
+                    </button>
+                    <span class="text-[10px] text-slate-400">Sort: Confidence ▼</span>
+                </div>
             </div>
             <div class="max-h-[28rem] space-y-3 overflow-y-auto pr-1">
                 @if (! empty($actionablePosts) && $actionablePosts->isNotEmpty())
@@ -104,7 +109,16 @@
                             <div class="mt-2 flex items-center justify-between">
                                 <span class="text-[9px] text-slate-400">{{ $post->author }} · {{ $post->raw_timestamp ?: '' }}</span>
                                 @if ($cs >= 0.75)
-                                    <button type="button" data-broadcast-alert class="rounded-lg bg-blue-600 px-3 py-1.5 text-[10px] font-bold text-white transition hover:bg-blue-500">Broadcast Alert</button>
+                                    <button
+                                        type="button"
+                                        data-broadcast-alert
+                                        data-post-id="{{ $post->id }}"
+                                        data-post-barangay="{{ $post->primary_barangay ?? '' }}"
+                                        data-post-text="{{ e(\Illuminate\Support\Str::limit($post->cleaned_text ?: $post->full_text, 220)) }}"
+                                        class="rounded-lg bg-blue-600 px-3 py-1.5 text-[10px] font-bold text-white transition hover:bg-blue-500"
+                                    >
+                                        Broadcast Alert
+                                    </button>
                                 @endif
                             </div>
                         </article>
@@ -152,7 +166,13 @@
                     <div>
                         <div class="flex flex-wrap items-center justify-between gap-2">
                             <div class="flex flex-wrap items-center gap-2">
-                                <span class="text-xs font-bold text-blue-200">{{ $watchPost->author }}</span>
+                                @if ($watchPost->post_url)
+                                    <a href="{{ $watchPost->post_url }}" target="_blank" rel="noopener noreferrer" class="text-xs font-bold text-blue-200 transition hover:text-cyan-300 hover:underline">
+                                        {{ $watchPost->author }}
+                                    </a>
+                                @else
+                                    <span class="text-xs font-bold text-blue-200">{{ $watchPost->author }}</span>
+                                @endif
                                 <span class="rounded-full bg-amber-400/20 px-2 py-0.5 text-[9px] font-bold text-amber-300">
                                     ⚠ NO URGENCY MENTIONED
                                 </span>
@@ -166,6 +186,32 @@
                         </div>
 
                         <p class="mt-2.5 text-xs leading-relaxed text-slate-200">{{ \Illuminate\Support\Str::limit($watchPost->cleaned_text ?: $watchPost->full_text, 280) }}</p>
+
+                        <div class="mt-3 flex flex-wrap items-center justify-between gap-2 text-[10px] text-slate-400">
+                            <div class="flex flex-wrap items-center gap-1.5">
+                                @php
+                                    $locs = ! empty($watchPost->extracted_locations) ? $watchPost->extracted_locations : ($watchPost->detected_locations ?? []);
+                                @endphp
+                                @if (! empty($locs))
+                                    @foreach (array_slice($locs, 0, 3) as $loc)
+                                        <span class="rounded bg-orange-500/20 px-2 py-0.5 text-[9px] font-bold text-orange-300">
+                                            📍 {{ $loc }}
+                                        </span>
+                                    @endforeach
+                                @endif
+                                @if ($watchPost->river_basin)
+                                    <span class="rounded bg-cyan-500/15 px-2 py-0.5 text-[9px] font-semibold text-cyan-300">
+                                        🌊 {{ $watchPost->river_basin }}
+                                    </span>
+                                @endif
+                            </div>
+
+                            @if ($watchPost->post_url)
+                                <a href="{{ $watchPost->post_url }}" target="_blank" rel="noopener noreferrer" class="font-bold text-cyan-300 transition hover:text-cyan-200 hover:underline">
+                                    Open on Facebook ↗
+                                </a>
+                            @endif
+                        </div>
                     </div>
 
                     <div class="mt-4 border-t border-blue-900/50 pt-3">
@@ -231,12 +277,103 @@
         @endif
     </section>
 
-    <div data-broadcast-modal class="fixed inset-0 z-50 hidden items-center justify-center bg-slate-950/70 p-5 backdrop-blur-sm">
-        <form data-broadcast-form class="w-full max-w-md rounded-2xl border border-blue-900/50 bg-white p-5 shadow-2xl dark:bg-[#071738]">
-            <div class="flex items-center justify-between"><h2 class="text-lg font-black text-slate-900 dark:text-white">Broadcast alert</h2><button type="button" data-close-broadcast class="text-2xl text-slate-500">×</button></div>
-            <label for="broadcast-message" class="mt-5 block text-xs font-bold text-slate-600 dark:text-slate-300">Message</label>
-            <textarea id="broadcast-message" required class="mt-2 min-h-28 w-full rounded-xl border border-slate-200 bg-slate-50 p-3 text-sm text-slate-900 outline-none focus:ring-2 focus:ring-blue-500 dark:border-blue-900/60 dark:bg-slate-950/40 dark:text-white" placeholder="Describe the alert for affected residents"></textarea>
-            <button type="submit" class="mt-4 w-full rounded-xl bg-blue-600 px-4 py-3 text-sm font-bold text-white hover:bg-blue-500">Send notification</button>
+    <div data-broadcast-modal class="fixed inset-0 z-[99999] hidden items-center justify-center bg-slate-950/80 p-5 backdrop-blur-sm" style="z-index: 99999;">
+        <form
+            data-broadcast-form
+            method="POST"
+            action="{{ route('operations.broadcast') }}"
+            class="relative z-[100000] w-full max-w-lg rounded-2xl border border-blue-900/60 bg-[#071738] p-6 shadow-2xl text-white"
+            style="z-index: 100000;"
+        >
+            @csrf
+            <input type="hidden" name="social_post_id" id="broadcast-post-id" value="">
+
+            <div class="flex items-center justify-between border-b border-blue-900/50 pb-3">
+                <div class="flex items-center gap-2.5">
+                    <span class="flex h-9 w-9 items-center justify-center rounded-xl bg-red-500/20 text-lg text-red-400">📢</span>
+                    <div>
+                        <h2 class="text-base font-black text-white">Broadcast Emergency Alert</h2>
+                        <p class="text-[10px] text-slate-400">Pushes immediate banner and notification to Citizen App users</p>
+                    </div>
+                </div>
+                <button type="button" data-close-broadcast class="cursor-pointer text-2xl font-bold text-slate-400 hover:text-white transition" aria-label="Close modal">×</button>
+            </div>
+
+            <div class="mt-4 space-y-3.5">
+                <div>
+                    <label for="broadcast-title" class="block text-xs font-bold text-slate-300">Alert Title</label>
+                    <input
+                        type="text"
+                        name="title"
+                        id="broadcast-title"
+                        required
+                        maxlength="160"
+                        placeholder="e.g. Flash Flood Warning: Bucana"
+                        class="mt-1 w-full rounded-xl border border-blue-900/60 bg-[#040e24] px-3 py-2 text-xs text-white placeholder-slate-500 outline-none focus:border-cyan-400 focus:ring-1 focus:ring-cyan-400"
+                    >
+                </div>
+
+                <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                    <div>
+                        <label for="broadcast-severity" class="block text-xs font-bold text-slate-300">Urgency Level</label>
+                        <select
+                            name="severity"
+                            id="broadcast-severity"
+                            required
+                            class="mt-1 w-full rounded-xl border border-blue-900/60 bg-[#040e24] px-3 py-2 text-xs text-white outline-none focus:border-cyan-400 focus:ring-1 focus:ring-cyan-400"
+                        >
+                            <option value="CRITICAL" selected>🚨 CRITICAL (Immediate Flood)</option>
+                            <option value="WARNING">⚠️ WARNING (Rising Water)</option>
+                            <option value="ADVISORY">ℹ️ ADVISORY (Weather Monitor)</option>
+                            <option value="INFO">✅ INFO / ALL CLEAR</option>
+                        </select>
+                    </div>
+
+                    <div>
+                        <label for="broadcast-barangay" class="block text-xs font-bold text-slate-300">Target Area</label>
+                        <select
+                            name="barangay_id"
+                            id="broadcast-barangay"
+                            class="mt-1 w-full rounded-xl border border-blue-900/60 bg-[#040e24] px-3 py-2 text-xs text-white outline-none focus:border-cyan-400 focus:ring-1 focus:ring-cyan-400"
+                        >
+                            <option value="">🌐 Davao City (Citywide)</option>
+                            @foreach (\App\Models\Barangay::orderBy('name')->get() as $brgy)
+                                <option value="{{ $brgy->id }}">{{ $brgy->name }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+                </div>
+
+                <div>
+                    <label for="broadcast-message" class="block text-xs font-bold text-slate-300">Alert Message</label>
+                    <textarea
+                        name="message"
+                        id="broadcast-message"
+                        required
+                        maxlength="2000"
+                        rows="3"
+                        class="mt-1 w-full rounded-xl border border-blue-900/60 bg-[#040e24] px-3 py-2 text-xs text-white placeholder-slate-500 outline-none focus:border-cyan-400 focus:ring-1 focus:ring-cyan-400"
+                        placeholder="Describe water level, affected streets, evacuation orders, or hotline contact..."
+                    ></textarea>
+                </div>
+            </div>
+
+            <div class="mt-5 flex items-center justify-end gap-2 border-t border-blue-900/50 pt-3">
+                <button
+                    type="button"
+                    data-close-broadcast
+                    class="rounded-xl border border-blue-900/60 bg-blue-950/40 px-4 py-2 text-xs font-semibold text-slate-300 hover:bg-blue-900/50 transition"
+                >
+                    Cancel
+                </button>
+                <button
+                    type="submit"
+                    data-broadcast-submit
+                    class="rounded-xl bg-red-600 px-5 py-2 text-xs font-bold text-white shadow-lg shadow-red-950/30 hover:bg-red-500 transition"
+                >
+                    Send Broadcast Alert
+                </button>
+            </div>
         </form>
     </div>
 </x-layouts.app>

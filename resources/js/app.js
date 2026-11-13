@@ -528,32 +528,6 @@ if (citizenApp) {
             showToast('Barangay removed from alerts');
         }
 
-        const broadcastModal = document.querySelector('[data-broadcast-modal]');
-        document.querySelectorAll('[data-broadcast-alert]').forEach((button) => {
-            button.addEventListener('click', () => {
-                broadcastModal?.classList.remove('hidden');
-                broadcastModal?.classList.add('flex');
-                broadcastModal?.querySelector('textarea')?.focus();
-            });
-        });
-        broadcastModal?.querySelector('[data-close-broadcast]')?.addEventListener('click', () => {
-            broadcastModal.classList.add('hidden');
-            broadcastModal.classList.remove('flex');
-        });
-        broadcastModal?.addEventListener('click', (event) => {
-            if (event.target === broadcastModal) {
-                broadcastModal.classList.add('hidden');
-                broadcastModal.classList.remove('flex');
-            }
-        });
-        broadcastModal?.querySelector('[data-broadcast-form]')?.addEventListener('submit', (event) => {
-            event.preventDefault();
-            broadcastModal.classList.add('hidden');
-            broadcastModal.classList.remove('flex');
-            event.currentTarget.reset();
-            showToast('Alert broadcast to response channels');
-        });
-
         if (event.target.closest('[data-edit-profile]')) {
             const card = event.target.closest('.profile-card');
             const name = card?.querySelector('[data-profile-name]');
@@ -594,9 +568,119 @@ if (citizenApp) {
         }
     });
 
+    const pollCitizenAlerts = async () => {
+        try {
+            const res = await fetch('/api/v1/citizen/alerts', {
+                headers: { Accept: 'application/json' },
+                credentials: 'include',
+            });
+            if (!res.ok) return;
+            const data = await res.json();
+            const alerts = data.alerts || [];
+
+            const alertBell = citizenApp.querySelector('[data-citizen-alerts]');
+            let dot = alertBell?.querySelector('.citizen-notification-dot');
+            if (alerts.length > 0) {
+                if (!dot && alertBell) {
+                    dot = document.createElement('i');
+                    dot.className = 'citizen-notification-dot';
+                    dot.setAttribute('aria-label', 'New notification');
+                    alertBell.appendChild(dot);
+                }
+            } else if (dot) {
+                dot.remove();
+            }
+
+            const homeScreen = citizenApp.querySelector('[data-citizen-screen="home"]');
+            let banner = homeScreen?.querySelector('[data-citizen-broadcast-banner]');
+            if (alerts.length > 0) {
+                const top = alerts[0];
+                const isCrit = top.severity === 'CRITICAL';
+                if (!banner && homeScreen) {
+                    const loc = homeScreen.querySelector('.citizen-location');
+                    banner = document.createElement('div');
+                    banner.setAttribute('data-citizen-broadcast-banner', '');
+                    loc?.after(banner);
+                }
+                if (banner) {
+                    banner.className = `citizen-broadcast-banner ${isCrit ? 'is-critical' : 'is-warning'}`;
+                    banner.dataset.detailLabel = `${top.severity} BROADCAST`;
+                    banner.dataset.detailTitle = top.title;
+                    banner.dataset.detailBody = `${top.message}\n\nTarget Area: ${top.target_scope}`;
+                    banner.dataset.detailMeta = `Broadcast by DRRMO · ${top.time_ago}`;
+                    banner.innerHTML = `
+                        <div class="citizen-broadcast-badge-row">
+                            <span class="citizen-pill ${isCrit ? 'pill-red' : 'pill-orange'}">
+                                ${isCrit ? '🚨 CRITICAL FLOOD BROADCAST' : '⚠️ FLOOD ADVISORY'}
+                            </span>
+                            <small>${top.time_ago}</small>
+                        </div>
+                        <strong>${top.title}</strong>
+                        <p>${top.message}</p>
+                        <div class="citizen-broadcast-footer">
+                            <span>📍 ${top.target_scope}</span>
+                            <a href="/citizen/alerts" data-citizen-nav="alerts">View all alerts →</a>
+                        </div>
+                    `;
+                    banner.onclick = () => openDetail(banner);
+                }
+            } else if (banner) {
+                banner.remove();
+            }
+
+            const alertList = citizenApp.querySelector('[data-citizen-alert-list]');
+            if (alertList && alerts.length > 0) {
+                const currentArticles = alertList.querySelectorAll('article.broadcast-alert-card');
+                if (currentArticles.length !== alerts.length) {
+                    alertList.innerHTML = alerts.map((alert) => {
+                        const isCritical = alert.severity === 'CRITICAL';
+                        const badgeClass = alert.severity === 'CRITICAL' ? 'badge-red' : (alert.severity === 'WARNING' ? 'badge-orange' : (alert.severity === 'ADVISORY' ? 'badge-blue' : 'badge-green'));
+                        const badgeSymbol = alert.severity === 'CRITICAL' ? '● CRITICAL BROADCAST' : (alert.severity === 'WARNING' ? '▲ WARNING' : (alert.severity === 'ADVISORY' ? '⚑ ADVISORY' : '● NOTICE'));
+                        return `
+                            <article
+                                data-detail-label="${alert.severity} BROADCAST"
+                                data-detail-title="${alert.title}"
+                                data-detail-body="${alert.message}\n\nTarget Area: ${alert.target_scope}"
+                                data-detail-meta="Broadcast by DRRMO Admin · ${alert.time_ago}"
+                                class="broadcast-alert-card ${isCritical ? 'border-critical' : ''}"
+                            >
+                                <div>
+                                    <span class="alert-badge ${badgeClass}">${badgeSymbol}</span>
+                                    <small>${alert.time_ago}</small>
+                                </div>
+                                <strong>${alert.title}</strong>
+                                <p>${alert.message}</p>
+                                <div class="alert-meta-row">
+                                    <span>📍 ${alert.target_scope}</span>
+                                    <span class="alert-official-tag">DRRMO Official Broadcast</span>
+                                </div>
+                            </article>
+                        `;
+                    }).join('');
+
+                    alertList.querySelectorAll('[data-detail-title]').forEach((card) => {
+                        card.setAttribute('tabindex', '0');
+                        card.addEventListener('click', () => openDetail(card));
+                    });
+                }
+            }
+        } catch {
+            // silent ignore
+        }
+    };
+
+    pollCitizenAlerts();
+    setInterval(pollCitizenAlerts, 15000);
 }
 
 document.addEventListener('click', (event) => {
+    if (event.target.closest('[data-close-broadcast]')) {
+        const modal = document.querySelector('[data-broadcast-modal]');
+        modal?.classList.add('hidden');
+        modal?.classList.remove('flex');
+        return;
+    }
+
     const button = event.target.closest('button');
     if (!button || button.type === 'submit' || button.closest('form') || button.closest('[data-harvesting-page]') || button.dataset.themeToggle !== undefined || button.dataset.sidebarOpen !== undefined || button.dataset.sidebarClose !== undefined) {
         return;
@@ -604,9 +688,38 @@ document.addEventListener('click', (event) => {
 
     if (button.dataset.broadcastAlert !== undefined) {
         const modal = document.querySelector('[data-broadcast-modal]');
-        modal?.classList.remove('hidden');
-        modal?.classList.add('flex');
-        modal?.querySelector('textarea')?.focus();
+        if (modal) {
+            const form = modal.querySelector('[data-broadcast-form]');
+            const postIdInput = form?.querySelector('#broadcast-post-id');
+            const titleInput = form?.querySelector('#broadcast-title');
+            const barangaySelect = form?.querySelector('#broadcast-barangay');
+            const messageInput = form?.querySelector('#broadcast-message');
+
+            if (postIdInput) postIdInput.value = button.dataset.postId || '';
+            const brgyName = button.dataset.postBarangay;
+            if (brgyName && titleInput) {
+                titleInput.value = `Flood Warning: Brgy. ${brgyName}`;
+            } else if (titleInput && !titleInput.value) {
+                titleInput.value = 'Flash Flood Warning: Davao City';
+            }
+
+            if (brgyName && barangaySelect) {
+                for (const opt of barangaySelect.options) {
+                    if (opt.text.toLowerCase().includes(brgyName.toLowerCase())) {
+                        barangaySelect.value = opt.value;
+                        break;
+                    }
+                }
+            }
+
+            if (button.dataset.postText && messageInput) {
+                messageInput.value = button.dataset.postText;
+            }
+
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+            titleInput?.focus();
+        }
         return;
     }
 
@@ -681,4 +794,68 @@ document.addEventListener('change', (event) => {
     }
 });
 
+const setupBroadcastModal = () => {
+    const modal = document.querySelector('[data-broadcast-modal]');
+    if (!modal) return;
+
+    const closeModal = () => {
+        modal.classList.add('hidden');
+        modal.classList.remove('flex');
+    };
+
+    modal.addEventListener('click', (e) => {
+        if (e.target === modal) {
+            closeModal();
+        }
+    });
+
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape' && !modal.classList.contains('hidden')) {
+            closeModal();
+        }
+    });
+
+    const form = modal.querySelector('[data-broadcast-form]');
+    if (form) {
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const submitBtn = form.querySelector('[data-broadcast-submit]') || form.querySelector('button[type="submit"]');
+            const origText = submitBtn ? submitBtn.textContent : '';
+            if (submitBtn) {
+                submitBtn.disabled = true;
+                submitBtn.textContent = 'Broadcasting...';
+            }
+
+            try {
+                const formData = new FormData(form);
+                const response = await fetch(form.action, {
+                    method: 'POST',
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest',
+                        'Accept': 'application/json',
+                    },
+                    body: formData,
+                });
+
+                const data = await response.json();
+                if (response.ok && data.success) {
+                    showToast('✓ Alert successfully broadcast to Citizen App!');
+                    closeModal();
+                    form.reset();
+                } else {
+                    showToast(data.message || 'Error sending broadcast alert.');
+                }
+            } catch (err) {
+                showToast('Failed to send broadcast alert. Please try again.');
+            } finally {
+                if (submitBtn) {
+                    submitBtn.disabled = false;
+                    submitBtn.textContent = origText;
+                }
+            }
+        });
+    }
+};
+
+setupBroadcastModal();
 updateThemeToggle();

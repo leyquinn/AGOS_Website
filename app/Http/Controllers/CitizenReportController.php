@@ -2,8 +2,9 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\CitizenReport;
 use App\Models\Barangay;
+use App\Models\BroadcastAlert;
+use App\Models\CitizenReport;
 use App\Models\Role;
 use App\Models\User;
 use Illuminate\Http\RedirectResponse;
@@ -132,12 +133,25 @@ class CitizenReportController extends Controller
 
     private function renderScreen(string $screen): View
     {
-        $user = request()->user()->load('barangay');
+        $user = (request()->user() ?: Auth::user())?->load('barangay');
+        $barangayId = $user?->barangay_id;
+
+        $broadcastAlerts = BroadcastAlert::with(['barangay', 'user'])
+            ->where('is_active', true)
+            ->where(function ($q) use ($barangayId) {
+                $q->whereNull('barangay_id');
+                if ($barangayId) {
+                    $q->orWhere('barangay_id', $barangayId);
+                }
+            })
+            ->latest()
+            ->get();
 
         return view('citizen.create', [
             'screen' => $screen,
             'barangays' => Barangay::orderBy('name')->get(),
-            'citizenReports' => $user->citizenReports()->with('barangay')->latest()->get(),
+            'citizenReports' => $user ? $user->citizenReports()->with('barangay')->latest()->get() : collect(),
+            'broadcastAlerts' => $broadcastAlerts,
         ]);
     }
 

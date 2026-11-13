@@ -25,7 +25,7 @@
                 </button>
                 <a href="{{ route('citizen.alerts') }}" class="citizen-header-button" data-citizen-alerts aria-label="Open alerts">
                 <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M18 9a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9M10 21h4"/></svg>
-                @if (session('status'))
+                @if (session('status') || (! empty($broadcastAlerts) && $broadcastAlerts->isNotEmpty()))
                     <i class="citizen-notification-dot" aria-label="New notification"></i>
                 @endif
                 </a>
@@ -62,6 +62,36 @@
                         <span><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 10c0 5-8 11-8 11S4 15 4 10a8 8 0 1 1 16 0Z"/><circle cx="12" cy="10" r="2.5"/></svg> Current Location</span>
                     </div>
                 </div>
+
+                @if (! empty($broadcastAlerts) && $broadcastAlerts->isNotEmpty())
+                    @php
+                        $latestBroadcast = $broadcastAlerts->first();
+                        $isCrit = $latestBroadcast->severity === 'CRITICAL';
+                        $scopeText = $latestBroadcast->barangay ? 'Brgy. ' . $latestBroadcast->barangay->name : 'Davao City (Citywide)';
+                    @endphp
+                    <div
+                        class="citizen-broadcast-banner {{ $isCrit ? 'is-critical' : 'is-warning' }}"
+                        data-citizen-broadcast-banner
+                        data-detail-label="{{ $latestBroadcast->severity }} BROADCAST"
+                        data-detail-title="{{ $latestBroadcast->title }}"
+                        data-detail-body="{{ $latestBroadcast->message }}&#10;&#10;Target Area: {{ $scopeText }}"
+                        data-detail-meta="Broadcast by DRRMO · {{ $latestBroadcast->created_at->diffForHumans() }}"
+                    >
+                        <div class="citizen-broadcast-badge-row">
+                            <span class="citizen-pill {{ $isCrit ? 'pill-red' : 'pill-orange' }}">
+                                {{ $isCrit ? '🚨 CRITICAL FLOOD BROADCAST' : '⚠️ FLOOD ADVISORY' }}
+                            </span>
+                            <small>{{ $latestBroadcast->created_at->diffForHumans() }}</small>
+                        </div>
+                        <strong>{{ $latestBroadcast->title }}</strong>
+                        <p>{{ $latestBroadcast->message }}</p>
+                        <div class="citizen-broadcast-footer">
+                            <span>📍 {{ $scopeText }}</span>
+                            <a href="{{ route('citizen.alerts') }}" data-citizen-nav="alerts">View all alerts →</a>
+                        </div>
+                    </div>
+                @endif
+
                 <div class="citizen-weather" data-citizen-weather data-detail-label="WEATHER UPDATE" data-detail-title="Today's Weather" data-detail-body="Live weather conditions for Davao City, including current temperature and rain probability." data-detail-meta="Updated from WeatherAPI">
                     <div><span class="weather-icon" data-citizen-weather-icon>☁</span><strong data-citizen-temperature>Loading…</strong><small data-citizen-condition>Weather update</small></div>
                     <div><span class="weather-icon">◐</span><strong data-citizen-rain>Loading…</strong><small>Rain Chance</small></div>
@@ -137,18 +167,55 @@
 
             <section class="citizen-screen {{ ($screen ?? 'home') === 'alerts' ? 'is-active' : '' }}" data-citizen-screen="alerts">
                 <div class="citizen-screen-title"><button type="button" data-citizen-nav="home">←</button><h1>ALERT / NOTIFICATION</h1><span></span></div>
-                <div class="barangay-title">MANAGE YOUR BARANGAYS</div>
+                <div class="barangay-title">MONITORED REGIONS</div>
                 <div class="barangay-tags">
-                    <span data-barangay-tag>Poblacion <button type="button" data-remove-barangay aria-label="Remove Poblacion">×</button></span>
-                    <span data-barangay-tag>Matina <button type="button" data-remove-barangay aria-label="Remove Matina">×</button></span>
-                    <span data-barangay-tag>Talomo <button type="button" data-remove-barangay aria-label="Remove Talomo">×</button></span>
-                    <button type="button">＋ Add Barangay</button>
+                    @if (auth()->user()->barangay)
+                        <span data-barangay-tag>Brgy. {{ auth()->user()->barangay->name }}</span>
+                    @endif
+                    <span data-barangay-tag>Davao City (Citywide)</span>
                 </div>
-                <div class="alert-list">
-                    <article data-detail-label="VALIDATED ALERT" data-detail-title="Flash Flood Warning: Poblacion" data-detail-body="Water level is rising rapidly in downtown area. Immediate evacuation is recommended for all low-lying zones near the river." data-detail-meta="Validated · 4 minutes ago"><div><span class="alert-badge badge-red">● VALIDATED</span><small>4 min ago</small></div><strong>Flash Flood Warning: Poblacion</strong><p>Water level is rising rapidly in downtown area. Immediate evacuation recommended for all low-lying zones near river.</p></article>
-                    <article data-detail-label="OFFICIAL NOTICE" data-detail-title="Road Closure: Matina Crossing" data-detail-body="McArthur Highway is temporarily closed due to severe water pooling. Please use alternate routes via Diversion Road." data-detail-meta="Official notice · 22 minutes ago"><div><span class="alert-badge badge-blue">⚑ OFFICIAL NOTICE</span><small>22 min ago</small></div><strong>Road Closure: Matina Crossing</strong><p>McArthur Highway is temporarily closed due to severe water pooling. Please use alternate routes via Diversion Road.</p></article>
-                    <article data-detail-label="MONITORING ALERT" data-detail-title="Heavy Rainfall: Talomo District" data-detail-body="Continuous moderate to heavy rainfall observed. Localized flooding is possible in urbanized areas. Remain vigilant." data-detail-meta="Monitoring · 1 hour ago"><div><span class="alert-badge badge-orange">◉ MONITORING</span><small>1h ago</small></div><strong>Heavy Rainfall: Talomo District</strong><p>Continuous moderate to heavy rainfall observed. Localized flooding is possible in urbanized areas. Remain vigilant.</p></article>
-                    <article data-detail-label="ALL CLEAR" data-detail-title="Storm Signal Lifted: Citywide" data-detail-body="Weather conditions have normalized. All public transport services and municipal offices have resumed regular operations." data-detail-meta="All clear · 3 minutes ago"><div><span class="alert-badge badge-green">● ALL CLEAR</span><small>3 min ago</small></div><strong>Storm Signal Lifted: Citywide</strong><p>Weather conditions have normalized. All public transport services and municipal offices have resumed regular operations.</p></article>
+                <div class="alert-list" data-citizen-alert-list>
+                    @forelse ($broadcastAlerts as $alert)
+                        @php
+                            $badgeClass = match($alert->severity) {
+                                'CRITICAL' => 'badge-red',
+                                'WARNING' => 'badge-orange',
+                                'ADVISORY' => 'badge-blue',
+                                default => 'badge-green',
+                            };
+                            $badgeSymbol = match($alert->severity) {
+                                'CRITICAL' => '● CRITICAL BROADCAST',
+                                'WARNING' => '▲ WARNING',
+                                'ADVISORY' => '⚑ ADVISORY',
+                                default => '● NOTICE',
+                            };
+                            $scopeName = $alert->barangay ? 'Brgy. ' . $alert->barangay->name : 'Davao City (Citywide)';
+                        @endphp
+                        <article
+                            data-detail-label="{{ $alert->severity }} BROADCAST"
+                            data-detail-title="{{ $alert->title }}"
+                            data-detail-body="{{ $alert->message }}&#10;&#10;Target Area: {{ $scopeName }}"
+                            data-detail-meta="Broadcast by DRRMO Admin · {{ $alert->created_at->diffForHumans() }}"
+                            class="broadcast-alert-card {{ $alert->severity === 'CRITICAL' ? 'border-critical' : '' }}"
+                        >
+                            <div>
+                                <span class="alert-badge {{ $badgeClass }}">{{ $badgeSymbol }}</span>
+                                <small>{{ $alert->created_at->diffForHumans() }}</small>
+                            </div>
+                            <strong>{{ $alert->title }}</strong>
+                            <p>{{ $alert->message }}</p>
+                            <div class="alert-meta-row">
+                                <span>📍 {{ $scopeName }}</span>
+                                <span class="alert-official-tag">DRRMO Official Broadcast</span>
+                            </div>
+                        </article>
+                    @empty
+                        <div class="empty-alerts-placeholder">
+                            <span class="empty-icon">🔔</span>
+                            <strong>No Broadcast Alerts</strong>
+                            <p>There are currently no active emergency broadcasts for {{ auth()->user()->barangay?->name ?? 'Davao City' }}.</p>
+                        </div>
+                    @endforelse
                 </div>
             </section>
 

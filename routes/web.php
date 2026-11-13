@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Api\AdminManagementController;
 use App\Http\Controllers\Api\CitizenApprovalController;
+use App\Http\Controllers\BroadcastAlertController;
 use App\Http\Controllers\CitizenReportController;
 use App\Http\Controllers\CitizenMapController;
 use App\Http\Controllers\HarvestingController;
@@ -30,6 +31,7 @@ Route::middleware('guest')->group(function () {
 // Handles stale browser history or a manually opened logout URL after a session has ended.
 Route::get('/citizen/logout', [CitizenReportController::class, 'logout'])->name('citizen.logout.get');
 Route::get('/logout', [PortalAuthController::class, 'destroy'])->name('logout.get');
+Route::get('/api/v1/citizen/alerts', [BroadcastAlertController::class, 'citizenAlerts'])->name('citizen.api.alerts');
 
 Route::middleware(['auth', 'role:citizen', 'no-back'])->group(function () {
     Route::get('/citizen', fn () => redirect()->route('citizen.home'))->name('citizen.create');
@@ -153,6 +155,8 @@ Route::middleware(['auth', 'role:super_admin,barangay_admin', 'no-back'])->group
             'avgCsOverall' => $avgCsOverall,
         ]);
     })->name('operations');
+
+    Route::post('/operations/broadcast', [BroadcastAlertController::class, 'store'])->name('operations.broadcast');
 
     Route::get('/reports', [ReportsController::class, 'index'])->name('reports');
     Route::get('/notifications', [ReportsController::class, 'notifications'])->name('notifications');
