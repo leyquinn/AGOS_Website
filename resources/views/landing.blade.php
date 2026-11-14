@@ -51,6 +51,153 @@
         </div>
     </section>
 
+    <!-- Public Flood Heatmap (Read-Only Access) -->
+    <section id="heatmap" data-scroll-fade class="w-full px-5 sm:px-8 lg:px-12 py-20 sm:py-28">
+        <div class="mb-10 flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
+            <div>
+                <span class="inline-flex items-center gap-2 text-xs uppercase tracking-[0.2em] text-blue-600 dark:text-blue-400 font-bold">
+                    <span class="h-2 w-2 rounded-full bg-emerald-500"></span>
+                    Public Flood Heatmap
+                </span>
+                <h2 class="mt-3 text-3xl sm:text-4xl md:text-5xl font-black text-white max-w-3xl leading-tight">
+                    Verified flood reports, open to the public.
+                </h2>
+                <p class="mt-4 max-w-2xl text-base leading-relaxed text-slate-400">
+                    Anyone can view validated barangay flood reports and hotspots without signing in. Submitting new reports is restricted to registered citizen accounts.
+                </p>
+            </div>
+            <div class="flex flex-wrap items-center gap-3">
+                <span class="inline-flex items-center gap-2 rounded-full border border-emerald-500/30 bg-emerald-100 px-3.5 py-1.5 text-xs font-bold text-emerald-700 dark:bg-emerald-500/15 dark:text-emerald-300">
+                    Read-Only Public View
+                </span>
+                <span data-heatmap-badge class="inline-flex items-center rounded-full border border-blue-500/30 bg-blue-100 px-3.5 py-1.5 text-xs font-bold text-blue-700 dark:bg-blue-500/15 dark:text-blue-300">
+                    {{ number_format($validatedEventsCount ?? 0) }} Verified Reports · {{ $barangaysAffectedCount ?? 0 }} Barangays
+                </span>
+            </div>
+        </div>
+
+        <div class="grid grid-cols-1 gap-6 lg:grid-cols-12">
+            <div class="overflow-hidden rounded-3xl border border-blue-900/50 bg-[#071738]/80 shadow-2xl shadow-blue-950/20 lg:col-span-8">
+                <div class="flex flex-col gap-3 border-b border-blue-900/50 px-5 py-4 sm:flex-row sm:items-center sm:justify-between">
+                    <div>
+                        <h3 class="text-sm font-bold text-white">Davao City Barangay Flood Heatmap</h3>
+                        <p data-map-status class="mt-1 text-xs text-slate-400">Loading Davao City barangay boundaries...</p>
+                    </div>
+                    <div class="flex flex-wrap items-center gap-2">
+                        <label class="flex items-center text-xs font-semibold text-slate-400">
+                            <span class="sr-only">Filter heatmap by year</span>
+                            <select data-heatmap-year-filter class="rounded-lg border border-blue-900/60 bg-[#031027] px-3 py-2 text-xs text-slate-200 outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500">
+                                <option value="">All years</option>
+                                @if (! empty($selectedYear) && ! collect($heatmapPeriods['years'] ?? [])->contains('year', $selectedYear))
+                                    <option value="{{ $selectedYear }}" selected>{{ $selectedYear }} (0)</option>
+                                @endif
+                                @foreach (($heatmapPeriods['years'] ?? []) as $yearItem)
+                                    <option value="{{ $yearItem['year'] }}" @selected(($selectedYear ?? null) === $yearItem['year'])>
+                                        {{ $yearItem['year'] }} ({{ number_format($yearItem['count']) }})
+                                    </option>
+                                @endforeach
+                            </select>
+                        </label>
+                        <label class="flex items-center text-xs font-semibold text-slate-400">
+                            <span class="sr-only">Filter heatmap by month</span>
+                            <select data-heatmap-month-filter class="rounded-lg border border-blue-900/60 bg-[#031027] px-3 py-2 text-xs text-slate-200 outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500">
+                                <option value="">All months</option>
+                                @if (! empty($selectedMonth))
+                                    <option value="{{ $selectedMonth }}" selected>{{ \Carbon\Carbon::create()->month((int) $selectedMonth)->format('F') }}</option>
+                                @endif
+                            </select>
+                        </label>
+                        <label class="flex items-center text-xs font-semibold text-slate-400">
+                            <span class="sr-only">Filter by barangay</span>
+                            <select data-barangay-filter class="rounded-lg border border-blue-900/60 bg-[#031027] px-3 py-2 text-xs text-slate-200 outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500">
+                                <option value="">All barangays</option>
+                            </select>
+                        </label>
+                    </div>
+                </div>
+                <div class="relative h-[26rem] sm:h-[30rem] bg-[#0b2852]">
+                    <div
+                        data-flood-map
+                        data-boundary-url="{{ asset('data/davao-barangays.geojson') }}"
+                        data-heatmap-url="{{ route('public.heatmap') }}"
+                        data-heatmap-periods='@json($heatmapPeriods ?? ['years' => [], 'months' => []])'
+                        data-selected-year="{{ $selectedYear ?? '' }}"
+                        data-selected-month="{{ $selectedMonth ?? '' }}"
+                        data-heat-points='@json($mapPoints ?? [])'
+                        @if (! empty($barangayReportCounts)) data-barangay-counts='@json($barangayReportCounts)' @endif
+                        class="h-full w-full"
+                    ></div>
+                    <div class="pointer-events-none absolute bottom-3 left-3 right-3 z-[400] flex flex-wrap items-center justify-between gap-2 rounded-xl border border-blue-900/50 bg-[#031027]/85 px-4 py-2.5 text-[11px] text-slate-300 backdrop-blur-sm">
+                        <span>Showing verified flood alerts &amp; reports clipped to Davao City boundaries</span>
+                        <span class="flex items-center gap-3 font-semibold">
+                            <span class="inline-flex items-center gap-1.5"><i class="h-2 w-2 rounded-full bg-rose-500"></i> High</span>
+                            <span class="inline-flex items-center gap-1.5"><i class="h-2 w-2 rounded-full bg-amber-400"></i> Moderate</span>
+                            <span class="inline-flex items-center gap-1.5"><i class="h-2 w-2 rounded-full bg-sky-400"></i> Low</span>
+                        </span>
+                    </div>
+                </div>
+            </div>
+
+            <aside class="flex flex-col justify-between rounded-3xl border border-blue-900/50 bg-[#071738]/80 p-6 shadow-2xl shadow-blue-950/20 lg:col-span-4">
+                <div>
+                    <div class="flex items-center justify-between gap-2 border-b border-blue-900/50 pb-4">
+                        <div>
+                            <h3 class="text-sm font-bold text-white">Verified Public Reports</h3>
+                            <p class="mt-0.5 text-xs text-slate-400">Validated signals visible without an account</p>
+                        </div>
+                        <span class="rounded-lg border border-blue-800/60 bg-blue-50 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider text-blue-700 dark:bg-blue-950/80 dark:text-blue-300">Open Data</span>
+                    </div>
+
+                    <div data-public-reports-list class="mt-4 max-h-[19rem] space-y-3 overflow-y-auto pr-1">
+                        @forelse (($publicReports ?? []) as $item)
+                            <article class="rounded-2xl border border-slate-200 bg-slate-50 p-3.5 dark:border-blue-900/50 dark:bg-[#0d2b5b]/70">
+                                <div class="flex items-center justify-between gap-2">
+                                    <span class="text-xs font-bold text-blue-700 dark:text-blue-300">Brgy. {{ $item['barangay'] }}</span>
+                                    <span class="rounded bg-emerald-100 px-2 py-0.5 font-mono text-[10px] font-bold text-emerald-700 dark:bg-emerald-500/20 dark:text-emerald-300">CS {{ $item['confidence'] }}</span>
+                                </div>
+                                <p class="mt-1.5 text-xs leading-relaxed text-slate-600 dark:text-slate-300">{{ $item['excerpt'] }}</p>
+                                <div class="mt-2 flex items-center justify-between text-[10px] text-slate-500 dark:text-slate-400">
+                                    <span>{{ $item['sourceLabel'] }}</span>
+                                    <span>{{ $item['reportedAt'] }}</span>
+                                </div>
+                            </article>
+                        @empty
+                            <div class="rounded-2xl border border-dashed border-slate-300 p-5 text-center text-xs text-slate-500 dark:border-blue-800/60 dark:text-slate-400">
+                                No verified flood reports recorded for the selected month yet. Switch the year or month filter above to explore past reports.
+                            </div>
+                        @endforelse
+                    </div>
+                </div>
+
+                <div class="mt-5 rounded-2xl border border-amber-500/30 bg-amber-50 p-4 dark:bg-amber-500/10">
+                    <div class="flex items-start gap-2.5">
+                        <svg class="mt-0.5 h-4 w-4 shrink-0 text-amber-600 dark:text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 11V7a4 4 0 1 1 8 0m-8 4h8a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h6Z"></path></svg>
+                        <div>
+                            <h4 class="text-xs font-bold text-amber-800 dark:text-amber-300">Posting Requires a Citizen Account</h4>
+                            <p class="mt-1 text-xs leading-relaxed text-slate-600 dark:text-slate-300">
+                                Guests may browse verified flood reports publicly, but creating a new report requires signing in to verify community submissions.
+                            </p>
+                        </div>
+                    </div>
+                    <div class="mt-4 flex flex-wrap gap-2.5">
+                        @if (auth()->check() && auth()->user()->role === 'citizen')
+                            <a href="{{ route('citizen.report') }}" class="inline-flex flex-1 items-center justify-center rounded-xl bg-blue-600 px-4 py-2.5 text-xs font-bold text-white shadow-sm transition hover:bg-blue-500">
+                                Post a Flood Report
+                            </a>
+                        @else
+                            <a href="{{ route('citizen.login') }}" class="inline-flex flex-1 items-center justify-center rounded-xl bg-blue-600 px-4 py-2.5 text-xs font-bold text-white shadow-sm transition hover:bg-blue-500">
+                                Sign In to Report
+                            </a>
+                            <a href="{{ route('citizen.register') }}" class="inline-flex items-center justify-center rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-xs font-bold text-slate-700 transition hover:bg-slate-100 dark:border-blue-800/70 dark:bg-[#031027] dark:text-slate-200 dark:hover:bg-blue-900/40">
+                                Register
+                            </a>
+                        @endif
+                    </div>
+                </div>
+            </aside>
+        </div>
+    </section>
+
     <!-- Section 2: Problem -->
     <section id="problem" data-scroll-fade class="w-full px-5 sm:px-8 lg:px-12 py-20 sm:py-28">
         <span class="text-sm uppercase tracking-[0.2em] text-blue-400 font-bold">The Challenge</span>

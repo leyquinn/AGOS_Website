@@ -4,6 +4,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>AGOS Citizen</title>
+    <link rel="icon" type="image/x-icon" href="{{ asset('favicon.ico') }}">
+    <link rel="icon" type="image/png" href="{{ asset('images/agos-favicon.png') }}">
+    <link rel="apple-touch-icon" href="{{ asset('images/agos-favicon.png') }}">
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
 <body class="citizen-body">
@@ -18,7 +21,7 @@
                 </button>
             </div>
             <a href="{{ route('citizen.home') }}" class="citizen-brand" data-citizen-nav="home">
-                <img src="{{ asset('images/agos-logo.png') }}" alt="AGOS">
+                <img src="{{ asset('images/agos-logo.png') }}" alt="AGOS - Bantay Agos, Ligtas Barangay" class="agos-brand-logo">
             </a>
             <div class="citizen-header-actions citizen-header-slot citizen-header-slot-right">
                 <button type="button" class="citizen-header-button" data-theme-toggle aria-label="Switch to light mode">
@@ -121,11 +124,13 @@
             <section class="citizen-screen {{ ($screen ?? 'home') === 'map' ? 'is-active' : '' }}" data-citizen-screen="map">
                 <div class="citizen-screen-title"><button type="button" class="citizen-subheader-button" data-citizen-nav="home">←</button><h1>LIVE FLOOD MAP</h1><button type="button" class="citizen-subheader-button" data-citizen-profile>◎</button></div>
                 <div class="citizen-heatmap-filters">
-                    <select data-citizen-year-filter aria-label="Filter flood heatmap by year">
+                    <select data-citizen-year-filter data-selected-year="{{ now()->year }}" aria-label="Filter flood heatmap by year">
                         <option value="">All years</option>
+                        <option value="{{ now()->year }}" selected>{{ now()->year }}</option>
                     </select>
-                    <select data-citizen-month-filter aria-label="Filter flood heatmap by month">
+                    <select data-citizen-month-filter data-selected-month="{{ now()->month }}" aria-label="Filter flood heatmap by month">
                         <option value="">All months</option>
+                        <option value="{{ now()->month }}" selected>{{ now()->format('F') }}</option>
                     </select>
                 </div>
                 <div class="citizen-map-large">

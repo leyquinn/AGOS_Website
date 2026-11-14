@@ -4,6 +4,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Sign In - AGOS</title>
+    <link rel="icon" type="image/x-icon" href="{{ asset('favicon.ico') }}">
+    <link rel="icon" type="image/png" href="{{ asset('images/agos-favicon.png') }}">
+    <link rel="apple-touch-icon" href="{{ asset('images/agos-favicon.png') }}">
     <script>if (localStorage.getItem('agos-theme') === 'light') document.documentElement.classList.add('theme-light');</script>
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>

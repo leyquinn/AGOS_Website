@@ -6,6 +6,7 @@ use App\Models\CitizenReport;
 use App\Models\SocialPost;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Str;
 
 class FloodHeatmapService
 {
@@ -145,6 +146,76 @@ class FloodHeatmapService
             'selectedYear' => $year,
             'selectedMonth' => $month,
         ];
+    }
+
+    /**
+     * Build sanitized, read-only verified flood reports for public display without exposing reporter identities.
+     *
+     * @return array<int, array{barangay: string, excerpt: string, confidence: string, sourceLabel: string, reportedAt: string}>
+     */
+    public function getPublicReportsFeed(?int $year = null, ?int $month = null, int $limit = 10): array
+    {
+        $matchesPeriod = static function (?Carbon $timestamp) use ($year, $month): bool {
+            if (! $timestamp) {
+                return $year === null && $month === null;
+            }
+            if ($year !== null && (int) $timestamp->year !== $year) {
+                return false;
+            }
+            if ($month !== null && (int) $timestamp->month !== $month) {
+                return false;
+            }
+
+            return true;
+        };
+
+        $socialPosts = SocialPost::where('model_status', 'VERIFIED_ACTIONABLE')
+            ->latest('scraped_at')
+            ->limit(60)
+            ->get(['primary_barangay', 'cleaned_text', 'full_text', 'confidence_score', 'discard_reason', 'is_whitelisted_source', 'posted_at', 'scraped_at', 'created_at'])
+            ->filter(fn (SocialPost $post): bool => $matchesPeriod($post->posted_at ?? $post->scraped_at ?? $post->created_at))
+            ->map(function (SocialPost $post): array {
+                $timestamp = $post->posted_at ?? $post->scraped_at ?? $post->created_at;
+                $isOfficial = $post->discard_reason === 'verified_by_official';
+
+                return [
+                    'ts' => $timestamp?->timestamp ?? 0,
+                    'barangay' => $post->primary_barangay ?: 'Davao City',
+                    'excerpt' => Str::limit(trim((string) ($post->cleaned_text ?: $post->full_text)), 145),
+                    'confidence' => number_format((float) $post->confidence_score, 2),
+                    'sourceLabel' => $isOfficial ? 'Official Verified' : ($post->is_whitelisted_source ? 'LGU / News Feed' : 'Validated Feed'),
+                    'reportedAt' => $timestamp ? $timestamp->format('M j, Y') : 'Recent',
+                ];
+            });
+
+        $citizenReports = CitizenReport::with('barangay')
+            ->where('verification_status', 'verified')
+            ->latest()
+            ->limit(40)
+            ->get(['barangay_id', 'report_text', 'water_level_status', 'confidence_score', 'created_at'])
+            ->filter(fn (CitizenReport $report): bool => $matchesPeriod($report->created_at))
+            ->map(fn (CitizenReport $report): array => [
+                'ts' => $report->created_at?->timestamp ?? 0,
+                'barangay' => $report->barangay?->name ?: 'Davao City',
+                'excerpt' => Str::limit(trim((string) ($report->report_text ?: ucfirst(str_replace('_', ' ', (string) $report->water_level_status)).' water level reported.')), 145),
+                'confidence' => number_format((float) ($report->confidence_score ?? 0.90), 2),
+                'sourceLabel' => 'Citizen Report',
+                'reportedAt' => $report->created_at ? $report->created_at->format('M j, Y') : 'Recent',
+            ]);
+
+        return $socialPosts
+            ->concat($citizenReports)
+            ->sortByDesc('ts')
+            ->take($limit)
+            ->map(fn (array $item): array => [
+                'barangay' => $item['barangay'],
+                'excerpt' => $item['excerpt'],
+                'confidence' => $item['confidence'],
+                'sourceLabel' => $item['sourceLabel'],
+                'reportedAt' => $item['reportedAt'],
+            ])
+            ->values()
+            ->all();
     }
 
     /**

@@ -442,6 +442,9 @@ if (citizenApp) {
         if (screenName === 'map') {
             citizenApp.querySelector('[data-citizen-screen="map"]')?.dispatchEvent(new Event('citizen-map-shown'));
         }
+        if (screenName === 'home') {
+            citizenApp.querySelector('[data-citizen-screen="home"]')?.dispatchEvent(new Event('citizen-home-shown'));
+        }
     };
 
     const initialScreen = citizenApp.dataset.initialScreen || 'home';
@@ -603,23 +606,31 @@ if (citizenApp) {
                     loc?.after(banner);
                 }
                 if (banner) {
-                    banner.className = `citizen-broadcast-banner ${isCrit ? 'is-critical' : 'is-warning'}`;
+                    const escapeText = (value) => String(value ?? '').replace(/[&<>"']/g, (ch) => ({
+                        '&': '&amp;',
+                        '<': '&lt;',
+                        '>': '&gt;',
+                        '"': '&quot;',
+                        "'": '&#39;',
+                    }[ch]));
+                    banner.className = `citizen-broadcast-banner citizen-alert-summary ${isCrit ? 'is-critical' : 'is-warning'}`;
                     banner.dataset.detailLabel = `${top.severity} BROADCAST`;
                     banner.dataset.detailTitle = top.title;
                     banner.dataset.detailBody = `${top.message}\n\nTarget Area: ${top.target_scope}`;
                     banner.dataset.detailMeta = `Broadcast by DRRMO · ${top.time_ago}`;
                     banner.innerHTML = `
                         <div class="citizen-broadcast-badge-row">
-                            <span class="citizen-pill ${isCrit ? 'pill-red' : 'pill-orange'}">
-                                ${isCrit ? '🚨 CRITICAL FLOOD BROADCAST' : '⚠️ FLOOD ADVISORY'}
+                            <span class="citizen-alert-severity ${isCrit ? 'is-critical' : 'is-warning'}">
+                                <svg aria-hidden="true" viewBox="0 0 24 24"><path d="M12 3 2.8 19h18.4L12 3Z"/><path d="M12 9v4m0 3h.01"/></svg>
+                                <span>${isCrit ? 'CRITICAL FLOOD BROADCAST' : 'FLOOD ADVISORY'}</span>
                             </span>
-                            <small>${top.time_ago}</small>
+                            <small class="tabular-nums">${escapeText(top.time_ago)}</small>
                         </div>
-                        <strong>${top.title}</strong>
-                        <p>${top.message}</p>
+                        <strong>${escapeText(top.title)}</strong>
+                        <p>${escapeText(top.message)}</p>
                         <div class="citizen-broadcast-footer">
-                            <span>📍 ${top.target_scope}</span>
-                            <a href="/citizen/alerts" data-citizen-nav="alerts">View all alerts →</a>
+                            <span class="inline-flex items-center gap-1.5"><svg aria-hidden="true" viewBox="0 0 24 24"><path d="M20 10c0 5-8 11-8 11S4 15 4 10a8 8 0 1 1 16 0Z"/><circle cx="12" cy="10" r="2.5"/></svg>${escapeText(top.target_scope)}</span>
+                            <a href="/citizen/alerts" data-citizen-nav="alerts">View all alerts <svg aria-hidden="true" viewBox="0 0 20 20"><path d="M4 10h11m-5-5 5 5-5 5"/></svg></a>
                         </div>
                     `;
                     banner.onclick = () => openDetail(banner);

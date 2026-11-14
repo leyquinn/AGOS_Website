@@ -112,7 +112,7 @@ const buildFilteredUrl = (baseUrl, year = '', month = '') => {
     return url.toString();
 };
 
-const syncYearMonthFilters = ({ yearSelect, monthSelect, periods, selectedYear = '', selectedMonth = '' }) => {
+const syncYearMonthFilters = ({ yearSelect, monthSelect, periods, selectedYear = '', selectedMonth = '', preserveMissingMonth = true }) => {
     const years = Array.isArray(periods?.years) ? periods.years : [];
     const months = Array.isArray(periods?.months) ? periods.months : [];
     const normalizedYear = selectedYear ? String(selectedYear) : '';
@@ -120,11 +120,17 @@ const syncYearMonthFilters = ({ yearSelect, monthSelect, periods, selectedYear =
 
     if (yearSelect) {
         yearSelect.innerHTML = '<option value="">All years</option>';
+        const seenYears = new Set();
         years.forEach((item) => {
+            const yearKey = String(item.year);
+            seenYears.add(yearKey);
             const label = `${item.year} (${Number(item.count || 0).toLocaleString()})`;
-            yearSelect.add(new Option(label, String(item.year)));
+            yearSelect.add(new Option(label, yearKey));
         });
-        yearSelect.value = years.some((item) => String(item.year) === normalizedYear) ? normalizedYear : '';
+        if (normalizedYear && !seenYears.has(normalizedYear)) {
+            yearSelect.add(new Option(`${normalizedYear} (0)`, normalizedYear));
+        }
+        yearSelect.value = normalizedYear;
     }
 
     const activeYear = yearSelect ? yearSelect.value : normalizedYear;
@@ -158,7 +164,18 @@ const syncYearMonthFilters = ({ yearSelect, monthSelect, periods, selectedYear =
     }
 
     if (normalizedMonth && !monthOptions.some((opt) => opt.value === normalizedMonth)) {
-        normalizedMonth = '';
+        if (preserveMissingMonth) {
+            const monthNum = Number(normalizedMonth);
+            const monthName = monthNum >= 1 && monthNum <= 12
+                ? new Intl.DateTimeFormat('en-US', { month: 'long' }).format(new Date(2000, monthNum - 1, 1))
+                : normalizedMonth;
+            monthOptions.unshift({
+                value: normalizedMonth,
+                label: `${monthName} (0)`,
+            });
+        } else {
+            normalizedMonth = '';
+        }
     }
 
     if (monthSelect) {
@@ -270,7 +287,10 @@ const initOperationsMap = async () => {
     const mapElement = document.querySelector('[data-flood-map]');
     if (!mapElement) return;
 
-    const map = L.map(mapElement, { preferCanvas: true }).setView(DAVAO_CENTER, 12);
+    const map = L.map(mapElement, {
+        preferCanvas: true,
+        scrollWheelZoom: mapElement.dataset.scrollWheelZoom !== 'false',
+    }).setView(DAVAO_CENTER, 12);
     L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
         attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
         maxZoom: 19,
@@ -425,6 +445,29 @@ const initOperationsMap = async () => {
                     const brgyCount = Number(data.barangaysAffectedCount || 0);
                     heatmapBadge.textContent = `${count} Verified Reports · ${brgyCount} Barangays`;
                 }
+                const publicReportsList = document.querySelector('[data-public-reports-list]');
+                if (publicReportsList && Array.isArray(data.publicReports)) {
+                    const escapeText = (value) => String(value ?? '').replace(/[&<>"']/g, (ch) => ({
+                        '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;',
+                    }[ch]));
+                    publicReportsList.innerHTML = data.publicReports.length
+                        ? data.publicReports.map((item) => `
+                            <article class="rounded-2xl border border-slate-200 bg-slate-50 p-3.5 dark:border-blue-900/50 dark:bg-[#0d2b5b]/70">
+                                <div class="flex items-center justify-between gap-2">
+                                    <span class="text-xs font-bold text-blue-700 dark:text-blue-300">Brgy. ${escapeText(item.barangay)}</span>
+                                    <span class="rounded bg-emerald-100 px-2 py-0.5 font-mono text-[10px] font-bold text-emerald-700 dark:bg-emerald-500/20 dark:text-emerald-300">CS ${escapeText(item.confidence)}</span>
+                                </div>
+                                <p class="mt-1.5 text-xs leading-relaxed text-slate-600 dark:text-slate-300">${escapeText(item.excerpt)}</p>
+                                <div class="mt-2 flex items-center justify-between text-[10px] text-slate-500 dark:text-slate-400">
+                                    <span>${escapeText(item.sourceLabel)}</span>
+                                    <span>${escapeText(item.reportedAt)}</span>
+                                </div>
+                            </article>
+                        `).join('')
+                        : `<div class="rounded-2xl border border-dashed border-slate-300 p-5 text-center text-xs text-slate-500 dark:border-blue-800/60 dark:text-slate-400">
+                            No verified flood reports recorded for the selected period yet. Switch the year or month filter above to explore past reports.
+                        </div>`;
+                }
                 updateBoundary(selector ? selector.value : '');
             } catch (error) {
                 console.error('Unable to filter operations flood heatmap.', error);
@@ -439,6 +482,7 @@ const initOperationsMap = async () => {
                 periods: heatmapPeriods,
                 selectedYear: yearFilter.value,
                 selectedMonth: monthFilter?.value || '',
+                preserveMissingMonth: false,
             });
             applyPeriodFilter(year, month);
         });
@@ -477,8 +521,8 @@ const initCitizenHomeMap = async () => {
     let boundaryFeatures = [];
     let rawHeatPoints = [];
     let heatmapPeriods = { years: [], months: [] };
-    let currentYear = '';
-    let currentMonth = '';
+    let currentYear = yearFilter?.dataset.selectedYear || String(new Date().getFullYear());
+    let currentMonth = monthFilter?.dataset.selectedMonth || String(new Date().getMonth() + 1);
 
     const escapeHtml = (value) => String(value).replace(/[&<>"']/g, (character) => ({
         '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;',
@@ -570,6 +614,7 @@ const initCitizenHomeMap = async () => {
             periods: heatmapPeriods,
             selectedYear: yearFilter.value,
             selectedMonth: monthFilter?.value || '',
+            preserveMissingMonth: false,
         });
         currentYear = synced.year;
         currentMonth = synced.month;
@@ -649,9 +694,8 @@ const initCitizenPreviewMap = async () => {
         doubleClickZoom: false,
         scrollWheelZoom: false,
         touchZoom: false,
-        zoomSnap: 0.5,
         preferCanvas: true,
-    }).setView(DAVAO_CENTER, 11.5);
+    }).setView(DAVAO_CENTER, 11);
 
     L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
         maxZoom: 19,
@@ -662,10 +706,29 @@ const initCitizenPreviewMap = async () => {
     const boundaryUrl = mapElement.dataset.boundaryUrl || DEFAULT_BOUNDARY_URL;
     const heatLayer = createHeatLayer(map, []);
 
+    const syncPreviewLayout = () => {
+        if (mapElement.offsetWidth <= 0 || mapElement.offsetHeight <= 0) return;
+        map.invalidateSize({ animate: false });
+        heatLayer._reset();
+    };
+
+    if (typeof ResizeObserver !== 'undefined') {
+        const observer = new ResizeObserver(() => syncPreviewLayout());
+        observer.observe(mapElement);
+    }
+
+    document.querySelector('[data-citizen-screen="home"]')?.addEventListener('citizen-home-shown', () => {
+        window.setTimeout(syncPreviewLayout, 50);
+    });
+    window.addEventListener('load', syncPreviewLayout);
+    window.requestAnimationFrame(() => syncPreviewLayout());
+    window.setTimeout(syncPreviewLayout, 150);
+
     try {
+        const now = new Date();
         const [boundaryResult, data] = await Promise.allSettled([
             loadBoundaryFeatures(boundaryUrl),
-            fetchCitizenMapBundle(mapElement.dataset.reportsUrl),
+            fetchCitizenMapBundle(buildFilteredUrl(mapElement.dataset.reportsUrl, String(now.getFullYear()), String(now.getMonth() + 1))),
         ]);
 
         let boundaryFeatures = [];
@@ -700,6 +763,8 @@ const initCitizenPreviewMap = async () => {
                 }).addTo(map);
             });
         }
+
+        syncPreviewLayout();
     } catch (error) {
         console.error('Unable to load citizen map preview reports.', error);
     }

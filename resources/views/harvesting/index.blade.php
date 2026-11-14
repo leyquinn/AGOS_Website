@@ -177,9 +177,6 @@
             <div class="flex flex-wrap items-center justify-between gap-3">
                 <div>
                     <h2 class="text-lg font-black tracking-tight">Pipeline Queue &amp; Flood Cleaner</h2>
-                    <p class="mt-1 max-w-3xl text-xs font-medium leading-relaxed text-slate-500 dark:text-slate-400">
-                        Multi-layer rule filter: strips Facebook UI artifacts, removes real-estate/business ads, non-Davao floods, negated phrases, and near-duplicates.
-                    </p>
                 </div>
 
                 <form method="POST" action="{{ route('harvesting.clean') }}" class="flex items-center gap-2.5">
@@ -250,9 +247,6 @@
                             </span>
                         @endif
                     </div>
-                    <p class="mt-1 max-w-4xl text-xs font-medium leading-relaxed text-slate-500 dark:text-slate-400">
-                        Shared <code>xlm-roberta-base</code> encoder with Task Head A (Relevance Classification <em>P<sub>rel</sub></em>), Task Head B (Barangay IOB2 NER + Gazetteer), and K-Means++ Spatial Consensus (<em>CS = 0.35·P<sub>rel</sub> + 0.65·D<sub>clusters</sub></em>).
-                    </p>
                 </div>
 
                 <form method="POST" action="{{ route('harvesting.analyze') }}" class="flex flex-wrap items-center gap-2.5">

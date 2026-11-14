@@ -2,7 +2,7 @@
     <div class="flex h-full min-w-0 flex-col overflow-x-hidden overflow-y-auto px-3 py-4 sm:px-4 sm:py-5">
         <div class="sidebar-header mb-8 flex h-16 min-h-16 items-center justify-between gap-2">
             <a href="{{ route('dashboard') }}" class="sidebar-brand flex min-w-0 items-center gap-3 rounded-xl px-2 py-1 transition-colors duration-200 hover:bg-slate-100 dark:hover:bg-slate-900" aria-label="AGOS Dashboard">
-                <span class="flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-xl bg-slate-50 p-1.5 dark:bg-slate-900"><img src="{{ asset('images/agos-logo.png') }}" alt="AGOS" class="h-full w-full object-contain"></span>
+                <span class="flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-xl bg-slate-50 p-1.5 dark:bg-slate-900"><img src="{{ asset('images/agos-mark.png') }}" alt="AGOS" class="agos-brand-logo h-full w-full object-contain"></span>
                 <span class="sidebar-label min-w-0 text-sm font-bold tracking-[0.16em] text-slate-900 dark:text-slate-100">AGOS<span class="block truncate text-[9px] font-medium tracking-[0.08em] text-slate-500 dark:text-slate-400">FLOOD INTELLIGENCE</span></span>
             </a>
             <button type="button" data-sidebar-toggle class="sidebar-collapse-toggle absolute right-3 top-7 z-30 hidden h-8 w-8 items-center justify-center rounded-full border border-slate-200 bg-slate-50 text-slate-600 shadow-sm transition-all duration-200 hover:border-blue-300 hover:bg-blue-50 hover:text-blue-700 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-400 dark:hover:border-slate-600 dark:hover:bg-slate-700 dark:hover:text-white lg:flex" aria-label="Collapse sidebar" title="Collapse sidebar">

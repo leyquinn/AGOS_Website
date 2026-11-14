@@ -26,15 +26,18 @@ Chart.register(
 );
 
 const chartInstances = new Map();
-const chartColors = {
-    cyan: '#0284c7',
-    blue: '#2563eb',
-    emerald: '#059669',
-    amber: '#d97706',
-    rose: '#e11d48',
-    slate: '#64748b',
-    grid: 'rgba(71, 107, 159, 0.25)',
-    text: '#94a3b8',
+const getChartColors = () => {
+    const isLight = document.documentElement.classList.contains('theme-light') || document.body?.classList.contains('theme-light');
+    return {
+        cyan: '#0284c7',
+        blue: '#2563eb',
+        emerald: '#059669',
+        amber: '#d97706',
+        rose: '#e11d48',
+        slate: '#64748b',
+        grid: isLight ? 'rgba(148, 163, 184, 0.25)' : 'rgba(71, 107, 159, 0.25)',
+        text: isLight ? '#475569' : '#94a3b8',
+    };
 };
 
 const formatInt = (num) => Number(num ?? 0).toLocaleString();
@@ -45,7 +48,7 @@ const escapeHtml = (value) => String(value ?? '')
     .replace(/>/g, '&gt;')
     .replace(/"/g, '&quot;');
 
-const baseOptions = (extra = {}) => ({
+const baseOptions = (extra = {}, chartColors = getChartColors()) => ({
     responsive: true,
     maintainAspectRatio: false,
     animation: { duration: 400, easing: 'easeOutQuart' },
@@ -70,6 +73,7 @@ const renderCharts = (analytics, payload) => {
     const charts = payload.charts;
     if (!charts) return;
 
+    const chartColors = getChartColors();
     const scoringCanvas = analytics.querySelector('[data-model-chart="scoring"]');
     const distCanvas = analytics.querySelector('[data-model-chart="distribution"]');
     const yieldCanvas = analytics.querySelector('[data-model-chart="yield"]');
@@ -90,7 +94,7 @@ const renderCharts = (analytics, payload) => {
                 x: { grid: { display: false }, ticks: { color: chartColors.text, font: { size: 10 } } },
                 y: { beginAtZero: true, max: 1, grid: { color: chartColors.grid }, ticks: { color: chartColors.text, font: { size: 10 } } },
             },
-        }),
+        }, chartColors),
     });
 
     createChart(distCanvas, {
@@ -102,7 +106,7 @@ const renderCharts = (analytics, payload) => {
                 { label: 'Final Confidence (CS)', data: charts.scoreDistribution.csCounts, backgroundColor: chartColors.emerald, borderRadius: 4 },
             ],
         },
-        options: baseOptions(),
+        options: baseOptions({}, chartColors),
     });
 
     createChart(yieldCanvas, {
@@ -120,7 +124,7 @@ const renderCharts = (analytics, payload) => {
                 x: { stacked: true, grid: { display: false }, ticks: { color: chartColors.text, font: { size: 10 } } },
                 y: { stacked: true, beginAtZero: true, grid: { color: chartColors.grid }, ticks: { color: chartColors.text, font: { size: 10 } } },
             },
-        }),
+        }, chartColors),
     });
 
     createChart(basinsCanvas, {
@@ -137,7 +141,7 @@ const renderCharts = (analytics, payload) => {
                 x: { beginAtZero: true, grid: { color: chartColors.grid }, ticks: { color: chartColors.text, font: { size: 10 } } },
                 y: { grid: { display: false }, ticks: { color: chartColors.text, font: { size: 10 } } },
             },
-        }),
+        }, chartColors),
     });
 };
 
@@ -242,6 +246,14 @@ const initModelAnalytics = () => {
     };
 
     windowSelect?.addEventListener('change', update);
+
+    const themeObserver = new MutationObserver(() => {
+        const key = windowSelect?.value || 'all';
+        const payload = windowsData[key] || windowsData.all;
+        if (payload) renderCharts(analytics, payload);
+    });
+    themeObserver.observe(document.documentElement, { attributes: true, attributeFilter: ['class'] });
+
     update();
 };
 

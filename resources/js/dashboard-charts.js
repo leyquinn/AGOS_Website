@@ -66,13 +66,17 @@ const floodActivityMockData = {
 
 const filterLabels = { '7d': 'Last 7 Days', '4w': 'Last 4 Weeks', '12m': 'Last 12 Months', ytd: 'All Years (Archive)' };
 const chartInstances = new Map();
-const colors = {
-    cyan: '#0284c7',
-    amber: '#d97706',
-    red: '#dc2626',
-    emerald: '#059669',
-    grid: 'rgba(71, 107, 159, 0.25)',
-    text: '#94a3b8',
+const getThemeColors = () => {
+    const isLight = document.documentElement.classList.contains('theme-light') || document.body?.classList.contains('theme-light');
+    return {
+        cyan: '#0284c7',
+        amber: '#d97706',
+        red: '#dc2626',
+        emerald: '#059669',
+        grid: isLight ? 'rgba(148, 163, 184, 0.25)' : 'rgba(71, 107, 159, 0.25)',
+        text: isLight ? '#475569' : '#94a3b8',
+        surfaceBorder: isLight ? '#ffffff' : '#071738',
+    };
 };
 
 let activeDatasets = null;
@@ -93,7 +97,7 @@ const getLiveDatasets = () => {
 
 const getFloodActivityData = (period) => getLiveDatasets()[period] ?? null;
 
-const chartOptions = (stacked = false) => ({
+const chartOptions = (stacked = false, colors = getThemeColors()) => ({
     responsive: true,
     maintainAspectRatio: false,
     animation: { duration: 500, easing: 'easeOutQuart' },
@@ -125,6 +129,8 @@ const renderCharts = (period) => {
         return;
     }
 
+    const colors = getThemeColors();
+
     createChart(activityCanvas, {
         type: 'line',
         data: {
@@ -134,21 +140,21 @@ const renderCharts = (period) => {
                 { label: 'Validated alerts', data: data.validatedAlerts, borderColor: colors.emerald, backgroundColor: 'rgba(5,150,105,.12)', fill: true, tension: .35, pointRadius: 3 },
             ],
         },
-        options: chartOptions(),
+        options: chartOptions(false, colors),
     });
     createChart(confidenceCanvas, {
         type: 'bar',
         data: { labels: ['CS ≥ 0.85', 'Lower confidence'], datasets: [{ label: 'Signals', data: [data.confidence.high, data.confidence.lower], backgroundColor: [colors.emerald, colors.amber], borderRadius: 6, maxBarThickness: 54 }] },
-        options: chartOptions(),
+        options: chartOptions(false, colors),
     });
     createChart(barangaysCanvas, {
         type: 'bar',
         data: { labels: data.barangays.labels, datasets: [{ label: 'Validated alerts', data: data.barangays.values, backgroundColor: colors.cyan, borderRadius: 5, barThickness: 18 }] },
-        options: { ...chartOptions(), indexAxis: 'y', scales: { x: { beginAtZero: true, grid: { color: colors.grid }, ticks: { color: colors.text, font: { size: 10 } } }, y: { grid: { display: false }, ticks: { color: colors.text, font: { size: 10 } } } } },
+        options: { ...chartOptions(false, colors), indexAxis: 'y', scales: { x: { beginAtZero: true, grid: { color: colors.grid }, ticks: { color: colors.text, font: { size: 10 } } }, y: { grid: { display: false }, ticks: { color: colors.text, font: { size: 10 } } } } },
     });
     createChart(sourcesCanvas, {
         type: 'doughnut',
-        data: { labels: data.sources.labels, datasets: [{ data: data.sources.values, backgroundColor: [colors.cyan, colors.amber, colors.red], borderColor: '#071738', borderWidth: 4 }] },
+        data: { labels: data.sources.labels, datasets: [{ data: data.sources.values, backgroundColor: [colors.cyan, colors.amber, colors.red], borderColor: colors.surfaceBorder, borderWidth: 4 }] },
         options: { responsive: true, maintainAspectRatio: false, cutout: '68%', plugins: { legend: { position: 'bottom', labels: { color: colors.text, boxWidth: 10, padding: 14, font: { size: 10 } } } } },
     });
 };
@@ -157,8 +163,10 @@ const initDashboardCharts = () => {
     const dashboard = document.querySelector('[data-flood-dashboard]');
     if (!dashboard) return;
 
+    let currentPeriod = '7d';
     const setPeriod = (period) => {
         if (!getLiveDatasets()[period]) return;
+        currentPeriod = period;
         dashboard.querySelectorAll('[data-period-label]').forEach((label) => { label.textContent = filterLabels[period]; });
         dashboard.querySelectorAll('[data-chart-filter]').forEach((button) => {
             const isActive = button.dataset.chartFilter === period;
@@ -171,6 +179,10 @@ const initDashboardCharts = () => {
     };
 
     dashboard.querySelectorAll('[data-chart-filter]').forEach((button) => button.addEventListener('click', () => setPeriod(button.dataset.chartFilter)));
+
+    const themeObserver = new MutationObserver(() => renderCharts(currentPeriod));
+    themeObserver.observe(document.documentElement, { attributes: true, attributeFilter: ['class'] });
+
     setPeriod('7d');
 };
 

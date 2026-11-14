@@ -13,10 +13,37 @@ use App\Http\Controllers\ReportsController;
 use App\Http\Controllers\WeatherController;
 use Illuminate\Support\Facades\Route;
 
-// Public Landing Page
-Route::get('/', function () {
-    return view('landing');
+// Public Landing Page & Public Read-Only Flood Heatmap
+Route::get('/', function (\Illuminate\Http\Request $request, \App\Services\FloodHeatmapService $heatmapService) {
+    $selectedYear = $request->query->has('year')
+        ? \App\Services\FloodHeatmapService::parseYear($request->query('year'))
+        : (int) now()->year;
+    $selectedMonth = $request->query->has('month')
+        ? \App\Services\FloodHeatmapService::parseMonth($request->query('month'))
+        : (int) now()->month;
+    $heatmapBundle = $heatmapService->getBundle($selectedYear, $selectedMonth);
+
+    return view('landing', [
+        'mapPoints' => $heatmapBundle['mapPoints'],
+        'barangayReportCounts' => $heatmapBundle['barangayReportCounts'],
+        'heatmapPeriods' => $heatmapBundle['availablePeriods'],
+        'selectedYear' => $heatmapBundle['selectedYear'],
+        'selectedMonth' => $heatmapBundle['selectedMonth'],
+        'validatedEventsCount' => $heatmapBundle['validatedEventsCount'],
+        'barangaysAffectedCount' => $heatmapBundle['barangaysAffectedCount'],
+        'publicReports' => $heatmapService->getPublicReportsFeed($selectedYear, $selectedMonth, 10),
+    ]);
 })->name('landing');
+
+Route::get('/public/heatmap', function (\Illuminate\Http\Request $request, \App\Services\FloodHeatmapService $heatmapService) {
+    $year = \App\Services\FloodHeatmapService::parseYear($request->query('year'));
+    $month = \App\Services\FloodHeatmapService::parseMonth($request->query('month'));
+
+    return response()->json([
+        ...$heatmapService->getBundle($year, $month),
+        'publicReports' => $heatmapService->getPublicReportsFeed($year, $month, 10),
+    ]);
+})->name('public.heatmap');
 
 // Auth Page
 Route::get('/login', [PortalAuthController::class, 'create'])->name('login');
@@ -69,8 +96,12 @@ Route::middleware(['auth', 'role:super_admin,barangay_admin', 'no-back'])->group
     Route::get('/dashboard/activity', [DashboardController::class, 'activity'])->name('dashboard.activity');
 
     Route::get('/operations', function (\Illuminate\Http\Request $request, \App\Services\FloodHeatmapService $heatmapService) {
-        $selectedYear = \App\Services\FloodHeatmapService::parseYear($request->query('year'));
-        $selectedMonth = \App\Services\FloodHeatmapService::parseMonth($request->query('month'));
+        $selectedYear = $request->query->has('year')
+            ? \App\Services\FloodHeatmapService::parseYear($request->query('year'))
+            : (int) now()->year;
+        $selectedMonth = $request->query->has('month')
+            ? \App\Services\FloodHeatmapService::parseMonth($request->query('month'))
+            : (int) now()->month;
         $heatmapBundle = $heatmapService->getBundle($selectedYear, $selectedMonth);
 
         $actionablePosts = \App\Models\SocialPost::where('model_status', 'VERIFIED_ACTIONABLE')

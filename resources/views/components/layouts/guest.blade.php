@@ -4,6 +4,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>AGOS - Multi-Task NLP Framework for Flood Validation</title>
+    <link rel="icon" type="image/x-icon" href="{{ asset('favicon.ico') }}">
+    <link rel="icon" type="image/png" href="{{ asset('images/agos-favicon.png') }}">
+    <link rel="apple-touch-icon" href="{{ asset('images/agos-favicon.png') }}">
     <script>if (localStorage.getItem('agos-theme') === 'light') document.documentElement.classList.add('theme-light');</script>
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
@@ -13,11 +16,12 @@
     <header class="fixed top-0 left-0 right-0 z-50 bg-[#031027]/90 backdrop-blur-md border-b border-blue-950/50">
         <div class="w-full px-6 sm:px-8 lg:px-12 h-20 grid grid-cols-[1fr_auto_1fr] items-center">
             <a href="#home" class="flex items-center justify-self-start" aria-label="AGOS home">
-                <img src="{{ asset('images/agos-logo.png') }}" alt="AGOS - Bantay Agos, Ligtas Barangay" class="h-10 w-auto max-w-none object-contain sm:h-12">
+                <img src="{{ asset('images/agos-logo.png') }}" alt="AGOS - Bantay Agos, Ligtas Barangay" class="agos-brand-logo h-10 w-auto max-w-none object-contain sm:h-12">
             </a>
             
-            <nav class="hidden md:flex items-center justify-center space-x-10 text-sm font-medium text-slate-300">
+            <nav class="hidden md:flex items-center justify-center space-x-8 text-sm font-medium text-slate-300 lg:space-x-10">
                 <a href="#home" class="hover:text-blue-400 transition-colors">Home</a>
+                <a href="#heatmap" class="hover:text-blue-400 transition-colors">Heatmap</a>
                 <a href="#problem" class="hover:text-blue-400 transition-colors">Problem</a>
                 <a href="#process" class="hover:text-blue-400 transition-colors">Process</a>
                 <a href="#features" class="hover:text-blue-400 transition-colors">Features</a>
@@ -40,7 +44,7 @@
         </div>
         <nav data-mobile-menu-panel class="hidden border-t border-blue-900/50 bg-[#031027] px-6 py-4 md:hidden">
             <div class="grid gap-3 text-sm font-semibold text-slate-300">
-                <a href="#home">Home</a><a href="#problem">Problem</a><a href="#process">Process</a><a href="#features">Features</a><a href="#results">Results</a><a href="#team">Team</a>
+                <a href="#home">Home</a><a href="#heatmap">Heatmap</a><a href="#problem">Problem</a><a href="#process">Process</a><a href="#features">Features</a><a href="#results">Results</a><a href="#team">Team</a>
             </div>
         </nav>
     </header>
@@ -53,7 +57,7 @@
     <footer class="border-t border-blue-950/60 bg-[#020b1a] py-14 text-slate-500 transition-colors duration-300">
         <div class="mx-auto grid w-full max-w-7xl gap-10 px-6 sm:px-8 lg:grid-cols-[1.2fr_1.5fr_1fr] lg:px-12">
             <div>
-                <img src="{{ asset('images/agos-logo.png') }}" alt="AGOS - Bantay Agos, Ligtas Barangay" class="h-10 w-auto object-contain">
+                <img src="{{ asset('images/agos-logo.png') }}" alt="AGOS - Bantay Agos, Ligtas Barangay" class="agos-brand-logo h-10 w-auto object-contain">
                 <p class="mt-4 max-w-xs text-xs uppercase leading-relaxed tracking-wider">Ateneo de Davao University<br>Computer Studies Cluster</p>
                 <p class="mt-4 max-w-xs text-sm leading-relaxed text-slate-400">Turning community reports into clearer, more actionable flood intelligence.</p>
             </div>

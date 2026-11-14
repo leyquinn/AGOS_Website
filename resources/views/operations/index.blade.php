@@ -67,6 +67,9 @@
                         <span class="sr-only">Filter heatmap by year</span>
                         <select data-heatmap-year-filter class="rounded-lg border border-blue-900/60 bg-[#031027] px-2.5 py-2 text-[10px] text-slate-200 outline-none focus:border-cyan-400 focus:ring-1 focus:ring-cyan-400">
                             <option value="">All years</option>
+                            @if (! empty($selectedYear) && ! collect($heatmapPeriods['years'] ?? [])->contains('year', $selectedYear))
+                                <option value="{{ $selectedYear }}" selected>{{ $selectedYear }} (0)</option>
+                            @endif
                             @foreach (($heatmapPeriods['years'] ?? []) as $yearItem)
                                 <option value="{{ $yearItem['year'] }}" @selected(($selectedYear ?? null) === $yearItem['year'])>
                                     {{ $yearItem['year'] }} ({{ number_format($yearItem['count']) }})
@@ -78,6 +81,9 @@
                         <span class="sr-only">Filter heatmap by month</span>
                         <select data-heatmap-month-filter class="rounded-lg border border-blue-900/60 bg-[#031027] px-2.5 py-2 text-[10px] text-slate-200 outline-none focus:border-cyan-400 focus:ring-1 focus:ring-cyan-400">
                             <option value="">All months</option>
+                            @if (! empty($selectedMonth))
+                                <option value="{{ $selectedMonth }}" selected>{{ \Carbon\Carbon::create()->month((int) $selectedMonth)->format('F') }}</option>
+                            @endif
                         </select>
                     </label>
                     <label class="flex items-center gap-2 text-[10px] font-semibold text-slate-400">

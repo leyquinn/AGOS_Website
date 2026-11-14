@@ -1,4 +1,5 @@
 @import "tailwindcss";
+@custom-variant dark (&:where(html:not(.theme-light), html:not(.theme-light) *));
 
 .leaflet-container .leaflet-tile {
     outline: 1px solid transparent;
@@ -600,7 +601,11 @@ body.theme-light [class*="border-blue-900"] {
 }
 
 html.theme-light body input,
-body.theme-light input {
+html.theme-light body select,
+html.theme-light body textarea,
+body.theme-light input,
+body.theme-light select,
+body.theme-light textarea {
     background-color: #ffffff !important;
     color: #0f172a !important;
     border-color: #cbd5e1 !important;
@@ -3151,8 +3156,9 @@ html.theme-light body .operations-code {
     justify-content: center;
 }
 .citizen-brand img {
-    width: 112px;
-    height: 34px;
+    width: auto;
+    max-width: 124px;
+    height: 36px;
     object-fit: contain;
 }
 .citizen-header-button {
@@ -3229,6 +3235,27 @@ html.theme-light body .operations-code {
 
     .citizen-main {
         height: calc(100vh - 56px - max(env(safe-area-inset-top), 3rem));
+    }
+
+    .citizen-sidebar {
+        padding-top: max(env(safe-area-inset-top), 3rem);
+    }
+}
+
+@media (min-width: 768px) {
+    .citizen-header {
+        height: 92px;
+        min-height: 92px;
+        padding: 36px 16px 0;
+        border-radius: 40px 40px 0 0;
+    }
+
+    .citizen-main {
+        height: calc(100% - 92px);
+    }
+
+    .citizen-sidebar {
+        padding-top: 48px;
     }
 }
 
@@ -3579,4 +3606,462 @@ html.theme-light body .report-metric-row {
     border-color: #e2e8f0;
     background: #f8fbff;
     color: #475569;
+}
+
+/* Citizen App dual-theme surface & contrast fixes */
+.citizen-app {
+    background: var(--citizen-shell);
+}
+
+.citizen-viewport {
+    background: var(--citizen-shell-gradient);
+    color: var(--citizen-text);
+}
+
+.citizen-main {
+    background: transparent;
+    color: var(--citizen-text);
+}
+
+.agos-brand-logo {
+    transition: filter 180ms ease;
+}
+
+html:not(.theme-light) body:not(.theme-light) .agos-brand-logo,
+.citizen-body:not(.theme-light) .citizen-brand img {
+    filter: brightness(0) invert(1);
+}
+
+html.theme-light .agos-brand-logo,
+body.theme-light .agos-brand-logo {
+    filter: none;
+}
+
+.citizen-location strong,
+.citizen-section-title strong,
+.citizen-activity-list article strong,
+.map-activity-list article strong,
+.alert-list article strong,
+.profile-card h2,
+.my-report strong,
+.validation-card strong,
+.citizen-form h2 {
+    color: var(--citizen-text);
+}
+
+.citizen-location span,
+.citizen-risk-card p,
+.citizen-activity-list article p,
+.map-activity-list article p,
+.map-activity-list article > small,
+.alert-list article p,
+.alert-list article small,
+.citizen-broadcast-badge-row small,
+.citizen-location-help,
+.profile-reports-title span {
+    color: var(--citizen-muted);
+}
+
+.citizen-weather,
+.citizen-risk-card,
+.citizen-activity-list article,
+.map-activity-list article,
+.alert-list article,
+.profile-card,
+.my-report,
+.validation-card {
+    border-color: var(--citizen-border);
+    background: var(--citizen-surface);
+    color: var(--citizen-text);
+    box-shadow: var(--citizen-shadow);
+}
+
+.citizen-weather > div + div {
+    border-left-color: var(--citizen-border);
+}
+
+.citizen-screen-title {
+    background: var(--citizen-surface-strong);
+    border-bottom-color: var(--citizen-border);
+}
+
+.citizen-screen-title h1 {
+    color: var(--citizen-text);
+}
+
+.citizen-section-title a,
+.citizen-section-title button {
+    color: #60a5fa;
+}
+
+.citizen-body.theme-light .citizen-section-title a,
+.citizen-body.theme-light .citizen-section-title button {
+    color: #2563eb;
+}
+
+.cta-icon {
+    color: #cffafe;
+}
+
+.citizen-report-cta,
+.citizen-report-cta strong {
+    color: #ffffff;
+}
+
+.citizen-report-cta small {
+    color: #e0f2fe;
+}
+
+.citizen-body:not(.theme-light) .citizen-broadcast-banner.is-warning,
+.citizen-body:not(.theme-light) .citizen-alert-summary.is-warning {
+    border-color: rgba(245, 158, 11, 0.55);
+    background: linear-gradient(135deg, rgba(245, 158, 11, 0.16) 0%, rgba(7, 23, 56, 0.94) 100%);
+}
+
+.citizen-body:not(.theme-light) .citizen-broadcast-banner.is-critical,
+.citizen-body:not(.theme-light) .citizen-alert-summary.is-critical {
+    border-color: rgba(239, 68, 68, 0.65);
+    background: linear-gradient(135deg, rgba(239, 68, 68, 0.2) 0%, rgba(7, 23, 56, 0.94) 100%);
+}
+
+.citizen-body.theme-light .citizen-broadcast-banner.is-warning,
+.citizen-body.theme-light .citizen-alert-summary.is-warning {
+    border-color: #f59e0b;
+    background: linear-gradient(135deg, #fffbeb 0%, #fef3c7 100%);
+}
+
+.citizen-body.theme-light .citizen-broadcast-banner.is-critical,
+.citizen-body.theme-light .citizen-alert-summary.is-critical {
+    border-color: #ef4444;
+    background: linear-gradient(135deg, #fef2f2 0%, #fee2e2 100%);
+}
+
+.citizen-broadcast-banner strong {
+    color: var(--citizen-text);
+}
+
+.citizen-broadcast-banner p {
+    color: var(--citizen-subtle);
+}
+
+.citizen-broadcast-footer {
+    color: var(--citizen-subtle);
+    border-top-color: var(--citizen-border);
+}
+
+.citizen-broadcast-footer a {
+    color: #60a5fa;
+}
+
+.citizen-body.theme-light .citizen-broadcast-footer a {
+    color: #2563eb;
+}
+
+.citizen-body.theme-light .citizen-alert-severity.is-critical,
+.citizen-body.theme-light .citizen-alerts-screen .citizen-alert-severity.badge-red {
+    border-color: rgba(220, 38, 38, 0.35);
+    background: rgba(239, 68, 68, 0.14);
+    color: #b91c1c;
+}
+
+.citizen-body.theme-light .citizen-alert-severity.is-warning,
+.citizen-body.theme-light .citizen-alerts-screen .citizen-alert-severity.badge-orange {
+    border-color: rgba(217, 119, 6, 0.4);
+    background: rgba(245, 158, 11, 0.18);
+    color: #b45309;
+}
+
+.citizen-body.theme-light .citizen-alerts-screen .citizen-alert-severity.badge-blue {
+    border-color: rgba(37, 99, 235, 0.3);
+    background: rgba(37, 99, 235, 0.12);
+    color: #1d4ed8;
+}
+
+.citizen-body.theme-light .citizen-alerts-screen .citizen-alert-severity.badge-green {
+    border-color: rgba(5, 150, 105, 0.35);
+    background: rgba(16, 185, 129, 0.14);
+    color: #047857;
+}
+
+.citizen-body.theme-light .citizen-alerts-screen .alert-official-tag,
+.citizen-body.theme-light .alert-official-tag {
+    color: #1d4ed8;
+}
+
+.citizen-bottom-nav button,
+.citizen-bottom-nav a {
+    min-height: 48px;
+    border-radius: 10px;
+    color: var(--citizen-muted);
+    font-size: 11px;
+}
+
+.citizen-bottom-nav button.is-active,
+.citizen-bottom-nav a.is-active {
+    background: rgba(37, 99, 235, 0.16);
+    color: #60a5fa;
+    font-weight: 700;
+}
+
+.citizen-body.theme-light .citizen-bottom-nav button.is-active,
+.citizen-body.theme-light .citizen-bottom-nav a.is-active {
+    background: rgba(37, 99, 235, 0.12);
+    color: #2563eb;
+}
+
+.map-search {
+    background: var(--citizen-surface-strong);
+    color: var(--citizen-text);
+    border: 1px solid var(--citizen-border);
+}
+
+.map-search-results {
+    background: var(--citizen-surface-strong);
+    border: 1px solid var(--citizen-border);
+}
+
+.map-search-results button {
+    background: var(--citizen-surface-strong);
+    color: var(--citizen-text);
+    border-top-color: var(--citizen-border);
+}
+
+.map-search-results button:hover {
+    background: rgba(37, 99, 235, 0.14);
+}
+
+.citizen-report-intro span {
+    border: 1px solid var(--citizen-border);
+    background: var(--citizen-surface);
+    color: var(--citizen-subtle);
+}
+
+.citizen-field select {
+    min-height: 48px;
+    padding: 12px 14px;
+    border: 1px solid var(--citizen-border);
+    border-radius: 12px;
+    background: var(--citizen-input);
+    color: var(--citizen-text);
+    font-size: 14px;
+}
+
+.current-location-field > span:first-child {
+    color: #60a5fa;
+}
+
+.citizen-body.theme-light .current-location-field > span:first-child,
+.citizen-body.theme-light .current-location-field button {
+    color: #2563eb;
+}
+
+.water-levels label {
+    border: 1px solid var(--citizen-border);
+    background: var(--citizen-surface);
+    color: var(--citizen-text);
+}
+
+.water-levels label span {
+    color: #60a5fa;
+}
+
+.citizen-body.theme-light .water-levels label span {
+    color: #2563eb;
+}
+
+.water-levels label:has(input:checked) {
+    border-color: #2563eb;
+    background: #2563eb;
+    color: #ffffff;
+}
+
+.water-levels label:has(input:checked) span {
+    color: #ffffff;
+}
+
+.profile-reports-title {
+    background: transparent;
+}
+
+.citizen-map-preview {
+    width: 100%;
+    height: 152px;
+    min-height: 152px;
+    background: var(--citizen-surface-strong);
+    border: 1px solid var(--citizen-border);
+}
+
+.citizen-map-preview-leaflet,
+.citizen-map-preview-leaflet.leaflet-container {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    background: var(--citizen-surface-strong);
+}
+
+/* =========================================================
+   AGOS Admin Portal Dual-Theme Contrast & Surface Fixes
+   ========================================================= */
+
+/* Light Mode: keep white text on solid colored / dark / gradient buttons, badges, and tabs */
+html.theme-light body :where(
+    [class*="bg-blue-600"]:not([class*="dark:bg-"]),
+    [class*="bg-blue-500"]:not([class*="dark:bg-"]),
+    [class*="bg-blue-700"]:not([class*="dark:bg-"]),
+    [class*="bg-rose-600"]:not([class*="dark:bg-"]),
+    [class*="bg-rose-500"]:not([class*="dark:bg-"]),
+    [class*="bg-red-600"]:not([class*="dark:bg-"]),
+    [class*="bg-red-500"]:not([class*="dark:bg-"]),
+    [class*="bg-emerald-600"]:not([class*="dark:bg-"]),
+    [class*="bg-emerald-500"]:not([class*="dark:bg-"]):not([class*="text-emerald-950"]),
+    [class*="bg-emerald-800"]:not([class*="dark:bg-"]),
+    [class*="bg-cyan-600"]:not([class*="dark:bg-"]),
+    [class*="bg-indigo-600"]:not([class*="dark:bg-"]),
+    [class*="bg-amber-600"]:not([class*="dark:bg-"]),
+    [class*="bg-gradient-to-"],
+    .harvest-tab.is-selected,
+    .report-action
+):where([class*="text-white"]),
+html.theme-light body :where(
+    [class*="bg-blue-600"]:not([class*="dark:bg-"]),
+    [class*="bg-blue-500"]:not([class*="dark:bg-"]),
+    [class*="bg-blue-700"]:not([class*="dark:bg-"]),
+    [class*="bg-rose-600"]:not([class*="dark:bg-"]),
+    [class*="bg-rose-500"]:not([class*="dark:bg-"]),
+    [class*="bg-red-600"]:not([class*="dark:bg-"]),
+    [class*="bg-red-500"]:not([class*="dark:bg-"]),
+    [class*="bg-emerald-600"]:not([class*="dark:bg-"]),
+    [class*="bg-emerald-500"]:not([class*="dark:bg-"]):not([class*="text-emerald-950"]),
+    [class*="bg-emerald-800"]:not([class*="dark:bg-"]),
+    [class*="bg-cyan-600"]:not([class*="dark:bg-"]),
+    [class*="bg-indigo-600"]:not([class*="dark:bg-"]),
+    [class*="bg-amber-600"]:not([class*="dark:bg-"]),
+    [class*="bg-gradient-to-"],
+    .harvest-tab.is-selected,
+    .report-action
+) [class*="text-white"] {
+    color: #ffffff !important;
+}
+
+/* Light Mode: keep console <pre>, tooltips, and solid dark-slate badges readable */
+html.theme-light body pre[class*="bg-slate-950"],
+html.theme-light body .bg-slate-900:not(.portal-shell),
+html.theme-light body .bg-slate-800\/90 {
+    color: #f8fafc !important;
+}
+
+/* Light Mode: preserve light pill text inside explicit dark-navy / dark-emerald pills (never matching dark:bg-*) */
+html.theme-light body :where(.bg-blue-900\/80, .bg-blue-950\/90, .bg-emerald-800\/80, .bg-slate-800\/90) {
+    color: #e2e8f0 !important;
+}
+
+html.theme-light body :where(.bg-blue-900\/80, .bg-blue-950\/90, .bg-emerald-800\/80, .bg-slate-800\/90):where([class*="text-cyan-"]),
+html.theme-light body :where(.bg-blue-900\/80, .bg-blue-950\/90) [class*="text-cyan-"] {
+    color: #a5f3fc !important;
+}
+
+html.theme-light body :where(.bg-blue-900\/80, .bg-blue-950\/90):where([class*="text-blue-"]),
+html.theme-light body :where(.bg-blue-900\/80, .bg-blue-950\/90) [class*="text-blue-"] {
+    color: #bfdbfe !important;
+}
+
+html.theme-light body :where(.bg-emerald-800\/80):where([class*="text-emerald-"]),
+html.theme-light body :where(.bg-emerald-800\/80) [class*="text-emerald-"] {
+    color: #a7f3d0 !important;
+}
+
+/* Light Mode: progress track & subtle cancel button on dark-blue alpha backgrounds */
+html.theme-light .portal-main .bg-blue-950 {
+    background-color: #dbeafe !important;
+}
+
+html.theme-light :where([data-broadcast-modal], [data-assign-admin-modal]) .bg-blue-950\/40 {
+    background-color: #f1f5f9 !important;
+    color: #334155 !important;
+    border-color: #cbd5e1 !important;
+}
+
+/* Light Mode: layer nested dark sub-surfaces cleanly on white cards & modals */
+html.theme-light :where(.portal-main, [data-assign-admin-modal], [data-broadcast-modal]) :where(
+    [class*="bg-[#031027"],
+    [class*="bg-[#040e24"],
+    [class*="bg-[#061633"],
+    [class*="bg-[#061836"],
+    [class*="bg-[#0d2b5b"],
+    [class*="bg-[#0b2852"]
+) {
+    background-color: #f1f5f9 !important;
+    border-color: #cbd5e1 !important;
+}
+
+html.theme-light .portal-main [class*="border-blue-800"],
+html.theme-light .portal-main [class*="border-blue-900"],
+html.theme-light [data-assign-admin-modal] [class*="border-blue-"],
+html.theme-light [data-broadcast-modal] [class*="border-blue-"] {
+    border-color: #cbd5e1 !important;
+}
+
+html.theme-light .portal-main [class*="divide-blue-"] > :not(:first-child) {
+    border-color: #e2e8f0 !important;
+}
+
+/* Light Mode: convert pale dark-mode foreground colors on light portal cards & modals */
+html.theme-light :where(.portal-main, .portal-header, [data-assign-admin-modal], [data-revoke-admin-modal], [data-broadcast-modal]) :where([class*="text-blue-100"], [class*="text-blue-200"], [class*="text-blue-300"]):not([class*="dark:text-"]):not([class*="bg-blue-"]):not([class*="bg-slate-9"]):not([class*="bg-slate-8"]) {
+    color: #1d4ed8 !important;
+}
+
+html.theme-light :where(.portal-main, .portal-header, [data-assign-admin-modal], [data-revoke-admin-modal], [data-broadcast-modal]) :where([class*="text-cyan-100"], [class*="text-cyan-200"], [class*="text-cyan-300"]):not([class*="dark:text-"]):not([class*="bg-blue-9"]):not([class*="bg-slate-9"]):not([class*="bg-cyan-6"]) {
+    color: #0e7490 !important;
+}
+
+html.theme-light :where(.portal-main, .portal-header, [data-assign-admin-modal], [data-revoke-admin-modal], [data-broadcast-modal]) :where([class*="text-emerald-200"], [class*="text-emerald-300"], [class*="text-emerald-400"]):not([class*="dark:text-"]):not([class*="bg-emerald-8"]):not([class*="bg-emerald-6"]):not([class*="bg-blue-9"]) {
+    color: #047857 !important;
+}
+
+html.theme-light :where(.portal-main, .portal-header, [data-assign-admin-modal], [data-revoke-admin-modal], [data-broadcast-modal]) :where([class*="text-amber-200"], [class*="text-amber-300"], [class*="text-amber-400"]):not([class*="dark:text-"]):not([class*="bg-amber-"]):not([class*="bg-slate-9"]) {
+    color: #b45309 !important;
+}
+
+html.theme-light :where(.portal-main, .portal-header, [data-assign-admin-modal], [data-revoke-admin-modal], [data-broadcast-modal]) :where([class*="text-rose-200"], [class*="text-rose-300"], [class*="text-rose-400"]):not([class*="dark:text-"]):not([class*="bg-rose-6"]):not([class*="bg-red-6"]):not([class*="bg-slate-9"]) {
+    color: #be123c !important;
+}
+
+html.theme-light :where(.portal-main, [data-assign-admin-modal], [data-revoke-admin-modal], [data-broadcast-modal]) :where(input, select, textarea) {
+    background-color: #ffffff !important;
+    color: #0f172a !important;
+    border-color: #cbd5e1 !important;
+}
+
+html.theme-light .portal-main :where(button, a)[class*="hover:text-white"]:not([class*="bg-blue-6"]):not([class*="bg-rose-6"]):not([class*="bg-red-6"]):not([class*="bg-emerald-6"]):hover {
+    color: #0f172a !important;
+    background-color: #e2e8f0 !important;
+}
+
+/* Dark Mode: fix settings card & unprefixed light-mode utility classes inside .portal-main */
+html:not(.theme-light) .portal-main .portal-card[class*="text-slate-700"],
+html:not(.theme-light) .portal-main [class*="text-slate-700"]:not([class*="dark:text-"]) {
+    color: #e2e8f0 !important;
+}
+
+html:not(.theme-light) .portal-main [class*="text-slate-600"]:not([class*="dark:text-"]) {
+    color: #cbd5e1 !important;
+}
+
+html:not(.theme-light) .portal-main .bg-slate-100 {
+    background-color: rgba(15, 23, 42, 0.85) !important;
+    border: 1px solid #1e3a8a !important;
+    color: #cbd5e1 !important;
+}
+
+html:not(.theme-light) .portal-main .bg-slate-100 [class*="text-blue-700"] {
+    color: #60a5fa !important;
+}
+
+html:not(.theme-light) .portal-main .bg-slate-100 [class*="text-slate-500"] {
+    color: #94a3b8 !important;
+}
+
+html:not(.theme-light) .portal-main [class*="divide-blue-200"] > :not(:first-child) {
+    border-color: rgba(30, 58, 138, 0.55) !important;
 }
