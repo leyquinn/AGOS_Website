@@ -2,10 +2,14 @@
 
 namespace Tests\Feature;
 
-use App\Models\Role;
 use App\Models\Barangay;
+use App\Models\CitizenReport;
+use App\Models\Role;
+use App\Models\SocialPost;
 use App\Models\User;
+use App\Services\FloodHeatmapService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Cache;
 use Tests\TestCase;
 
 class CitizenReportTest extends TestCase
@@ -190,5 +194,55 @@ class CitizenReportTest extends TestCase
         ]);
 
         $this->actingAs($admin)->get(route('citizen.create'))->assertForbidden();
+    }
+
+    public function test_citizen_map_api_includes_shared_verified_heatmap_bundle(): void
+    {
+        Cache::forget(FloodHeatmapService::CACHE_KEY);
+
+        $barangay = Barangay::create(['name' => 'Matina Crossing', 'district' => '1st District']);
+        $citizen = User::factory()->create([
+            'role_id' => Role::firstOrCreate(['name' => 'citizen'])->id,
+            'barangay_id' => $barangay->id,
+        ]);
+
+        SocialPost::create([
+            'post_id' => 'fb-verified-1',
+            'full_text' => 'Flooding along Matina Crossing road.',
+            'model_status' => 'VERIFIED_ACTIONABLE',
+            'confidence_score' => 0.9100,
+            'primary_barangay' => 'Matina Crossing',
+            'latitude' => 7.0589,
+            'longitude' => 125.5681,
+        ]);
+
+        CitizenReport::create([
+            'user_id' => $citizen->id,
+            'barangay_id' => $barangay->id,
+            'report_text' => 'Verified knee-deep flood.',
+            'latitude' => 7.0601,
+            'longitude' => 125.5702,
+            'water_level_status' => 'knee_deep',
+            'verification_status' => 'verified',
+        ]);
+
+        CitizenReport::create([
+            'user_id' => $citizen->id,
+            'barangay_id' => $barangay->id,
+            'report_text' => 'Pending unverified report.',
+            'latitude' => 7.0711,
+            'longitude' => 125.6111,
+            'water_level_status' => 'low',
+            'verification_status' => 'pending',
+        ]);
+
+        $response = $this->actingAs($citizen)->getJson(route('citizen.map.reports'));
+
+        $response->assertOk()
+            ->assertJsonCount(2, 'reports')
+            ->assertJsonCount(2, 'heatPoints')
+            ->assertJsonPath('validatedEventsCount', 2)
+            ->assertJsonPath('barangaysAffectedCount', 1)
+            ->assertJsonPath('barangayCounts.Matina Crossing', 2);
     }
 }

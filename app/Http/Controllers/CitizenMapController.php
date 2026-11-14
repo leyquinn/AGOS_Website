@@ -3,14 +3,17 @@
 namespace App\Http\Controllers;
 
 use App\Models\CitizenReport;
+use App\Services\FloodHeatmapService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
 
 class CitizenMapController extends Controller
 {
-    public function reports(): JsonResponse
+    public function reports(FloodHeatmapService $heatmapService): JsonResponse
     {
+        $heatmapBundle = $heatmapService->getBundle();
+
         return response()->json([
             'reports' => CitizenReport::with('barangay')
                 ->whereNotNull('latitude')
@@ -28,6 +31,10 @@ class CitizenMapController extends Controller
                     'reported_at' => $report->created_at->diffForHumans(),
                     'validation_status' => ucfirst($report->verification_status),
                 ]),
+            'heatPoints' => $heatmapBundle['mapPoints'],
+            'barangayCounts' => $heatmapBundle['barangayReportCounts'],
+            'validatedEventsCount' => $heatmapBundle['validatedEventsCount'],
+            'barangaysAffectedCount' => $heatmapBundle['barangaysAffectedCount'],
         ]);
     }
 

@@ -65,6 +65,62 @@ const pointsInsideFeatures = (points, features) => points.filter(([latitude, lon
     return features.some((feature) => featureContainsPoint(point, feature));
 });
 
+const normalizeHeatPoints = (points) => (Array.isArray(points) ? points : []).map((point) => (
+    Array.isArray(point)
+        ? point
+        : [Number(point.latitude), Number(point.longitude), Number(point.intensity), point.barangay]
+)).filter(([latitude, longitude]) => Number.isFinite(latitude) && Number.isFinite(longitude));
+
+const boundaryPromises = new Map();
+const loadBoundaryFeatures = async (boundaryUrl = DEFAULT_BOUNDARY_URL) => {
+    if (window._davaoGeoJsonCache) {
+        const geoJson = window._davaoGeoJsonCache;
+        const features = geoJson.type === 'FeatureCollection'
+            ? geoJson.features
+            : [{ type: 'Feature', properties: {}, geometry: geoJson }];
+        return { geoJson, features };
+    }
+
+    if (!boundaryPromises.has(boundaryUrl)) {
+        boundaryPromises.set(boundaryUrl, (async () => {
+            const response = await fetch(boundaryUrl, { headers: { Accept: 'application/geo+json, application/json' } });
+            if (!response.ok) throw new Error(`Boundary request failed with status ${response.status}`);
+            const geoJson = await response.json();
+            window._davaoGeoJsonCache = geoJson;
+            return geoJson;
+        })().catch((error) => {
+            boundaryPromises.delete(boundaryUrl);
+            throw error;
+        }));
+    }
+
+    const geoJson = await boundaryPromises.get(boundaryUrl);
+    const features = geoJson.type === 'FeatureCollection'
+        ? geoJson.features
+        : [{ type: 'Feature', properties: {}, geometry: geoJson }];
+    if (!features.length) throw new Error('Boundary GeoJSON contains no features.');
+    return { geoJson, features };
+};
+
+const citizenMapPromises = new Map();
+const fetchCitizenMapBundle = (reportsUrl) => {
+    if (!citizenMapPromises.has(reportsUrl)) {
+        citizenMapPromises.set(reportsUrl, (async () => {
+            const response = await fetch(reportsUrl, {
+                headers: { Accept: 'application/json' },
+                credentials: 'same-origin',
+                cache: 'no-store',
+            });
+            if (!response.ok) throw new Error(`Map reports failed with status ${response.status}`);
+            return response.json();
+        })().catch((error) => {
+            citizenMapPromises.delete(reportsUrl);
+            throw error;
+        }));
+    }
+    return citizenMapPromises.get(reportsUrl);
+};
+
 const createHeatLayer = (map, points) => {
     const layer = L.Layer.extend({
         initialize(points) {
@@ -168,9 +224,7 @@ const initOperationsMap = async () => {
     } catch (error) {
         console.error('Unable to parse report heatmap points.', error);
     }
-    heatPoints = heatPoints.map((point) => Array.isArray(point)
-        ? point
-        : [point.latitude, point.longitude, point.intensity, point.barangay]);
+    heatPoints = normalizeHeatPoints(heatPoints);
     const heatLayer = createHeatLayer(map, heatPoints);
     const reportBarangays = [...new Set(heatPoints.map((point) => point[3]).filter(Boolean))].sort();
     const populateSelector = (names) => {
@@ -191,15 +245,8 @@ const initOperationsMap = async () => {
     };
 
     try {
-        let geoJson = window._davaoGeoJsonCache;
-        if (!geoJson) {
-            const response = await fetch(boundaryUrl, { headers: { Accept: 'application/geo+json, application/json' } });
-            if (!response.ok) throw new Error(`Boundary request failed with status ${response.status}`);
-            geoJson = await response.json();
-            window._davaoGeoJsonCache = geoJson;
-        }
-        features = geoJson.type === 'FeatureCollection' ? geoJson.features : [{ type: 'Feature', properties: {}, geometry: geoJson }];
-        if (!features.length) throw new Error('Boundary GeoJSON contains no features.');
+        const { geoJson, features: loadedFeatures } = await loadBoundaryFeatures(boundaryUrl);
+        features = loadedFeatures;
         heatPoints = pointsInsideFeatures(heatPoints, features);
         heatLayer.setPoints(heatPoints);
 
@@ -269,7 +316,7 @@ const initCitizenHomeMap = async () => {
     const mapElement = document.querySelector('[data-citizen-map]');
     if (!mapElement) return;
 
-    const map = L.map(mapElement, { zoomControl: false }).setView([7.0736, 125.6110], 13);
+    const map = L.map(mapElement, { zoomControl: false, preferCanvas: true }).setView(DAVAO_CENTER, 12);
     L.control.zoom({ position: 'bottomright' }).addTo(map);
     L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
         attribution: '&copy; OpenStreetMap',
@@ -278,7 +325,13 @@ const initCitizenHomeMap = async () => {
         updateWhenZooming: false,
     }).addTo(map);
 
+    const statusBadge = document.querySelector('[data-citizen-heatmap-status]');
+    const boundaryUrl = mapElement.dataset.boundaryUrl || DEFAULT_BOUNDARY_URL;
+    const heatLayer = createHeatLayer(map, []);
     const markers = L.layerGroup().addTo(map);
+    let boundaryFeatures = [];
+    let rawHeatPoints = [];
+
     const escapeHtml = (value) => String(value).replace(/[&<>"']/g, (character) => ({
         '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;',
     }[character]));
@@ -289,21 +342,62 @@ const initCitizenHomeMap = async () => {
         iconAnchor: [7, 7],
     });
 
+    const syncHeatmapPoints = () => {
+        const points = boundaryFeatures.length
+            ? pointsInsideFeatures(rawHeatPoints, boundaryFeatures)
+            : rawHeatPoints;
+        heatLayer.setPoints(points);
+        if (boundaryFeatures.length) {
+            heatLayer.setBoundary(boundaryFeatures);
+        }
+    };
+
+    const syncMapLayout = () => {
+        if (mapElement.offsetWidth <= 0 || mapElement.offsetHeight <= 0) return;
+        map.invalidateSize();
+        heatLayer._reset();
+    };
+
+    const loadBoundaries = async () => {
+        try {
+            const { geoJson, features } = await loadBoundaryFeatures(boundaryUrl);
+            boundaryFeatures = features;
+            const boundaryLayer = L.geoJSON(geoJson, {
+                interactive: false,
+                style: { color: '#38bdf8', weight: 0.9, opacity: 0.65, fillColor: '#0ea5e9', fillOpacity: 0.03 },
+            }).addTo(map);
+            boundaryLayer.bringToBack();
+            syncHeatmapPoints();
+            syncMapLayout();
+        } catch (error) {
+            console.error('Unable to load Davao barangay boundaries for citizen map.', error);
+        }
+    };
+
     const loadReports = async () => {
         try {
-            const response = await fetch(mapElement.dataset.reportsUrl, {
-                headers: { Accept: 'application/json' },
-                credentials: 'same-origin',
-                cache: 'no-store',
-            });
-            if (!response.ok) throw new Error(`Map reports failed with status ${response.status}`);
-            const { reports } = await response.json();
+            const data = await fetchCitizenMapBundle(mapElement.dataset.reportsUrl);
+            const reports = Array.isArray(data.reports) ? data.reports : [];
+            rawHeatPoints = normalizeHeatPoints(data.heatPoints);
+            syncHeatmapPoints();
+
             markers.clearLayers();
             reports.forEach((report) => L.marker([report.latitude, report.longitude], { icon: iconFor(report.severity) })
                 .bindPopup(`<strong>${escapeHtml(report.location)}</strong><br>${escapeHtml(report.water_level)}<br><small>${escapeHtml(report.reported_at)} · ${escapeHtml(report.validation_status)}</small>`)
                 .addTo(markers));
+
+            if (statusBadge) {
+                const verifiedCount = Number(data.validatedEventsCount || 0);
+                const barangayCount = Number(data.barangaysAffectedCount || 0);
+                statusBadge.textContent = verifiedCount > 0
+                    ? `Verified Heatmap: ${verifiedCount.toLocaleString()} reports · ${barangayCount} barangays`
+                    : 'Verified Heatmap: No active verified flood reports';
+            }
         } catch (error) {
             console.error('Unable to load citizen map reports.', error);
+            if (statusBadge) {
+                statusBadge.textContent = 'Unable to load verified flood heatmap';
+            }
         }
     };
 
@@ -354,8 +448,14 @@ const initCitizenHomeMap = async () => {
         searchInput.value = result.textContent;
         results.innerHTML = '';
     });
-    document.querySelector('[data-citizen-screen="map"]')?.addEventListener('citizen-map-shown', () => window.setTimeout(() => map.invalidateSize(), 50));
-    loadReports();
+
+    if (typeof ResizeObserver !== 'undefined') {
+        const observer = new ResizeObserver(() => syncMapLayout());
+        observer.observe(mapElement);
+    }
+    document.querySelector('[data-citizen-screen="map"]')?.addEventListener('citizen-map-shown', () => window.setTimeout(syncMapLayout, 50));
+
+    await Promise.all([loadBoundaries(), loadReports()]);
 };
 
 const initCitizenPreviewMap = async () => {
@@ -370,7 +470,8 @@ const initCitizenPreviewMap = async () => {
         scrollWheelZoom: false,
         touchZoom: false,
         zoomSnap: 0.5,
-    }).setView([7.0736, 125.6110], 12);
+        preferCanvas: true,
+    }).setView(DAVAO_CENTER, 11.5);
 
     L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
         maxZoom: 19,
@@ -378,25 +479,47 @@ const initCitizenPreviewMap = async () => {
         updateWhenZooming: false,
     }).addTo(map);
 
+    const boundaryUrl = mapElement.dataset.boundaryUrl || DEFAULT_BOUNDARY_URL;
+    const heatLayer = createHeatLayer(map, []);
+
     try {
-        const response = await fetch(mapElement.dataset.reportsUrl, {
-            headers: { Accept: 'application/json' },
-            credentials: 'same-origin',
-            cache: 'no-store',
-        });
-        if (!response.ok) throw new Error(`Preview reports failed with status ${response.status}`);
-        const { reports } = await response.json();
-        reports.slice(0, 12).forEach((report) => {
-            L.circleMarker([report.latitude, report.longitude], {
-                radius: 5,
-                color: '#ffffff',
-                weight: 2,
-                fillColor: report.severity === 'critical'
-                    ? '#dc2626'
-                    : report.severity === 'moderate' ? '#f59e0b' : '#16a34a',
-                fillOpacity: 1,
+        const [boundaryResult, data] = await Promise.allSettled([
+            loadBoundaryFeatures(boundaryUrl),
+            fetchCitizenMapBundle(mapElement.dataset.reportsUrl),
+        ]);
+
+        let boundaryFeatures = [];
+        if (boundaryResult.status === 'fulfilled') {
+            const { geoJson, features } = boundaryResult.value;
+            boundaryFeatures = features;
+            const previewBoundary = L.geoJSON(geoJson, {
+                interactive: false,
+                style: { color: '#38bdf8', weight: 0.7, opacity: 0.5, fillColor: '#0ea5e9', fillOpacity: 0.03 },
             }).addTo(map);
-        });
+            previewBoundary.bringToBack();
+            heatLayer.setBoundary(boundaryFeatures);
+        }
+
+        if (data.status === 'fulfilled') {
+            const payload = data.value;
+            const rawPoints = normalizeHeatPoints(payload.heatPoints);
+            const clippedPoints = boundaryFeatures.length
+                ? pointsInsideFeatures(rawPoints, boundaryFeatures)
+                : rawPoints;
+            heatLayer.setPoints(clippedPoints);
+
+            (Array.isArray(payload.reports) ? payload.reports : []).slice(0, 12).forEach((report) => {
+                L.circleMarker([report.latitude, report.longitude], {
+                    radius: 5,
+                    color: '#ffffff',
+                    weight: 2,
+                    fillColor: report.severity === 'critical'
+                        ? '#dc2626'
+                        : report.severity === 'moderate' ? '#f59e0b' : '#16a34a',
+                    fillOpacity: 1,
+                }).addTo(map);
+            });
+        }
     } catch (error) {
         console.error('Unable to load citizen map preview reports.', error);
     }

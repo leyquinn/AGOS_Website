@@ -108,7 +108,7 @@
                     <span class="cta-icon">▣</span><span><strong>See Flooding in Your Area</strong><small>Help others by reporting current water levels</small></span><b>→</b>
                 </a>
                 <a href="{{ route('citizen.map') }}" class="citizen-map-preview" aria-label="Open live flood map">
-                    <div class="citizen-map-preview-leaflet" data-citizen-preview-map data-reports-url="{{ route('citizen.map.reports') }}"></div>
+                    <div class="citizen-map-preview-leaflet" data-citizen-preview-map data-boundary-url="{{ asset('data/davao-barangays.geojson') }}" data-reports-url="{{ route('citizen.map.reports') }}"></div>
                 </a>
                 <div class="citizen-section-title"><strong>Nearby Activity</strong><a href="{{ route('citizen.map') }}">View All</a></div>
                 <div class="citizen-activity-list">
@@ -121,9 +121,10 @@
             <section class="citizen-screen {{ ($screen ?? 'home') === 'map' ? 'is-active' : '' }}" data-citizen-screen="map">
                 <div class="citizen-screen-title"><button type="button" class="citizen-subheader-button" data-citizen-nav="home">←</button><h1>LIVE FLOOD MAP</h1><button type="button" class="citizen-subheader-button" data-citizen-profile>◎</button></div>
                 <div class="citizen-map-large">
-                    <div class="citizen-map-leaflet" data-citizen-map data-reports-url="{{ route('citizen.map.reports') }}" data-search-url="{{ route('citizen.map.search') }}"></div>
+                    <div class="citizen-map-leaflet" data-citizen-map data-boundary-url="{{ asset('data/davao-barangays.geojson') }}" data-reports-url="{{ route('citizen.map.reports') }}" data-search-url="{{ route('citizen.map.search') }}"></div>
                     <label class="map-search">⌕ <input type="search" data-map-search placeholder="Search location or area..." aria-label="Search location or area"><b data-map-location>♟</b></label>
                     <div class="map-search-results" data-map-search-results></div>
+                    <div class="citizen-heatmap-status" data-citizen-heatmap-status>Loading verified flood heatmap…</div>
                 </div>
                 <div class="citizen-section-title"><strong>Nearby Activity</strong><a href="{{ route('citizen.map') }}">View All</a></div>
                 <div class="map-activity-list">
