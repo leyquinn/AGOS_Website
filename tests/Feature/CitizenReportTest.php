@@ -245,4 +245,94 @@ class CitizenReportTest extends TestCase
             ->assertJsonPath('barangaysAffectedCount', 1)
             ->assertJsonPath('barangayCounts.Matina Crossing', 2);
     }
+
+    public function test_heatmap_sorts_periods_and_filters_by_year_and_month_for_admin_and_citizen(): void
+    {
+        Cache::forget(FloodHeatmapService::CACHE_KEY);
+
+        $barangayA = Barangay::create(['name' => 'Matina Crossing', 'district' => '1st District']);
+        $barangayB = Barangay::create(['name' => 'Talomo', 'district' => '1st District']);
+
+        $citizen = User::factory()->create([
+            'role_id' => Role::firstOrCreate(['name' => 'citizen'])->id,
+            'barangay_id' => $barangayA->id,
+        ]);
+
+        $admin = User::factory()->create([
+            'role_id' => Role::firstOrCreate(['name' => 'super_admin'])->id,
+        ]);
+
+        SocialPost::create([
+            'post_id' => 'fb-2025-03',
+            'full_text' => 'Flooding in Matina Crossing in March 2025.',
+            'model_status' => 'VERIFIED_ACTIONABLE',
+            'confidence_score' => 0.8900,
+            'primary_barangay' => 'Matina Crossing',
+            'latitude' => 7.0589,
+            'longitude' => 125.5681,
+            'posted_at' => '2025-03-14 08:00:00',
+        ]);
+
+        SocialPost::create([
+            'post_id' => 'fb-2026-10',
+            'full_text' => 'Flooding in Talomo in October 2026.',
+            'model_status' => 'VERIFIED_ACTIONABLE',
+            'confidence_score' => 0.9300,
+            'primary_barangay' => 'Talomo',
+            'latitude' => 7.0510,
+            'longitude' => 125.5490,
+            'posted_at' => '2026-10-09 14:30:00',
+        ]);
+
+        $citizenNov2026 = CitizenReport::create([
+            'user_id' => $citizen->id,
+            'barangay_id' => $barangayA->id,
+            'report_text' => 'Verified November 2026 flood.',
+            'latitude' => 7.0601,
+            'longitude' => 125.5702,
+            'water_level_status' => 'waist_deep',
+            'verification_status' => 'verified',
+        ]);
+        $citizenNov2026->created_at = '2026-11-05 10:00:00';
+        $citizenNov2026->save();
+
+        // Admin heatmap endpoint checks sorting (newest year & month first) and year/month filtering.
+        $this->actingAs($admin)
+            ->getJson(route('operations.heatmap'))
+            ->assertOk()
+            ->assertJsonPath('validatedEventsCount', 3)
+            ->assertJsonPath('availablePeriods.years.0.year', 2026)
+            ->assertJsonPath('availablePeriods.years.1.year', 2025)
+            ->assertJsonPath('availablePeriods.months.0.year', 2026)
+            ->assertJsonPath('availablePeriods.months.0.month', 11)
+            ->assertJsonPath('availablePeriods.months.1.year', 2026)
+            ->assertJsonPath('availablePeriods.months.1.month', 10)
+            ->assertJsonPath('availablePeriods.months.2.year', 2025)
+            ->assertJsonPath('availablePeriods.months.2.month', 3);
+
+        $this->actingAs($admin)
+            ->getJson(route('operations.heatmap', ['year' => 2026, 'month' => 10]))
+            ->assertOk()
+            ->assertJsonPath('validatedEventsCount', 1)
+            ->assertJsonPath('barangaysAffectedCount', 1)
+            ->assertJsonPath('barangayReportCounts.Talomo', 1)
+            ->assertJsonPath('selectedYear', 2026)
+            ->assertJsonPath('selectedMonth', 10);
+
+        // Citizen heatmap endpoint filters both heatmap points and citizen pins cleanly.
+        $this->actingAs($citizen)
+            ->getJson(route('citizen.map.reports', ['year' => 2026, 'month' => 11]))
+            ->assertOk()
+            ->assertJsonCount(1, 'reports')
+            ->assertJsonCount(1, 'heatPoints')
+            ->assertJsonPath('validatedEventsCount', 1)
+            ->assertJsonPath('barangayCounts.Matina Crossing', 1)
+            ->assertJsonPath('selectedYear', 2026)
+            ->assertJsonPath('selectedMonth', 11);
+
+        // Citizen cannot call admin heatmap route.
+        $this->actingAs($citizen)
+            ->getJson(route('operations.heatmap'))
+            ->assertForbidden();
+    }
 }

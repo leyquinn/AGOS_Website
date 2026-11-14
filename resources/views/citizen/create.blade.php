@@ -120,6 +120,14 @@
 
             <section class="citizen-screen {{ ($screen ?? 'home') === 'map' ? 'is-active' : '' }}" data-citizen-screen="map">
                 <div class="citizen-screen-title"><button type="button" class="citizen-subheader-button" data-citizen-nav="home">←</button><h1>LIVE FLOOD MAP</h1><button type="button" class="citizen-subheader-button" data-citizen-profile>◎</button></div>
+                <div class="citizen-heatmap-filters">
+                    <select data-citizen-year-filter aria-label="Filter flood heatmap by year">
+                        <option value="">All years</option>
+                    </select>
+                    <select data-citizen-month-filter aria-label="Filter flood heatmap by month">
+                        <option value="">All months</option>
+                    </select>
+                </div>
                 <div class="citizen-map-large">
                     <div class="citizen-map-leaflet" data-citizen-map data-boundary-url="{{ asset('data/davao-barangays.geojson') }}" data-reports-url="{{ route('citizen.map.reports') }}" data-search-url="{{ route('citizen.map.search') }}"></div>
                     <label class="map-search">⌕ <input type="search" data-map-search placeholder="Search location or area..." aria-label="Search location or area"><b data-map-location>♟</b></label>

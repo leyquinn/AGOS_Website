@@ -56,24 +56,47 @@
                 <div>
                     <div class="flex flex-wrap items-center gap-2">
                         <h2 class="text-sm font-bold text-white">Barangay flood heatmap (Verified Model Output)</h2>
-                        <span class="rounded-full bg-emerald-500/20 px-2.5 py-0.5 text-[9px] font-bold text-emerald-300">
+                        <span data-heatmap-badge class="rounded-full bg-emerald-500/20 px-2.5 py-0.5 text-[9px] font-bold text-emerald-300">
                             {{ number_format($validatedEventsCount ?? 0) }} Verified Reports · {{ $barangaysAffectedCount ?? 0 }} Barangays
                         </span>
                     </div>
                     <p data-map-status class="mt-1 text-[10px] text-slate-400">Loading Davao City barangay boundaries...</p>
                 </div>
-                <label class="flex items-center gap-2 text-[10px] font-semibold text-slate-400">
-                    <span class="sr-only">Filter by barangay</span>
-                    <select data-barangay-filter class="rounded-lg border border-blue-900/60 bg-[#031027] px-3 py-2 text-[10px] text-slate-200 outline-none focus:border-cyan-400 focus:ring-1 focus:ring-cyan-400">
-                        <option value="">All barangays</option>
-                    </select>
-                </label>
+                <div class="flex flex-wrap items-center gap-2">
+                    <label class="flex items-center text-[10px] font-semibold text-slate-400">
+                        <span class="sr-only">Filter heatmap by year</span>
+                        <select data-heatmap-year-filter class="rounded-lg border border-blue-900/60 bg-[#031027] px-2.5 py-2 text-[10px] text-slate-200 outline-none focus:border-cyan-400 focus:ring-1 focus:ring-cyan-400">
+                            <option value="">All years</option>
+                            @foreach (($heatmapPeriods['years'] ?? []) as $yearItem)
+                                <option value="{{ $yearItem['year'] }}" @selected(($selectedYear ?? null) === $yearItem['year'])>
+                                    {{ $yearItem['year'] }} ({{ number_format($yearItem['count']) }})
+                                </option>
+                            @endforeach
+                        </select>
+                    </label>
+                    <label class="flex items-center text-[10px] font-semibold text-slate-400">
+                        <span class="sr-only">Filter heatmap by month</span>
+                        <select data-heatmap-month-filter class="rounded-lg border border-blue-900/60 bg-[#031027] px-2.5 py-2 text-[10px] text-slate-200 outline-none focus:border-cyan-400 focus:ring-1 focus:ring-cyan-400">
+                            <option value="">All months</option>
+                        </select>
+                    </label>
+                    <label class="flex items-center gap-2 text-[10px] font-semibold text-slate-400">
+                        <span class="sr-only">Filter by barangay</span>
+                        <select data-barangay-filter class="rounded-lg border border-blue-900/60 bg-[#031027] px-3 py-2 text-[10px] text-slate-200 outline-none focus:border-cyan-400 focus:ring-1 focus:ring-cyan-400">
+                            <option value="">All barangays</option>
+                        </select>
+                    </label>
+                </div>
             </div>
             <div class="relative h-[28rem] bg-[#0b2852]">
                 <div
                     data-flood-map
                     data-boundary-url="{{ asset('data/davao-barangays.geojson') }}"
-                    @if (! empty($mapPoints) && count($mapPoints) > 0) data-heat-points='@json($mapPoints)' @endif
+                    data-heatmap-url="{{ route('operations.heatmap') }}"
+                    data-heatmap-periods='@json($heatmapPeriods ?? ['years' => [], 'months' => []])'
+                    data-selected-year="{{ $selectedYear ?? '' }}"
+                    data-selected-month="{{ $selectedMonth ?? '' }}"
+                    data-heat-points='@json($mapPoints ?? [])'
                     @if (! empty($barangayReportCounts)) data-barangay-counts='@json($barangayReportCounts)' @endif
                     class="h-full w-full"
                 ></div>

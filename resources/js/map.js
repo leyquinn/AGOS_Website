@@ -103,10 +103,77 @@ const loadBoundaryFeatures = async (boundaryUrl = DEFAULT_BOUNDARY_URL) => {
 };
 
 const citizenMapPromises = new Map();
-const fetchCitizenMapBundle = (reportsUrl) => {
-    if (!citizenMapPromises.has(reportsUrl)) {
-        citizenMapPromises.set(reportsUrl, (async () => {
-            const response = await fetch(reportsUrl, {
+const buildFilteredUrl = (baseUrl, year = '', month = '') => {
+    const url = new URL(baseUrl, window.location.origin);
+    if (year) url.searchParams.set('year', String(year));
+    else url.searchParams.delete('year');
+    if (month) url.searchParams.set('month', String(month));
+    else url.searchParams.delete('month');
+    return url.toString();
+};
+
+const syncYearMonthFilters = ({ yearSelect, monthSelect, periods, selectedYear = '', selectedMonth = '' }) => {
+    const years = Array.isArray(periods?.years) ? periods.years : [];
+    const months = Array.isArray(periods?.months) ? periods.months : [];
+    const normalizedYear = selectedYear ? String(selectedYear) : '';
+    let normalizedMonth = selectedMonth ? String(selectedMonth) : '';
+
+    if (yearSelect) {
+        yearSelect.innerHTML = '<option value="">All years</option>';
+        years.forEach((item) => {
+            const label = `${item.year} (${Number(item.count || 0).toLocaleString()})`;
+            yearSelect.add(new Option(label, String(item.year)));
+        });
+        yearSelect.value = years.some((item) => String(item.year) === normalizedYear) ? normalizedYear : '';
+    }
+
+    const activeYear = yearSelect ? yearSelect.value : normalizedYear;
+    const monthOptions = [];
+    if (activeYear) {
+        months
+            .filter((item) => String(item.year) === activeYear)
+            .sort((a, b) => Number(b.month) - Number(a.month))
+            .forEach((item) => {
+                monthOptions.push({
+                    value: String(item.month),
+                    label: `${item.month_name} (${Number(item.count || 0).toLocaleString()})`,
+                });
+            });
+    } else {
+        const aggregated = new Map();
+        months.forEach((item) => {
+            const m = Number(item.month);
+            const prev = aggregated.get(m) || { month: m, month_name: item.month_name, count: 0 };
+            prev.count += Number(item.count || 0);
+            aggregated.set(m, prev);
+        });
+        [...aggregated.values()]
+            .sort((a, b) => b.month - a.month)
+            .forEach((item) => {
+                monthOptions.push({
+                    value: String(item.month),
+                    label: `${item.month_name} (${item.count.toLocaleString()})`,
+                });
+            });
+    }
+
+    if (normalizedMonth && !monthOptions.some((opt) => opt.value === normalizedMonth)) {
+        normalizedMonth = '';
+    }
+
+    if (monthSelect) {
+        monthSelect.innerHTML = '<option value="">All months</option>';
+        monthOptions.forEach((opt) => monthSelect.add(new Option(opt.label, opt.value)));
+        monthSelect.value = normalizedMonth;
+    }
+
+    return { year: activeYear, month: normalizedMonth };
+};
+
+const fetchCitizenMapBundle = (requestUrl) => {
+    if (!citizenMapPromises.has(requestUrl)) {
+        citizenMapPromises.set(requestUrl, (async () => {
+            const response = await fetch(requestUrl, {
                 headers: { Accept: 'application/json' },
                 credentials: 'same-origin',
                 cache: 'no-store',
@@ -114,11 +181,11 @@ const fetchCitizenMapBundle = (reportsUrl) => {
             if (!response.ok) throw new Error(`Map reports failed with status ${response.status}`);
             return response.json();
         })().catch((error) => {
-            citizenMapPromises.delete(reportsUrl);
+            citizenMapPromises.delete(requestUrl);
             throw error;
         }));
     }
-    return citizenMapPromises.get(reportsUrl);
+    return citizenMapPromises.get(requestUrl);
 };
 
 const createHeatLayer = (map, points) => {
@@ -213,28 +280,47 @@ const initOperationsMap = async () => {
 
     const status = document.querySelector('[data-map-status]');
     const selector = document.querySelector('[data-barangay-filter]');
+    const yearFilter = document.querySelector('[data-heatmap-year-filter]');
+    const monthFilter = document.querySelector('[data-heatmap-month-filter]');
+    const heatmapBadge = document.querySelector('[data-heatmap-badge]');
+    const heatmapUrl = mapElement.dataset.heatmapUrl || '';
     const boundaryUrl = mapElement.dataset.boundaryUrl || DEFAULT_BOUNDARY_URL;
     let boundaryLayer;
     let features = [];
     let heatPoints = defaultHeatPoints;
     let barangayCounts = {};
+    let heatmapPeriods = { years: [], months: [] };
     try {
-        heatPoints = JSON.parse(mapElement.dataset.heatPoints || 'null') || defaultHeatPoints;
+        if (mapElement.dataset.heatPoints !== undefined) {
+            heatPoints = JSON.parse(mapElement.dataset.heatPoints) || [];
+        }
         barangayCounts = JSON.parse(mapElement.dataset.barangayCounts || '{}') || {};
+        if (mapElement.dataset.heatmapPeriods) {
+            heatmapPeriods = JSON.parse(mapElement.dataset.heatmapPeriods) || heatmapPeriods;
+        }
     } catch (error) {
         console.error('Unable to parse report heatmap points.', error);
     }
+    syncYearMonthFilters({
+        yearSelect: yearFilter,
+        monthSelect: monthFilter,
+        periods: heatmapPeriods,
+        selectedYear: mapElement.dataset.selectedYear || '',
+        selectedMonth: mapElement.dataset.selectedMonth || '',
+    });
     heatPoints = normalizeHeatPoints(heatPoints);
     const heatLayer = createHeatLayer(map, heatPoints);
     const reportBarangays = [...new Set(heatPoints.map((point) => point[3]).filter(Boolean))].sort();
     const populateSelector = (names) => {
         if (!selector) return;
+        const previousSelection = selector.value;
         selector.innerHTML = '<option value="">All barangays</option>';
         names.forEach((name) => {
             const count = barangayCounts[name] || 0;
             const label = count > 0 ? `${name} (${count} verified)` : name;
             selector.add(new Option(label, name));
         });
+        selector.value = names.includes(previousSelection) ? previousSelection : '';
         selector.disabled = false;
     };
     const updateFallbackFilter = (event) => {
@@ -247,8 +333,8 @@ const initOperationsMap = async () => {
     try {
         const { geoJson, features: loadedFeatures } = await loadBoundaryFeatures(boundaryUrl);
         features = loadedFeatures;
-        heatPoints = pointsInsideFeatures(heatPoints, features);
-        heatLayer.setPoints(heatPoints);
+        let clippedHeatPoints = pointsInsideFeatures(heatPoints, features);
+        heatLayer.setPoints(clippedHeatPoints);
 
         boundaryLayer = L.geoJSON(geoJson, {
             interactive: false,
@@ -256,29 +342,36 @@ const initOperationsMap = async () => {
         }).addTo(map);
         map.fitBounds(boundaryLayer.getBounds(), { padding: [18, 18] });
 
-        selector.innerHTML = '<option value="">All barangays</option>';
-        features
-            .map((feature) => getFeatureName(feature).replace(/\ufffd/g, 'ñ'))
-            .sort((first, second) => {
-                const c1 = barangayCounts[first] || 0;
-                const c2 = barangayCounts[second] || 0;
-                if ((c1 > 0) !== (c2 > 0)) return c2 - c1;
-                if (c1 !== c2) return c2 - c1;
-                return first.localeCompare(second);
-            })
-            .forEach((name) => {
+        const populateBoundaryBarangayOptions = () => {
+            if (!selector) return;
+            const previousSelection = selector.value;
+            selector.innerHTML = '<option value="">All barangays</option>';
+            const sortedNames = features
+                .map((feature) => getFeatureName(feature).replace(/\ufffd/g, 'ñ'))
+                .sort((first, second) => {
+                    const c1 = barangayCounts[first] || 0;
+                    const c2 = barangayCounts[second] || 0;
+                    if ((c1 > 0) !== (c2 > 0)) return c2 - c1;
+                    if (c1 !== c2) return c2 - c1;
+                    return first.localeCompare(second);
+                });
+            sortedNames.forEach((name) => {
                 const count = barangayCounts[name] || 0;
                 const label = count > 0 ? `🚨 ${name} (${count} verified)` : name;
                 selector.add(new Option(label, name));
             });
+            selector.value = sortedNames.includes(previousSelection) ? previousSelection : '';
+        };
+
+        populateBoundaryBarangayOptions();
 
         const updateBoundary = (selectedName = '') => {
             const activeFeatures = selectedName
                 ? features.filter((feature) => getFeatureName(feature).replace(/\ufffd/g, 'ñ') === selectedName)
                 : features;
             const activePoints = selectedName
-                ? heatPoints.filter((pt) => pt[3] === selectedName || pointsInsideFeatures([pt], activeFeatures).length > 0)
-                : heatPoints;
+                ? clippedHeatPoints.filter((pt) => pt[3] === selectedName || pointsInsideFeatures([pt], activeFeatures).length > 0)
+                : clippedHeatPoints;
             boundaryLayer.setStyle((feature) => {
                 const fname = getFeatureName(feature).replace(/\ufffd/g, 'ñ');
                 const isSelected = fname === selectedName;
@@ -302,7 +395,57 @@ const initOperationsMap = async () => {
                 : `Showing ${selCount.toLocaleString()} verified flood reports across ${Object.keys(barangayCounts).length} Davao City barangays`;
         };
 
-        selector.addEventListener('change', (event) => updateBoundary(event.target.value));
+        const applyPeriodFilter = async (nextYear, nextMonth) => {
+            if (!heatmapUrl) return;
+            try {
+                status.textContent = 'Filtering verified flood heatmap...';
+                const response = await fetch(buildFilteredUrl(heatmapUrl, nextYear, nextMonth), {
+                    headers: { Accept: 'application/json' },
+                    credentials: 'same-origin',
+                    cache: 'no-store',
+                });
+                if (!response.ok) throw new Error(`Heatmap filter failed with status ${response.status}`);
+                const data = await response.json();
+                barangayCounts = data.barangayReportCounts || {};
+                heatPoints = normalizeHeatPoints(data.mapPoints);
+                clippedHeatPoints = pointsInsideFeatures(heatPoints, features);
+                if (data.availablePeriods) {
+                    heatmapPeriods = data.availablePeriods;
+                }
+                syncYearMonthFilters({
+                    yearSelect: yearFilter,
+                    monthSelect: monthFilter,
+                    periods: heatmapPeriods,
+                    selectedYear: data.selectedYear ?? nextYear,
+                    selectedMonth: data.selectedMonth ?? nextMonth,
+                });
+                populateBoundaryBarangayOptions();
+                if (heatmapBadge) {
+                    const count = Number(data.validatedEventsCount || 0).toLocaleString();
+                    const brgyCount = Number(data.barangaysAffectedCount || 0);
+                    heatmapBadge.textContent = `${count} Verified Reports · ${brgyCount} Barangays`;
+                }
+                updateBoundary(selector ? selector.value : '');
+            } catch (error) {
+                console.error('Unable to filter operations flood heatmap.', error);
+                status.textContent = 'Unable to filter heatmap reports.';
+            }
+        };
+
+        yearFilter?.addEventListener('change', () => {
+            const { year, month } = syncYearMonthFilters({
+                yearSelect: yearFilter,
+                monthSelect: monthFilter,
+                periods: heatmapPeriods,
+                selectedYear: yearFilter.value,
+                selectedMonth: monthFilter?.value || '',
+            });
+            applyPeriodFilter(year, month);
+        });
+        monthFilter?.addEventListener('change', () => {
+            applyPeriodFilter(yearFilter?.value || '', monthFilter.value);
+        });
+        selector?.addEventListener('change', (event) => updateBoundary(event.target.value));
         updateBoundary();
     } catch (error) {
         console.error('Unable to load Davao barangay boundaries.', error);
@@ -326,11 +469,16 @@ const initCitizenHomeMap = async () => {
     }).addTo(map);
 
     const statusBadge = document.querySelector('[data-citizen-heatmap-status]');
+    const yearFilter = document.querySelector('[data-citizen-year-filter]');
+    const monthFilter = document.querySelector('[data-citizen-month-filter]');
     const boundaryUrl = mapElement.dataset.boundaryUrl || DEFAULT_BOUNDARY_URL;
     const heatLayer = createHeatLayer(map, []);
     const markers = L.layerGroup().addTo(map);
     let boundaryFeatures = [];
     let rawHeatPoints = [];
+    let heatmapPeriods = { years: [], months: [] };
+    let currentYear = '';
+    let currentMonth = '';
 
     const escapeHtml = (value) => String(value).replace(/[&<>"']/g, (character) => ({
         '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;',
@@ -374,10 +522,24 @@ const initCitizenHomeMap = async () => {
         }
     };
 
-    const loadReports = async () => {
+    const loadReports = async (year = currentYear, month = currentMonth) => {
         try {
-            const data = await fetchCitizenMapBundle(mapElement.dataset.reportsUrl);
+            const requestUrl = buildFilteredUrl(mapElement.dataset.reportsUrl, year, month);
+            const data = await fetchCitizenMapBundle(requestUrl);
             const reports = Array.isArray(data.reports) ? data.reports : [];
+            if (data.heatmapPeriods) {
+                heatmapPeriods = data.heatmapPeriods;
+            }
+            const synced = syncYearMonthFilters({
+                yearSelect: yearFilter,
+                monthSelect: monthFilter,
+                periods: heatmapPeriods,
+                selectedYear: data.selectedYear ?? year,
+                selectedMonth: data.selectedMonth ?? month,
+            });
+            currentYear = synced.year;
+            currentMonth = synced.month;
+
             rawHeatPoints = normalizeHeatPoints(data.heatPoints);
             syncHeatmapPoints();
 
@@ -391,7 +553,7 @@ const initCitizenHomeMap = async () => {
                 const barangayCount = Number(data.barangaysAffectedCount || 0);
                 statusBadge.textContent = verifiedCount > 0
                     ? `Verified Heatmap: ${verifiedCount.toLocaleString()} reports · ${barangayCount} barangays`
-                    : 'Verified Heatmap: No active verified flood reports';
+                    : 'Verified Heatmap: No verified flood reports for selected period';
             }
         } catch (error) {
             console.error('Unable to load citizen map reports.', error);
@@ -400,6 +562,24 @@ const initCitizenHomeMap = async () => {
             }
         }
     };
+
+    yearFilter?.addEventListener('change', () => {
+        const synced = syncYearMonthFilters({
+            yearSelect: yearFilter,
+            monthSelect: monthFilter,
+            periods: heatmapPeriods,
+            selectedYear: yearFilter.value,
+            selectedMonth: monthFilter?.value || '',
+        });
+        currentYear = synced.year;
+        currentMonth = synced.month;
+        loadReports(currentYear, currentMonth);
+    });
+    monthFilter?.addEventListener('change', () => {
+        currentYear = yearFilter?.value || '';
+        currentMonth = monthFilter.value;
+        loadReports(currentYear, currentMonth);
+    });
 
     const showLocation = ({ latitude, longitude }, label = 'You are here') => {
         L.marker([latitude, longitude], {

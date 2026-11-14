@@ -10,15 +10,19 @@ use Illuminate\Support\Facades\Http;
 
 class CitizenMapController extends Controller
 {
-    public function reports(FloodHeatmapService $heatmapService): JsonResponse
+    public function reports(Request $request, FloodHeatmapService $heatmapService): JsonResponse
     {
-        $heatmapBundle = $heatmapService->getBundle();
+        $year = FloodHeatmapService::parseYear($request->query('year'));
+        $month = FloodHeatmapService::parseMonth($request->query('month'));
+        $heatmapBundle = $heatmapService->getBundle($year, $month);
 
         return response()->json([
             'reports' => CitizenReport::with('barangay')
                 ->whereNotNull('latitude')
                 ->whereNotNull('longitude')
                 ->whereIn('verification_status', ['pending', 'verified'])
+                ->when($year !== null, fn ($query) => $query->whereYear('created_at', $year))
+                ->when($month !== null, fn ($query) => $query->whereMonth('created_at', $month))
                 ->latest()
                 ->limit(300)
                 ->get()
@@ -35,6 +39,9 @@ class CitizenMapController extends Controller
             'barangayCounts' => $heatmapBundle['barangayReportCounts'],
             'validatedEventsCount' => $heatmapBundle['validatedEventsCount'],
             'barangaysAffectedCount' => $heatmapBundle['barangaysAffectedCount'],
+            'heatmapPeriods' => $heatmapBundle['availablePeriods'],
+            'selectedYear' => $heatmapBundle['selectedYear'],
+            'selectedMonth' => $heatmapBundle['selectedMonth'],
         ]);
     }
 

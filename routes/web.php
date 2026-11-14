@@ -69,7 +69,9 @@ Route::middleware(['auth', 'role:super_admin,barangay_admin', 'no-back'])->group
     Route::get('/dashboard/activity', [DashboardController::class, 'activity'])->name('dashboard.activity');
 
     Route::get('/operations', function (\Illuminate\Http\Request $request, \App\Services\FloodHeatmapService $heatmapService) {
-        $heatmapBundle = $heatmapService->getBundle();
+        $selectedYear = \App\Services\FloodHeatmapService::parseYear($request->query('year'));
+        $selectedMonth = \App\Services\FloodHeatmapService::parseMonth($request->query('month'));
+        $heatmapBundle = $heatmapService->getBundle($selectedYear, $selectedMonth);
 
         $actionablePosts = \App\Models\SocialPost::where('model_status', 'VERIFIED_ACTIONABLE')
             ->orderByRaw("CASE WHEN discard_reason = 'verified_by_official' THEN 0 ELSE 1 END")
@@ -100,6 +102,9 @@ Route::middleware(['auth', 'role:super_admin,barangay_admin', 'no-back'])->group
             'actionablePosts' => $actionablePosts,
             'mapPoints' => $heatmapBundle['mapPoints'],
             'barangayReportCounts' => $heatmapBundle['barangayReportCounts'],
+            'heatmapPeriods' => $heatmapBundle['availablePeriods'],
+            'selectedYear' => $heatmapBundle['selectedYear'],
+            'selectedMonth' => $heatmapBundle['selectedMonth'],
             'noUrgencyPosts' => $noUrgencyPosts,
             'noUrgencyTotalCount' => $noUrgencyTotalCount,
             'reviewBarangay' => $reviewBarangay,
@@ -110,6 +115,13 @@ Route::middleware(['auth', 'role:super_admin,barangay_admin', 'no-back'])->group
             'avgCsOverall' => $avgCsOverall,
         ]);
     })->name('operations');
+
+    Route::get('/operations/heatmap', function (\Illuminate\Http\Request $request, \App\Services\FloodHeatmapService $heatmapService) {
+        $year = \App\Services\FloodHeatmapService::parseYear($request->query('year'));
+        $month = \App\Services\FloodHeatmapService::parseMonth($request->query('month'));
+
+        return response()->json($heatmapService->getBundle($year, $month));
+    })->name('operations.heatmap');
 
     Route::post('/operations/broadcast', [BroadcastAlertController::class, 'store'])->name('operations.broadcast');
 
