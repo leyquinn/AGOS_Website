@@ -122,7 +122,7 @@ Route::middleware(['auth', 'role:super_admin,barangay_admin', 'no-back'])->group
 
         $noUrgencyPosts = $noUrgencyQuery->paginate(6, ['*'], 'review_page')->withQueryString();
 
-        $totalActiveReports = \App\Models\SocialPost::whereIn('model_status', ['VERIFIED_ACTIONABLE', 'FLOOD_MENTION_NO_URGENCY'])->count();
+        $totalActiveReports = $heatmapBundle['activeReportsCount'];
         $validatedEventsCount = $heatmapBundle['validatedEventsCount'];
         $barangaysAffectedCount = $heatmapBundle['barangaysAffectedCount'];
         $avgCsOverall = $heatmapBundle['avgCsOverall'];
@@ -133,6 +133,8 @@ Route::middleware(['auth', 'role:super_admin,barangay_admin', 'no-back'])->group
             'actionablePosts' => $actionablePosts,
             'mapPoints' => $heatmapBundle['mapPoints'],
             'barangayReportCounts' => $heatmapBundle['barangayReportCounts'],
+            'barangayActiveCounts' => $heatmapBundle['barangayActiveCounts'],
+            'barangayAvgCs' => $heatmapBundle['barangayAvgCs'],
             'heatmapPeriods' => $heatmapBundle['availablePeriods'],
             'selectedYear' => $heatmapBundle['selectedYear'],
             'selectedMonth' => $heatmapBundle['selectedMonth'],

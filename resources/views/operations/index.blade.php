@@ -16,14 +16,14 @@
 
     <section class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
         @foreach ([
-            ['label' => 'Active Reports (Cleaned)', 'value' => number_format($totalActiveReports ?? 142), 'color' => 'text-slate-900 dark:text-slate-100'],
-            ['label' => 'Verified Flood Reports', 'value' => number_format($validatedEventsCount ?? 18), 'color' => 'text-emerald-600 dark:text-emerald-400'],
-            ['label' => 'Barangays Affected', 'value' => number_format($barangaysAffectedCount ?? 9), 'color' => 'text-rose-600 dark:text-rose-400'],
-            ['label' => 'Avg. Confidence (CS)', 'value' => number_format($avgCsOverall ?? 0.81, 2), 'color' => 'text-blue-700 dark:text-blue-400'],
+            ['label' => 'Active Reports (Cleaned)', 'value' => number_format($totalActiveReports ?? 0), 'color' => 'text-slate-900 dark:text-slate-100', 'attr' => 'data-kpi-active-reports'],
+            ['label' => 'Verified Flood Reports', 'value' => number_format($validatedEventsCount ?? 0), 'color' => 'text-emerald-600 dark:text-emerald-400', 'attr' => 'data-kpi-verified-reports'],
+            ['label' => 'Barangays Affected', 'value' => number_format($barangaysAffectedCount ?? 0), 'color' => 'text-rose-600 dark:text-rose-400', 'attr' => 'data-kpi-barangays-affected'],
+            ['label' => 'Avg. Confidence (CS)', 'value' => number_format($avgCsOverall ?? 0, 2), 'color' => 'text-blue-700 dark:text-blue-400', 'attr' => 'data-kpi-avg-confidence'],
         ] as $stat)
             <div class="rounded-2xl border border-blue-900/50 bg-[#071738]/80 p-5 shadow-lg shadow-blue-950/10 transition hover:-translate-y-0.5 hover:border-blue-700/70">
                 <p class="text-xs font-semibold text-slate-400">{{ $stat['label'] }}</p>
-                <p class="mt-3 tabular-nums text-4xl font-black {{ $stat['color'] }}">{{ $stat['value'] }}</p>
+                <p {{ $stat['attr'] }} class="mt-3 tabular-nums text-4xl font-black {{ $stat['color'] }}">{{ $stat['value'] }}</p>
             </div>
         @endforeach
     </section>
@@ -104,6 +104,12 @@
                     data-selected-month="{{ $selectedMonth ?? '' }}"
                     data-heat-points='@json($mapPoints ?? [])'
                     @if (! empty($barangayReportCounts)) data-barangay-counts='@json($barangayReportCounts)' @endif
+                    data-active-reports-count="{{ (int) ($totalActiveReports ?? 0) }}"
+                    data-validated-events-count="{{ (int) ($validatedEventsCount ?? 0) }}"
+                    data-barangays-affected-count="{{ (int) ($barangaysAffectedCount ?? 0) }}"
+                    data-avg-cs-overall="{{ number_format((float) ($avgCsOverall ?? 0), 2, '.', '') }}"
+                    data-barangay-active-counts='@json($barangayActiveCounts ?? [])'
+                    data-barangay-avg-cs='@json($barangayAvgCs ?? [])'
                     class="h-full w-full"
                 ></div>
                 <div class="pointer-events-none absolute bottom-0 left-0 right-0 bg-[#071738]/85 px-5 py-3 text-xs text-slate-400">

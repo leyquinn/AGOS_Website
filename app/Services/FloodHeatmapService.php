@@ -64,7 +64,7 @@ class FloodHeatmapService
             fn (): array => $this->buildCachedDataset()
         );
 
-        if (! is_array($base) || ! isset($base['socialItems'], $base['citizenItems'], $base['periods'])) {
+        if (! is_array($base) || ! isset($base['socialItems'], $base['citizenItems'], $base['activeItems'], $base['periods'])) {
             Cache::forget(self::CACHE_KEY);
             $base = Cache::remember(
                 self::CACHE_KEY,
@@ -86,13 +86,18 @@ class FloodHeatmapService
 
         $socialItems = collect($base['socialItems'])->filter($matchesPeriod)->values();
         $citizenItems = collect($base['citizenItems'])->filter($matchesPeriod)->values();
+        $activeItems = collect($base['activeItems'])->filter($matchesPeriod)->values();
 
         $byBarangay = $socialItems->groupBy('barangay');
         $citizenByBarangay = $citizenItems->groupBy('barangay');
+        $activeByBarangay = $activeItems->groupBy('barangay')
+            ->map(fn ($group): int => $group->count())
+            ->all();
 
         $allBarangays = $byBarangay->keys()->merge($citizenByBarangay->keys())->unique();
 
         $barangayReportCounts = [];
+        $barangayAvgCs = [];
         $mapPoints = collect();
 
         foreach ($allBarangays as $brgy) {
@@ -104,6 +109,7 @@ class FloodHeatmapService
             $avgCs = $socialGroup->isNotEmpty()
                 ? (float) $socialGroup->avg('confidence_score')
                 : 1.0;
+            $barangayAvgCs[$brgy] = round($avgCs, 2);
             $maxPts = $count >= 25 ? 4 : ($count >= 5 ? 3 : ($count >= 2 ? 2 : 1));
             $volumeBoost = min(0.28, log10($count + 1) * 0.12);
             $intensity = min(0.98, max(0.45, ($avgCs * 0.72) + $volumeBoost));
@@ -139,9 +145,14 @@ class FloodHeatmapService
         return [
             'mapPoints' => $mapPoints->values()->all(),
             'barangayReportCounts' => $barangayReportCounts,
+            'barangayActiveCounts' => $activeByBarangay,
+            'barangayAvgCs' => $barangayAvgCs,
+            'activeReportsCount' => $activeItems->count(),
             'validatedEventsCount' => $socialItems->count() + $citizenItems->count(),
             'barangaysAffectedCount' => $allBarangays->count(),
-            'avgCsOverall' => (float) ($socialItems->avg('confidence_score') ?: 0.81),
+            'avgCsOverall' => $socialItems->isNotEmpty()
+                ? round((float) $socialItems->avg('confidence_score'), 2)
+                : ($citizenItems->isNotEmpty() ? 1.00 : 0.00),
             'availablePeriods' => $base['periods'],
             'selectedYear' => $year,
             'selectedMonth' => $month,
@@ -170,12 +181,12 @@ class FloodHeatmapService
         };
 
         $socialPosts = SocialPost::where('model_status', 'VERIFIED_ACTIONABLE')
-            ->latest('scraped_at')
+            ->orderByRaw('COALESCE(analyzed_at, scraped_at, created_at) DESC')
             ->limit(60)
-            ->get(['primary_barangay', 'cleaned_text', 'full_text', 'confidence_score', 'discard_reason', 'is_whitelisted_source', 'posted_at', 'scraped_at', 'created_at'])
-            ->filter(fn (SocialPost $post): bool => $matchesPeriod($post->posted_at ?? $post->scraped_at ?? $post->created_at))
+            ->get(['primary_barangay', 'cleaned_text', 'full_text', 'confidence_score', 'discard_reason', 'is_whitelisted_source', 'posted_at', 'scraped_at', 'analyzed_at', 'created_at'])
+            ->filter(fn (SocialPost $post): bool => $matchesPeriod(self::resolveSocialPostTimestamp($post)))
             ->map(function (SocialPost $post): array {
-                $timestamp = $post->posted_at ?? $post->scraped_at ?? $post->created_at;
+                $timestamp = self::resolveSocialPostTimestamp($post);
                 $isOfficial = $post->discard_reason === 'verified_by_official';
 
                 return [
@@ -230,6 +241,15 @@ class FloodHeatmapService
      *     }
      * }
      */
+    private static function resolveSocialPostTimestamp(SocialPost $post): ?Carbon
+    {
+        if ($post->discard_reason === 'verified_by_official') {
+            return $post->analyzed_at ?? $post->scraped_at ?? $post->posted_at ?? $post->created_at;
+        }
+
+        return $post->posted_at ?? $post->scraped_at ?? $post->created_at;
+    }
+
     private function buildCachedDataset(): array
     {
         $verifiedAll = SocialPost::where('model_status', 'VERIFIED_ACTIONABLE')
@@ -244,6 +264,7 @@ class FloodHeatmapService
                 'discard_reason',
                 'posted_at',
                 'scraped_at',
+                'analyzed_at',
                 'created_at',
             ])
             ->get();
@@ -253,6 +274,31 @@ class FloodHeatmapService
             ->whereNotNull('latitude')
             ->whereNotNull('longitude')
             ->get(['id', 'barangay_id', 'latitude', 'longitude', 'confidence_score', 'created_at']);
+
+        $activeAll = SocialPost::whereIn('model_status', ['VERIFIED_ACTIONABLE', 'FLOOD_MENTION_NO_URGENCY'])
+            ->select([
+                'id',
+                'primary_barangay',
+                'discard_reason',
+                'posted_at',
+                'scraped_at',
+                'analyzed_at',
+                'created_at',
+            ])
+            ->get();
+
+        $activeItems = $activeAll
+            ->map(function (SocialPost $post): array {
+                $timestamp = self::resolveSocialPostTimestamp($post);
+
+                return [
+                    'barangay' => $post->primary_barangay ?: 'Poblacion',
+                    'year' => $timestamp ? (int) $timestamp->year : null,
+                    'month' => $timestamp ? (int) $timestamp->month : null,
+                ];
+            })
+            ->values()
+            ->all();
 
         $yearCounts = [];
         $monthCounts = [];
@@ -279,7 +325,7 @@ class FloodHeatmapService
 
         $socialItems = $verifiedAll
             ->map(function (SocialPost $post) use ($recordPeriod): array {
-                $timestamp = $post->posted_at ?? $post->scraped_at ?? $post->created_at;
+                $timestamp = self::resolveSocialPostTimestamp($post);
                 $period = $recordPeriod($timestamp);
 
                 return [
@@ -326,6 +372,7 @@ class FloodHeatmapService
         return [
             'socialItems' => $socialItems,
             'citizenItems' => $citizenItems,
+            'activeItems' => $activeItems,
             'periods' => [
                 'years' => $years,
                 'months' => array_values($monthCounts),

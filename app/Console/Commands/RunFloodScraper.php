@@ -94,30 +94,40 @@ class RunFloodScraper extends Command
         $run->update(['log_excerpt' => $logBuffer]);
 
         try {
-            $process = new Process($command, base_path(), [
+            $baseEnv = getenv();
+            if (! is_array($baseEnv)) {
+                $baseEnv = [];
+            }
+            $env = array_merge($baseEnv, [
                 'PYTHONIOENCODING' => 'utf-8',
                 'PYTHONUTF8' => '1',
-                'SYSTEMROOT' => getenv('SYSTEMROOT') ?: 'C:\\Windows',
-                'PATH' => getenv('PATH') ?: '',
-                'TEMP' => getenv('TEMP') ?: sys_get_temp_dir(),
-                'TMP' => getenv('TMP') ?: sys_get_temp_dir(),
-                'USERPROFILE' => getenv('USERPROFILE') ?: '',
-                'LOCALAPPDATA' => getenv('LOCALAPPDATA') ?: '',
-                'APPDATA' => getenv('APPDATA') ?: '',
-            ], null, 3600);
+            ]);
+
+            $process = new Process($command, base_path(), $env, null, 3600);
+            $process->start();
 
             $lastSyncTime = 0;
+            $stoppedByUser = false;
 
-            $process->run(function (string $type, string $buffer) use ($run, &$logBuffer, $outputJsonPath, &$lastSyncTime): void {
-                $logBuffer .= $buffer;
-                if (strlen($logBuffer) > 12000) {
-                    $logBuffer = substr($logBuffer, -12000);
+            while ($process->isRunning()) {
+                $chunk = $process->getIncrementalOutput().$process->getIncrementalErrorOutput();
+                if ($chunk !== '') {
+                    $logBuffer .= $chunk;
+                    if (strlen($logBuffer) > 12000) {
+                        $logBuffer = substr($logBuffer, -12000);
+                    }
                 }
 
-                // Check if user requested stop from UI
+                // Check if user requested stop from UI or started a newer run
                 $freshRun = HarvestRun::find($run->id);
                 if ($freshRun && $freshRun->status === 'stopped') {
-                    return;
+                    $stoppedByUser = true;
+                    $pid = $process->getPid();
+                    if (PHP_OS_FAMILY === 'Windows' && $pid) {
+                        @exec("taskkill /F /T /PID {$pid} > NUL 2>&1");
+                    }
+                    $process->stop(1);
+                    break;
                 }
 
                 $nowTs = time();
@@ -126,13 +136,25 @@ class RunFloodScraper extends Command
                     $this->syncJsonToDatabase($run, $outputJsonPath);
                     $run->update(['log_excerpt' => $logBuffer]);
                 }
-            });
+
+                usleep(400000);
+            }
+
+            // Drain any remaining output after exit
+            $tail = $process->getIncrementalOutput().$process->getIncrementalErrorOutput();
+            if ($tail !== '') {
+                $logBuffer .= $tail;
+                if (strlen($logBuffer) > 12000) {
+                    $logBuffer = substr($logBuffer, -12000);
+                }
+            }
 
             // Final sync of scraped JSON output
             $this->syncJsonToDatabase($run, $outputJsonPath);
+            $run->refresh();
 
             $freshRun = HarvestRun::find($run->id);
-            if ($freshRun && $freshRun->status === 'stopped') {
+            if ($stoppedByUser || ($freshRun && $freshRun->status === 'stopped')) {
                 $run->update([
                     'log_excerpt' => $logBuffer."\n[Stopped by user]",
                     'finished_at' => now(),

@@ -303,24 +303,60 @@ const initOperationsMap = async () => {
     const yearFilter = document.querySelector('[data-heatmap-year-filter]');
     const monthFilter = document.querySelector('[data-heatmap-month-filter]');
     const heatmapBadge = document.querySelector('[data-heatmap-badge]');
+    const kpiActive = document.querySelector('[data-kpi-active-reports]');
+    const kpiVerified = document.querySelector('[data-kpi-verified-reports]');
+    const kpiBarangays = document.querySelector('[data-kpi-barangays-affected]');
+    const kpiAvgCs = document.querySelector('[data-kpi-avg-confidence]');
     const heatmapUrl = mapElement.dataset.heatmapUrl || '';
     const boundaryUrl = mapElement.dataset.boundaryUrl || DEFAULT_BOUNDARY_URL;
     let boundaryLayer;
     let features = [];
     let heatPoints = defaultHeatPoints;
     let barangayCounts = {};
+    let barangayActiveCounts = {};
+    let barangayAvgCs = {};
+    let periodSummary = {
+        activeReportsCount: Number(mapElement.dataset.activeReportsCount || 0),
+        validatedEventsCount: Number(mapElement.dataset.validatedEventsCount || 0),
+        barangaysAffectedCount: Number(mapElement.dataset.barangaysAffectedCount || 0),
+        avgCsOverall: Number(mapElement.dataset.avgCsOverall || 0),
+    };
     let heatmapPeriods = { years: [], months: [] };
     try {
         if (mapElement.dataset.heatPoints !== undefined) {
             heatPoints = JSON.parse(mapElement.dataset.heatPoints) || [];
         }
         barangayCounts = JSON.parse(mapElement.dataset.barangayCounts || '{}') || {};
+        barangayActiveCounts = JSON.parse(mapElement.dataset.barangayActiveCounts || '{}') || {};
+        barangayAvgCs = JSON.parse(mapElement.dataset.barangayAvgCs || '{}') || {};
         if (mapElement.dataset.heatmapPeriods) {
             heatmapPeriods = JSON.parse(mapElement.dataset.heatmapPeriods) || heatmapPeriods;
         }
     } catch (error) {
         console.error('Unable to parse report heatmap points.', error);
     }
+    const updateKpiCards = (selectedName = '') => {
+        const verifiedVal = selectedName
+            ? Number(barangayCounts[selectedName] || 0)
+            : Number(periodSummary.validatedEventsCount || 0);
+        const brgyVal = selectedName
+            ? (verifiedVal > 0 ? 1 : 0)
+            : Number(periodSummary.barangaysAffectedCount || 0);
+        const activeVal = selectedName
+            ? Number(barangayActiveCounts[selectedName] || 0)
+            : Number(periodSummary.activeReportsCount || 0);
+        const csVal = selectedName
+            ? Number(barangayAvgCs[selectedName] || 0)
+            : Number(periodSummary.avgCsOverall || 0);
+
+        if (kpiActive) kpiActive.textContent = activeVal.toLocaleString();
+        if (kpiVerified) kpiVerified.textContent = verifiedVal.toLocaleString();
+        if (kpiBarangays) kpiBarangays.textContent = brgyVal.toLocaleString();
+        if (kpiAvgCs) kpiAvgCs.textContent = csVal.toFixed(2);
+        if (heatmapBadge) {
+            heatmapBadge.textContent = `${verifiedVal.toLocaleString()} Verified Reports · ${brgyVal} Barangays`;
+        }
+    };
     syncYearMonthFilters({
         yearSelect: yearFilter,
         monthSelect: monthFilter,
@@ -413,6 +449,7 @@ const initOperationsMap = async () => {
             status.textContent = selectedName
                 ? `Showing ${selCount} verified flood report(s) clipped to Brgy. ${selectedName}`
                 : `Showing ${selCount.toLocaleString()} verified flood reports across ${Object.keys(barangayCounts).length} Davao City barangays`;
+            updateKpiCards(selectedName);
         };
 
         const applyPeriodFilter = async (nextYear, nextMonth) => {
@@ -427,6 +464,14 @@ const initOperationsMap = async () => {
                 if (!response.ok) throw new Error(`Heatmap filter failed with status ${response.status}`);
                 const data = await response.json();
                 barangayCounts = data.barangayReportCounts || {};
+                barangayActiveCounts = data.barangayActiveCounts || {};
+                barangayAvgCs = data.barangayAvgCs || {};
+                periodSummary = {
+                    activeReportsCount: Number(data.activeReportsCount || 0),
+                    validatedEventsCount: Number(data.validatedEventsCount || 0),
+                    barangaysAffectedCount: Number(data.barangaysAffectedCount || 0),
+                    avgCsOverall: Number(data.avgCsOverall || 0),
+                };
                 heatPoints = normalizeHeatPoints(data.mapPoints);
                 clippedHeatPoints = pointsInsideFeatures(heatPoints, features);
                 if (data.availablePeriods) {
@@ -440,11 +485,7 @@ const initOperationsMap = async () => {
                     selectedMonth: data.selectedMonth ?? nextMonth,
                 });
                 populateBoundaryBarangayOptions();
-                if (heatmapBadge) {
-                    const count = Number(data.validatedEventsCount || 0).toLocaleString();
-                    const brgyCount = Number(data.barangaysAffectedCount || 0);
-                    heatmapBadge.textContent = `${count} Verified Reports · ${brgyCount} Barangays`;
-                }
+                updateKpiCards(selector ? selector.value : '');
                 const publicReportsList = document.querySelector('[data-public-reports-list]');
                 if (publicReportsList && Array.isArray(data.publicReports)) {
                     const escapeText = (value) => String(value ?? '').replace(/[&<>"']/g, (ch) => ({

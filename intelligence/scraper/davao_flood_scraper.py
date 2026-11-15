@@ -619,16 +619,15 @@ def _apply_fb_ui_date_filter(driver, target_year: int | None, target_months: lis
 # Browser setup
 # ──────────────────────────────────────────────
 
-def create_driver(profile_dir: str, *, headless: bool = False, block_images: bool = False) -> uc.Chrome:
-    """Instantiate an undetected-chromedriver instance with a persistent
-    Chrome profile so the Facebook session survives across runs."""
-
+def _build_chrome_options(abs_profile_dir: str, *, headless: bool = False, block_images: bool = False) -> uc.ChromeOptions:
+    """Create a fresh ChromeOptions object for undetected-chromedriver."""
     options = uc.ChromeOptions()
-    abs_profile_dir = os.path.abspath(profile_dir)
     options.add_argument(f"--user-data-dir={abs_profile_dir}")
     options.add_argument("--profile-directory=Default")
     options.add_argument("--disable-notifications")
     options.add_argument("--disable-popup-blocking")
+    options.add_argument("--no-first-run")
+    options.add_argument("--no-default-browser-check")
     options.add_argument("--lang=en-US")
 
     if block_images:
@@ -642,6 +641,16 @@ def create_driver(profile_dir: str, *, headless: bool = False, block_images: boo
     if headless:
         options.add_argument("--headless=new")
         options.add_argument("--window-size=1920,1080")
+
+    return options
+
+
+def create_driver(profile_dir: str, *, headless: bool = False, block_images: bool = False) -> uc.Chrome:
+    """Instantiate an undetected-chromedriver instance with a persistent
+    Chrome profile so the Facebook session survives across runs."""
+
+    abs_profile_dir = os.path.abspath(profile_dir)
+    options = _build_chrome_options(abs_profile_dir, headless=headless, block_images=block_images)
 
     # Dynamically locate chromedriver matching installed Chrome via Selenium Manager
     # to prevent undetected_chromedriver from hanging while attempting to download older versions
@@ -670,10 +679,16 @@ def create_driver(profile_dir: str, *, headless: bool = False, block_images: boo
     try:
         driver = uc.Chrome(**driver_kwargs)
     except Exception as exc:
-        log.warning(f"Driver launch with specific executable failed: {exc}. Retrying standard...")
-        driver_kwargs.pop("driver_executable_path", None)
-        driver_kwargs.pop("version_main", None)
-        driver = uc.Chrome(**driver_kwargs)
+        log.warning(
+            f"Driver launch with specific executable failed: {exc}. "
+            "Retrying standard (ensure no other Chrome window is using fb_chrome_profile)..."
+        )
+        retry_options = _build_chrome_options(abs_profile_dir, headless=headless, block_images=block_images)
+        retry_kwargs = {
+            "options": retry_options,
+            "use_subprocess": False,
+        }
+        driver = uc.Chrome(**retry_kwargs)
 
     driver.set_page_load_timeout(60)
     driver.implicitly_wait(5)
